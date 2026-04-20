@@ -1,0 +1,13 @@
+backend/__pycache__/
+backend/.pytest_cache/
+backend/test_temp.db
+backend/pathguard.db
+backend/venv/
+backend/env/
+backend/.env
+frontend/node_modules/
+frontend/.next/
+frontend/.env
+frontend/.env.local
+.DS_Store
+*.pyc

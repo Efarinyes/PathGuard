@@ -1,0 +1,25 @@
+name: tracker-env
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.11
+
+  # mantenim conda on té sentit
+  - uvicorn
+  - sqlalchemy
+  - pytest
+  - pip
+
+  - pip:
+      - fastapi
+      - pydantic
+      - pydantic-settings
+      - email-validator
+      - bcrypt==3.2.0
+      - python-jose[cryptography]
+      - passlib[bcrypt]
+      - psycopg2-binary
+      - httpx
+      - pytest-asyncio
