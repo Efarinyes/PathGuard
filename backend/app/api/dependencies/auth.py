@@ -99,6 +99,6 @@ def get_optional_patient(
 def resolve_patient(patient: Patient | None, user: User | None) -> Patient:
     if patient:
         return patient
-    if user and user.patients:
-        return user.patients[0]
+    if user and user.group and user.group.patient:
+        return user.group.patient
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authorized")

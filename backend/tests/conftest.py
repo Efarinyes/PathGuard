@@ -10,9 +10,10 @@ from app.api import deps
 from app.db.session import database as db_session
 from app.api.users.models import User
 from app.db.base.base_class import Base
-from app.api.models.walk import Walk
-from app.api.models.location import Location
-from app.api.models.patient import Patient
+from app.db.models.walk import Walk
+from app.db.models.location import Location
+from app.db.models.patient import Patient
+from app.db.models.group import Group
 from app.core.security.auth import create_access_token
 from app.core.security.password import hash_password
 
