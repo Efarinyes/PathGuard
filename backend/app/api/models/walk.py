@@ -11,6 +11,9 @@ class Walk(Base):
     end_time = Column(DateTime, nullable=True)
     active = Column(Boolean, default=True)
     initiated_by_type = Column(String(50), nullable=False)
+    initiated_by_id = Column(Integer, nullable=True)
+    stopped_by_type = Column(String(50), nullable=True)
+    stopped_by_id = Column(Integer, nullable=True)
     
     # Relationships
     locations = relationship("Location", back_populates="walk", cascade="all, delete-orphan")

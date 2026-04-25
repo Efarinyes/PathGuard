@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.db.session import database as db_session
 from app.api.models.location import Location
 from app.api.models.walk import Walk
+from app.db.state import walk_state_cache
 from app.db.websockets_router import manager
 
 from app.api.users.models import User
@@ -18,8 +19,7 @@ class LocationCreate(BaseModel):
     longitude: float
     timestamp: datetime
     walk_id: int
-
-@router.post("/", response_model=dict)
+@router.post("", response_model=dict)
 async def save_location(
     location: LocationCreate, 
     db: Session = Depends(db_session.get_db),
@@ -28,6 +28,7 @@ async def save_location(
 ):
     """
     Saves a new location point and broadcasts it to all connected caregivers.
+    Also updates the in-memory state cache for fast recovery.
     """
     # Authorize
     active_patient = resolve_patient(patient, user)
@@ -60,6 +61,7 @@ async def save_location(
     db.refresh(new_location)
     
     location_data = {
+        "type": "location",
         "id": new_location.id,
         "walk_id": new_location.walk_id,
         "latitude": new_location.latitude,
@@ -67,12 +69,15 @@ async def save_location(
         "timestamp": new_location.timestamp.isoformat() if new_location.timestamp else None
     }
     
+    # ⚡ Update the live cache for /walks/active recovery
+    walk_state_cache.update(location.walk_id, location_data)
+    
     # Broadcast to all connected caregivers
     await manager.broadcast(location_data)
     
     return location_data
 
-@router.get("/")
+@router.get("")
 def read_locations(
     db: Session = Depends(db_session.get_db),
     patient: Patient | None = Depends(get_optional_patient),

@@ -8,11 +8,13 @@ from app.api.models.location import Location
 from app.api.users.models import User
 from app.api.models.patient import Patient
 from app.db.auth_deps import get_optional_patient, get_optional_caregiver, resolve_patient
+from app.db.state import walk_state_cache
+from app.db.websockets_router import manager
 
 router = APIRouter()
 
 @router.post("/start", response_model=int)
-def start_walk(
+async def start_walk(
     db: Session = Depends(db_session.get_db),
     patient: Patient | None = Depends(get_optional_patient),
     user: User | None = Depends(get_optional_caregiver)
@@ -23,6 +25,7 @@ def start_walk(
     # Authorize
     active_patient = resolve_patient(patient, user)
     initiated_by_type = "patient" if patient else "caregiver"
+    initiated_by_id = patient.id if patient else user.id
     
     # Check if there's already an active walk
     active_walk = db.query(Walk).filter(Walk.active == True).first()
@@ -36,16 +39,24 @@ def start_walk(
     new_walk = Walk(
         start_time=datetime.utcnow(),
         active=True,
-        initiated_by_type=initiated_by_type
+        initiated_by_type=initiated_by_type,
+        initiated_by_id=initiated_by_id
     )
     db.add(new_walk)
     db.commit()
     db.refresh(new_walk)
     
+    # Broadcast to caregivers
+    await manager.broadcast({
+        "type": "walk_started",
+        "walk_id": new_walk.id,
+        "start_time": new_walk.start_time.isoformat()
+    })
+    
     return new_walk.id
 
 @router.post("/stop")
-def stop_walk(
+async def stop_walk(
     db: Session = Depends(db_session.get_db),
     patient: Patient | None = Depends(get_optional_patient),
     user: User | None = Depends(get_optional_caregiver)
@@ -55,6 +66,8 @@ def stop_walk(
     """
     # Authorize
     active_patient = resolve_patient(patient, user)
+    stopped_by_type = "patient" if patient else "caregiver"
+    stopped_by_id = patient.id if patient else user.id
     
     # Find the active walk
     active_walk = db.query(Walk).filter(Walk.active == True).first()
@@ -67,6 +80,11 @@ def stop_walk(
     # Update the walk
     active_walk.active = False
     active_walk.end_time = datetime.utcnow()
+    active_walk.stopped_by_type = stopped_by_type
+    active_walk.stopped_by_id = stopped_by_id
+    
+    # ⚡ Clear the live cache as the walk is no longer active
+    walk_state_cache.clear(active_walk.id)
     
     # Get location count for summary
     location_count = len(active_walk.locations)
@@ -77,6 +95,13 @@ def stop_walk(
     # Calculate duration
     duration = active_walk.end_time - active_walk.start_time
     
+    # Broadcast to caregivers
+    await manager.broadcast({
+        "type": "walk_stopped",
+        "walk_id": active_walk.id,
+        "end_time": active_walk.end_time.isoformat()
+    })
+
     return {
         "id": active_walk.id,
         "start_time": active_walk.start_time,
@@ -117,6 +142,69 @@ def get_walk_locations(
         }
         for loc in locations
     ]
+
+@router.get("/active")
+def get_active_walk(
+    db: Session = Depends(db_session.get_db),
+    patient: Patient | None = Depends(get_optional_patient),
+    user: User | None = Depends(get_optional_caregiver)
+):
+    """
+    Returns the currently active walk state for recovery.
+    Used by caregivers when refreshing the dashboard.
+    """
+    # Authorize
+    active_patient = resolve_patient(patient, user)
+    
+    # Find the active walk
+    active_walk = db.query(Walk).filter(Walk.active == True).first()
+    
+    if not active_walk:
+        return {"active_walk": None}
+    
+    # ⚡ Try to fetch from in-memory cache first for speed
+    cached_data = walk_state_cache.get(active_walk.id)
+    if cached_data:
+        return {
+            "active_walk_id": active_walk.id,
+            "patient_id": active_patient.id,
+            "latest_location": cached_data["latest"],
+            "history": cached_data["history"]
+        }
+    
+    # Fallback to DB if cache is empty (e.g. after server restart)
+    history = db.query(Location)\
+        .filter(Location.walk_id == active_walk.id)\
+        .order_by(Location.timestamp.desc())\
+        .limit(50)\
+        .all()
+    
+    history.reverse()
+    latest_location = history[-1] if history else None
+    
+    # Re-populate cache for next time
+    history_dicts = [
+        {
+            "latitude": loc.latitude,
+            "longitude": loc.longitude,
+            "timestamp": loc.timestamp.isoformat() if loc.timestamp else None
+        } for loc in history
+    ]
+    
+    if latest_location:
+        latest_dict = {
+            "latitude": latest_location.latitude,
+            "longitude": latest_location.longitude,
+            "timestamp": latest_location.timestamp.isoformat() if latest_location.timestamp else None
+        }
+        walk_state_cache.update(active_walk.id, latest_dict) # This will also populate history
+
+    return {
+        "active_walk_id": active_walk.id,
+        "patient_id": active_patient.id,
+        "latest_location": latest_dict if latest_location else None,
+        "history": history_dicts
+    }
 
 @router.get("/", response_model=list)
 def read_walks(
