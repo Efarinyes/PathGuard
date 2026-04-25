@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.config.settings import settings
 from app.db.session import database as db_session
 from app.api.users.models import User
-from app.api.models.patient import Patient
+from app.db.models.patient import Patient
 from app.core.security.jwt import verify_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")

@@ -2,14 +2,14 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.session import database as db_session
-from app.api.models.walk import Walk
-from app.api.models.location import Location
+from app.db.models.walk import Walk
+from app.db.models.location import Location
 
 from app.api.users.models import User
-from app.api.models.patient import Patient
-from app.db.auth_deps import get_optional_patient, get_optional_caregiver, resolve_patient
+from app.db.models.patient import Patient
+from app.api.dependencies.auth import get_optional_patient, get_optional_caregiver, resolve_patient
 from app.db.state import walk_state_cache
-from app.db.websockets_router import manager
+from app.api.ws_manager import manager
 
 router = APIRouter()
 

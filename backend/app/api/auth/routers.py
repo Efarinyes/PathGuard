@@ -10,7 +10,7 @@ from app.api.auth import schemas as auth_schemas
 from app.core.config.settings import settings
 from app.core.security.auth import create_access_token
 from app.core.security.password import hash_password
-from app.api.models.patient import Patient
+from app.db.models.patient import Patient
 from app.api.users.models import User
 
 router = APIRouter()

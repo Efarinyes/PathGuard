@@ -2,16 +2,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.auth import routers as auth_routers
-from app.db import locations_router
-from app.db import walks_router
-from app.db import websockets_router
+from app.api.routers import locations as locations_router
+from app.api.routers import walks as walks_router
+from app.api import ws_manager as websockets_router
 from app.core.config.settings import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create all tables on startup if they don't exist
     from app.db.session.database import engine
-    import app.db.base_models  # noqa — registers all models
+    import app.db.models.base  # noqa — registers all models
     from app.db.base.base_class import Base
     Base.metadata.create_all(bind=engine)
     yield
