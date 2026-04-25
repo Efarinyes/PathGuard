@@ -52,7 +52,7 @@ async def start_walk(
     db.refresh(new_walk)
     
     # Broadcast to caregivers in the environment
-    await manager.broadcast({
+    await manager.broadcast_to_group(active_patient.group_id, {
         "type": "walk_started",
         "walk_id": new_walk.id,
         "patient_id": active_patient.id,
@@ -99,7 +99,7 @@ async def stop_walk(
     db.commit()
     
     # Broadcast to caregivers
-    await manager.broadcast({
+    await manager.broadcast_to_group(active_patient.group_id, {
         "type": "walk_stopped",
         "walk_id": active_walk.id,
         "patient_id": active_patient.id,

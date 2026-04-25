@@ -33,13 +33,16 @@ async def save_location(
     # Authorize
     active_patient = resolve_patient(patient, user)
     
-    # Verify the walk exists and is active
-    walk = db.query(Walk).filter(Walk.id == location.walk_id).first()
+    # Verify the walk exists and belongs to the authorized patient
+    walk = db.query(Walk).filter(
+        Walk.id == location.walk_id,
+        Walk.patient_id == active_patient.id
+    ).first()
     
     if not walk:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Walk not found"
+            detail="Walk not found or access denied"
         )
     
     if not walk.active:
@@ -72,8 +75,8 @@ async def save_location(
     # ⚡ Update the live cache for /walks/active recovery
     walk_state_cache.update(location.walk_id, location_data)
     
-    # Broadcast to all connected caregivers
-    await manager.broadcast(location_data)
+    # Broadcast ONLY to the authorized group
+    await manager.broadcast_to_group(active_patient.group_id, location_data)
     
     return location_data
 
