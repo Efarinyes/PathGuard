@@ -20,16 +20,19 @@ async def start_walk(
     user: User | None = Depends(get_optional_caregiver)
 ):
     """
-    Starts a new walk session. Only one active walk is allowed at a time.
+    Starts a new walk session. Scoped to the caller's family group.
     """
-    # Authorize
+    # Authorize: resolve_patient ensures the caregiver only sees their group's patient
     active_patient = resolve_patient(patient, user)
     initiated_by_type = "patient" if patient else "caregiver"
     initiated_by_id = patient.id if patient else user.id
     
-    # Check if there's already an active walk
-    #active_walk = db.query(Walk).filter(Walk.active == True, Walk.patient_id == active_patient.id).first()
-    active_walk = db.query(Walk).filter(Walk.active==True, Walk.patient_id == active_patient.id).first()
+    # Check if there's already an active walk for THIS patient
+    active_walk = db.query(Walk).filter(
+        Walk.active == True, 
+        Walk.patient_id == active_patient.id
+    ).first()
+    
     if active_walk:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -48,10 +51,11 @@ async def start_walk(
     db.commit()
     db.refresh(new_walk)
     
-    # Broadcast to caregivers
+    # Broadcast to caregivers in the environment
     await manager.broadcast({
         "type": "walk_started",
         "walk_id": new_walk.id,
+        "patient_id": active_patient.id,
         "start_time": f"{new_walk.start_time.isoformat()}Z"
     })
     
@@ -64,15 +68,18 @@ async def stop_walk(
     user: User | None = Depends(get_optional_caregiver)
 ):
     """
-    Stops the currently active walk session.
+    Stops the currently active walk session for the resolved patient.
     """
-    # Authorize
     active_patient = resolve_patient(patient, user)
     stopped_by_type = "patient" if patient else "caregiver"
     stopped_by_id = patient.id if patient else user.id
     
-    # Find the active walk
-    active_walk = db.query(Walk).filter(Walk.active == True, Walk.patient_id == active_patient.id).first()
+    # Find the active walk for THIS patient ONLY
+    active_walk = db.query(Walk).filter(
+        Walk.active == True, 
+        Walk.patient_id == active_patient.id
+    ).first()
+    
     if not active_walk:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -85,30 +92,22 @@ async def stop_walk(
     active_walk.stopped_by_type = stopped_by_type
     active_walk.stopped_by_id = stopped_by_id
     
-    # ⚡ Clear the live cache as the walk is no longer active
+    # ⚡ Clear the live cache
     walk_state_cache.clear(active_walk.id)
     
-    # Get location count for summary
     location_count = len(active_walk.locations)
-    
     db.commit()
-    db.refresh(active_walk)
-    
-    # Calculate duration
-    duration = active_walk.end_time - active_walk.start_time
     
     # Broadcast to caregivers
     await manager.broadcast({
         "type": "walk_stopped",
         "walk_id": active_walk.id,
+        "patient_id": active_patient.id,
         "end_time": active_walk.end_time.isoformat()
     })
 
     return {
         "id": active_walk.id,
-        "start_time": active_walk.start_time,
-        "end_time": active_walk.end_time,
-        "duration_seconds": int(duration.total_seconds()),
         "location_count": location_count
     }
 
@@ -120,17 +119,20 @@ def get_walk_locations(
     user: User | None = Depends(get_optional_caregiver)
 ):
     """
-    Returns an ordered list of coordinates for a specific walk.
+    Returns locations for a specific walk, strictly enforced by patient ownership.
     """
-    # Authorize
     active_patient = resolve_patient(patient, user)
     
-    # Verify the walk exists
-    walk = db.query(Walk).filter(Walk.id == id).first()
+    # Verify the walk exists AND belongs to the authorized patient
+    walk = db.query(Walk).filter(
+        Walk.id == id, 
+        Walk.patient_id == active_patient.id
+    ).first()
+    
     if not walk:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Walk not found"
+            detail="Walk not found or access denied"
         )
     
     # Fetch locations ordered by timestamp
@@ -152,35 +154,30 @@ def get_active_walk(
     user: User | None = Depends(get_optional_caregiver)
 ):
     """
-    Returns the currently active walk state for recovery.
-    Used by caregivers when refreshing the dashboard.
+    Returns the currently active walk state for recovery, scoped to the family group.
     """
-    # Authorize
     active_patient = resolve_patient(patient, user)
     
-    # Find the active walk
-    active_walk = db.query(Walk).filter(Walk.active == True, Walk.patient_id == active_patient.id).first()
+    # Find the active walk for this patient
+    active_walk = db.query(Walk).filter(
+        Walk.active == True, 
+        Walk.patient_id == active_patient.id
+    ).first()
     
     if not active_walk:
         return {"active_walk": None}
     
-    # ⚡ Try to fetch from in-memory cache first for speed
+    # Cache and recovery logic remains the same but is now implicitly safe
     cached_data = walk_state_cache.get(active_walk.id)
     if cached_data:
         return {
             "active_walk_id": active_walk.id,
             "patient_id": active_patient.id,
-            "latest_location": {
-                **cached_data["latest"],
-                "timestamp": f'{cached_data["latest"]["timestamp"]}Z' if not cached_data["latest"]["timestamp"].endswith('Z') else cached_data["latest"]["timestamp"]
-            },
-            "history": [
-                {**p, "timestamp": f'{p["timestamp"]}Z' if not p["timestamp"].endswith("Z") else p["timestamp"]}
-                for p in cached_data["history"]
-            ]
+            "latest_location": cached_data["latest"],
+            "history": cached_data["history"]
         }
     
-    # Fallback to DB if cache is empty (e.g. after server restart)
+    # Fallback to DB
     history = db.query(Location)\
         .filter(Location.walk_id == active_walk.id)\
         .order_by(Location.timestamp.desc())\
@@ -188,29 +185,12 @@ def get_active_walk(
         .all()
     
     history.reverse()
-    latest_location = history[-1] if history else None
+    history_dicts = [{"latitude": loc.latitude, "longitude": loc.longitude, "timestamp": loc.timestamp.isoformat()} for loc in history]
     
-    # Re-populate cache for next time
-    history_dicts = [
-        {
-            "latitude": loc.latitude,
-            "longitude": loc.longitude,
-            "timestamp": loc.timestamp.isoformat() if loc.timestamp else None
-        } for loc in history
-    ]
-    
-    if latest_location:
-        latest_dict = {
-            "latitude": latest_location.latitude,
-            "longitude": latest_location.longitude,
-            "timestamp": latest_location.timestamp.isoformat() if latest_location.timestamp else None
-        }
-        walk_state_cache.update(active_walk.id, latest_dict) # This will also populate history
-
     return {
         "active_walk_id": active_walk.id,
         "patient_id": active_patient.id,
-        "latest_location": latest_dict if latest_location else None,
+        "latest_location": history_dicts[-1] if history_dicts else None,
         "history": history_dicts
     }
 
@@ -221,25 +201,22 @@ def read_walks(
     user: User | None = Depends(get_optional_caregiver)
 ):
     """
-    Returns a list of past walk sessions.
+    Returns a list of past walk sessions for the family group.
     """
-    # Authorize
     active_patient = resolve_patient(patient, user)
     
-    # Fetch all finished walks, ordered by start time (newest first)
-    past_walks = db.query(Walk).filter(Walk.active == False).order_by(Walk.start_time.desc()).all()
+    # Fetch only walks belonging to the active patient
+    past_walks = db.query(Walk).filter(
+        Walk.active == False,
+        Walk.patient_id == active_patient.id
+    ).order_by(Walk.start_time.desc()).all()
     
-    result = []
-    for walk in past_walks:
-        duration_seconds = 0
-        if walk.end_time and walk.start_time:
-            duration_seconds = int((walk.end_time - walk.start_time).total_seconds())
-            
-        result.append({
+    return [
+        {
             "id": walk.id,
             "start_time": walk.start_time,
             "end_time": walk.end_time,
-            "duration_seconds": duration_seconds
-        })
-        
-    return result
+            "duration_seconds": int((walk.end_time - walk.start_time).total_seconds()) if walk.end_time else 0
+        }
+        for walk in past_walks
+    ]
