@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  /* PathGuard Palette */
+  --color-primary: #1E3A8A;
+  --color-secondary: #22C55E;
+  --color-warning: #F59E0B;
+  --color-critical: #EF4444;
+  --color-background: #F8FAFC;
+  --color-text: #0F172A;
+
+  /* Typography */
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  /* UI Tokens */
+  --radius-xl: 16px;
+  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+@theme {
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-warning: var(--color-warning);
+  --color-critical: var(--color-critical);
+  --color-background: var(--color-background);
+  --color-text: var(--color-text);
+
+  --font-sans: var(--font-sans);
+
+  --radius-xl: var(--radius-xl);
+  --shadow-soft: var(--shadow-soft);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Accessibility: Ensure minimum touch target */
+@layer base {
+  button, a {
+    @apply min-h-[44px];
+  }
+}
