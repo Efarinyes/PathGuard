@@ -28,7 +28,8 @@ async def start_walk(
     initiated_by_id = patient.id if patient else user.id
     
     # Check if there's already an active walk
-    active_walk = db.query(Walk).filter(Walk.active == True).first()
+    #active_walk = db.query(Walk).filter(Walk.active == True, Walk.patient_id == active_patient.id).first()
+    active_walk = db.query(Walk).filter(Walk.active==True, Walk.patient_id == active_patient.id).first()
     if active_walk:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -39,6 +40,7 @@ async def start_walk(
     new_walk = Walk(
         start_time=datetime.utcnow(),
         active=True,
+        patient_id=active_patient.id,
         initiated_by_type=initiated_by_type,
         initiated_by_id=initiated_by_id
     )
@@ -50,7 +52,7 @@ async def start_walk(
     await manager.broadcast({
         "type": "walk_started",
         "walk_id": new_walk.id,
-        "start_time": new_walk.start_time.isoformat()
+        "start_time": f"{new_walk.start_time.isoformat()}Z"
     })
     
     return new_walk.id
@@ -70,7 +72,7 @@ async def stop_walk(
     stopped_by_id = patient.id if patient else user.id
     
     # Find the active walk
-    active_walk = db.query(Walk).filter(Walk.active == True).first()
+    active_walk = db.query(Walk).filter(Walk.active == True, Walk.patient_id == active_patient.id).first()
     if not active_walk:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -157,7 +159,7 @@ def get_active_walk(
     active_patient = resolve_patient(patient, user)
     
     # Find the active walk
-    active_walk = db.query(Walk).filter(Walk.active == True).first()
+    active_walk = db.query(Walk).filter(Walk.active == True, Walk.patient_id == active_patient.id).first()
     
     if not active_walk:
         return {"active_walk": None}
@@ -168,8 +170,14 @@ def get_active_walk(
         return {
             "active_walk_id": active_walk.id,
             "patient_id": active_patient.id,
-            "latest_location": cached_data["latest"],
-            "history": cached_data["history"]
+            "latest_location": {
+                **cached_data["latest"],
+                "timestamp": f'{cached_data["latest"]["timestamp"]}Z' if not cached_data["latest"]["timestamp"].endswith('Z') else cached_data["latest"]["timestamp"]
+            },
+            "history": [
+                {**p, "timestamp": f'{p["timestamp"]}Z' if not p["timestamp"].endswith("Z") else p["timestamp"]}
+                for p in cached_data["history"]
+            ]
         }
     
     # Fallback to DB if cache is empty (e.g. after server restart)

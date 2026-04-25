@@ -20,3 +20,4 @@ class Patient(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     caregivers = relationship("User", secondary="patient_caregiver", back_populates="patients")
+    walks = relationship("Walk", back_populates="patient")

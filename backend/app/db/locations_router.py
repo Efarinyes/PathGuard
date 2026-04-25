@@ -66,7 +66,7 @@ async def save_location(
         "walk_id": new_location.walk_id,
         "latitude": new_location.latitude,
         "longitude": new_location.longitude,
-        "timestamp": new_location.timestamp.isoformat() if new_location.timestamp else None
+        "timestamp": f"{new_location.timestamp.isoformat()}Z" if new_location.timestamp else None
     }
     
     # ⚡ Update the live cache for /walks/active recovery
