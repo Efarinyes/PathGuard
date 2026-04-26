@@ -46,13 +46,16 @@ class ConnectionManager:
     async def broadcast_to_group(self, group_id: int, message: dict):
         """
         Sends a message ONLY to the specified group channel.
-        Enforces standardized payload format.
+        Enforces standardized payload format and includes unique event_id for deduplication.
         """
         if group_id not in self.group_rooms:
             return
             
-        # Standardize payload
+        # Standardize payload and ensure unique event_id
         message.setdefault("group_id", group_id)
+        if "event_id" not in message:
+            message["event_id"] = str(uuid.uuid4())
+            
         if "timestamp" not in message:
             message["timestamp"] = f"{datetime.utcnow().isoformat()}Z"
 

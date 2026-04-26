@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useWebSocket } from './useWebSocket';
 import { useAppState } from './useAppState';
 import { LocationPayload } from '../services/locationService';
@@ -20,17 +20,21 @@ export function useLivePatientLocation(
   initialHistory: LocationPayload[] = []
 ): UseLivePatientLocationReturn {
   const { userToken, deviceToken, isHydrated: appIsHydrated } = useAppState();
-  
+
   const [currentLocation, setCurrentLocation] = useState<LocationPayload | null>(null);
   const [routeHistory, setRouteHistory] = useState<LocationPayload[]>(initialHistory);
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isActive, setIsActive] = useState(false);
 
+  // ⚡ Robust Deduplication & Ordering refs
+  const processedEvents = useRef<Set<string>>(new Set());
+  const latestTimestamp = useRef<number>(0);
+
   // 1. Snapshot Recovery: Fetch active walk state
   async function rehydrateState(isReconnect = false) {
-    if (isLoading && isReconnect) return; 
-    
+    if (isLoading && isReconnect) return;
+
     if (!userToken && !deviceToken) {
       setIsLoading(false);
       setIsReady(true);
@@ -39,7 +43,7 @@ export function useLivePatientLocation(
 
     try {
       if (!isReconnect) setIsLoading(true);
-      
+
       const response = await fetch(`${API_BASE_URL}/walks/active`, {
         headers: {
           'Content-Type': 'application/json',
@@ -52,30 +56,41 @@ export function useLivePatientLocation(
         const data = await response.json();
         if (data.active_walk) {
           const walk = data.active_walk;
+
+          // Detect walk transition (important for multi-tab or reconnect)
           setIsActive(true);
-          
+
           if (walk.latest_location) {
             setCurrentLocation(walk.latest_location);
+            const ts = new Date(walk.latest_location.timestamp).getTime();
+            if (ts > latestTimestamp.current) latestTimestamp.current = ts;
           }
-          
+
           if (walk.history) {
             setRouteHistory((prevHistory) => {
-              // Create a set of existing timestamps for efficient deduplication
               const existingTimestamps = new Set(prevHistory.map(p => p.timestamp));
               const newPoints = walk.history.filter((p: any) => !existingTimestamps.has(p.timestamp));
-              
+
               const combined = [...prevHistory, ...newPoints];
-              
-              // Sort by timestamp to ensure correct map rendering
-              return combined.sort((a, b) => 
+
+              const sorted = combined.sort((a, b) =>
                 new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
               );
+
+              if (sorted.length > 0) {
+                const lastTs = new Date(sorted[sorted.length - 1].timestamp).getTime();
+                if (lastTs > latestTimestamp.current) latestTimestamp.current = lastTs;
+              }
+
+              return sorted;
             });
           }
         } else {
           setIsActive(false);
           setCurrentLocation(null);
           setRouteHistory([]);
+          latestTimestamp.current = 0;
+          processedEvents.current.clear();
         }
       }
     } catch (error) {
@@ -101,39 +116,58 @@ export function useLivePatientLocation(
       rehydrateState(true);
     }
   }, [isConnected]);
-  
-  // 3. Seamless Integration: Handle new messages
+
+  // 3. Seamless Integration: Handle new messages with Deduplication & Ordering
   useEffect(() => {
     if (!lastMessage) return;
 
+    // A. Event Deduplication (Strict UUID check)
+    if (lastMessage.event_id) {
+      if (processedEvents.current.has(lastMessage.event_id)) {
+        return; // Already processed
+      }
+      processedEvents.current.add(lastMessage.event_id);
+
+      // Keep memory usage low by capping the set
+      if (processedEvents.current.size > 200) {
+        const first = processedEvents.current.values().next().value;
+        if (first) processedEvents.current.delete(first);
+      }
+    }
+
+    // B. Chronological Ordering (Strict Timestamp check)
+    const eventTime = lastMessage.timestamp ? new Date(lastMessage.timestamp).getTime() : 0;
+    if (eventTime > 0 && eventTime < latestTimestamp.current) {
+      console.debug('[WS] Ignoring out-of-order event:', lastMessage);
+      return;
+    }
+    if (eventTime > 0) latestTimestamp.current = eventTime;
+
+    // C. Event Dispatch
     if (lastMessage.type === 'walk_started') {
       setIsActive(true);
       setCurrentLocation(null);
       setRouteHistory([]);
+      processedEvents.current.clear();
+      latestTimestamp.current = eventTime;
       return;
     }
 
     if (lastMessage.type === 'walk_stopped') {
       setIsActive(false);
       setCurrentLocation(null);
+      latestTimestamp.current = 0;
       return;
     }
 
     if (lastMessage.type === 'location' || !lastMessage.type) {
       if (typeof lastMessage.latitude !== 'number' || typeof lastMessage.longitude !== 'number') {
-        console.warn('[useLivePatientLocation] Received malformed location message:', lastMessage);
         return;
       }
 
       setIsActive(true);
-      setCurrentLocation((prevCurrent) => {
-        const isNewer = !prevCurrent || new Date(lastMessage.timestamp) > new Date(prevCurrent.timestamp);
-        if (isNewer) {
-          setRouteHistory((prevHistory) => [...prevHistory, lastMessage]);
-          return lastMessage;
-        }
-        return prevCurrent;
-      });
+      setCurrentLocation(lastMessage);
+      setRouteHistory((prevHistory) => [...prevHistory, lastMessage]);
     }
   }, [lastMessage]);
 
