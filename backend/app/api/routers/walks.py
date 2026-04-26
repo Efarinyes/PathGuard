@@ -154,8 +154,10 @@ def get_active_walk(
     user: User | None = Depends(get_optional_caregiver)
 ):
     """
-    Returns the currently active walk state for recovery, scoped to the family group.
+    Returns the currently active walk state for recovery.
+    Optimized for fast UI rehydration on page refresh.
     """
+    # Authorize: ensures group-scoping
     active_patient = resolve_patient(patient, user)
     
     # Find the active walk for this patient
@@ -167,17 +169,22 @@ def get_active_walk(
     if not active_walk:
         return {"active_walk": None}
     
-    # Cache and recovery logic remains the same but is now implicitly safe
+    # ⚡ Try to fetch from in-memory cache first for speed
     cached_data = walk_state_cache.get(active_walk.id)
+    
     if cached_data:
         return {
-            "active_walk_id": active_walk.id,
-            "patient_id": active_patient.id,
-            "latest_location": cached_data["latest"],
-            "history": cached_data["history"]
+            "active_walk": {
+                "id": active_walk.id,
+                "patient_id": active_patient.id,
+                "start_time": f"{active_walk.start_time.isoformat()}Z",
+                "status": "active",
+                "latest_location": cached_data["latest"],
+                "history": cached_data["history"]
+            }
         }
     
-    # Fallback to DB
+    # Fallback to DB if cache is empty (e.g. after server restart)
     history = db.query(Location)\
         .filter(Location.walk_id == active_walk.id)\
         .order_by(Location.timestamp.desc())\
@@ -185,13 +192,29 @@ def get_active_walk(
         .all()
     
     history.reverse()
-    history_dicts = [{"latitude": loc.latitude, "longitude": loc.longitude, "timestamp": loc.timestamp.isoformat()} for loc in history]
+    history_dicts = [
+        {
+            "latitude": loc.latitude, 
+            "longitude": loc.longitude, 
+            "timestamp": f"{loc.timestamp.isoformat()}Z"
+        } for loc in history
+    ]
     
+    latest_dict = history_dicts[-1] if history_dicts else None
+    
+    # Optional: Seed cache if it was empty
+    if latest_dict:
+        walk_state_cache.update(active_walk.id, latest_dict)
+
     return {
-        "active_walk_id": active_walk.id,
-        "patient_id": active_patient.id,
-        "latest_location": history_dicts[-1] if history_dicts else None,
-        "history": history_dicts
+        "active_walk": {
+            "id": active_walk.id,
+            "patient_id": active_patient.id,
+            "start_time": f"{active_walk.start_time.isoformat()}Z",
+            "status": "active",
+            "latest_location": latest_dict,
+            "history": history_dicts
+        }
     }
 
 @router.get("/", response_model=list)

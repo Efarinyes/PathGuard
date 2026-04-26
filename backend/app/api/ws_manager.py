@@ -106,38 +106,6 @@ async def websocket_endpoint(
 
     await manager.connect(websocket, group_id)
     
-    # Rehydration: Send active state to connecting caregivers
-    if role == "caregiver":
-        # Find active walk for this group
-        active_walk = db.query(Walk).filter(
-            Walk.active == True, 
-            Walk.patient_id == db.query(Patient.id).filter(Patient.group_id == group_id).scalar_subquery()
-        ).first()
-        
-        if active_walk:
-            cached = walk_state_cache.get(active_walk.id)
-            if cached:
-                await websocket.send_json({
-                    "type": "snapshot",
-                    "active_walk_id": active_walk.id,
-                    "latest_location": cached["latest"],
-                    "history": cached["history"]
-                })
-            else:
-                # DB Fallback
-                history = db.query(Location)\
-                    .filter(Location.walk_id == active_walk.id)\
-                    .order_by(Location.timestamp.desc())\
-                    .limit(50).all()
-                history.reverse()
-                history_dicts = [{"latitude": loc.latitude, "longitude": loc.longitude, "timestamp": loc.timestamp.isoformat()} for loc in history]
-                await websocket.send_json({
-                    "type": "snapshot",
-                    "active_walk_id": active_walk.id,
-                    "latest_location": history_dicts[-1] if history_dicts else None,
-                    "history": history_dicts
-                })
-
     try:
         while True:
             # Keep connection alive

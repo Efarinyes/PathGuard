@@ -50,20 +50,32 @@ export function useLivePatientLocation(
 
       if (response.ok) {
         const data = await response.json();
-        if (data.active_walk_id) {
+        if (data.active_walk) {
+          const walk = data.active_walk;
           setIsActive(true);
-          if (data.latest_location) setCurrentLocation(data.latest_location);
-          if (data.history) {
+          
+          if (walk.latest_location) {
+            setCurrentLocation(walk.latest_location);
+          }
+          
+          if (walk.history) {
             setRouteHistory((prevHistory) => {
+              // Create a set of existing timestamps for efficient deduplication
               const existingTimestamps = new Set(prevHistory.map(p => p.timestamp));
-              const newPoints = data.history.filter((p: any) => !existingTimestamps.has(p.timestamp));
-              return [...prevHistory, ...newPoints].sort((a, b) => 
+              const newPoints = walk.history.filter((p: any) => !existingTimestamps.has(p.timestamp));
+              
+              const combined = [...prevHistory, ...newPoints];
+              
+              // Sort by timestamp to ensure correct map rendering
+              return combined.sort((a, b) => 
                 new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
               );
             });
           }
         } else {
           setIsActive(false);
+          setCurrentLocation(null);
+          setRouteHistory([]);
         }
       }
     } catch (error) {
