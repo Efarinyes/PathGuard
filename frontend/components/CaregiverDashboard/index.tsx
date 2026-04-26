@@ -1,14 +1,17 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { LogOut } from 'lucide-react';
 import CaregiverMap from '../CaregiverMap';
 import { useLivePatientLocation } from '../../hooks/useLivePatientLocation';
+import { useAppState } from '../../hooks/useAppState';
 
 /**
  * Clean, minimalistic dashboard serving as the primary interface for caregivers.
  * Split view: Map on top/left, critical status overview card on bottom/right.
  */
 export default function CaregiverDashboard() {
+  const { clearAll } = useAppState();
   const { currentLocation, routeHistory, isConnected, isLoading, isActive } = useLivePatientLocation();
   const [timeAgo, setTimeAgo] = useState<string>('Esperant dades...');
 
@@ -87,6 +90,19 @@ export default function CaregiverDashboard() {
               <p className="text-[#0F172A] font-semibold">{routeHistory.length}</p>
             </div>
           )}
+
+          <div className="mt-auto pt-4">
+            <button
+              onClick={() => {
+                clearAll();
+                window.location.href = '/caregiver';
+              }}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-slate-500 hover:text-[#EF4444] hover:bg-red-50 border border-slate-200 hover:border-red-100 transition-all font-medium text-sm"
+            >
+              <LogOut size={18} />
+              Tancar sessió
+            </button>
+          </div>
 
         </div>
       </div>
