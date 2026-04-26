@@ -31,10 +31,50 @@ export function useLivePatientLocation(
   const processedEvents = useRef<Set<string>>(new Set());
   const latestTimestamp = useRef<number>(0);
 
-  // 1. Snapshot Recovery: Fetch active walk state
-  async function rehydrateState(isReconnect = false) {
-    if (isLoading && isReconnect) return;
+  // Helper to apply a full state snapshot (Atomic Join Consistency)
+  const applySnapshot = (walk: any) => {
+    if (!walk) {
+      setIsActive(false);
+      setCurrentLocation(null);
+      setRouteHistory([]);
+      latestTimestamp.current = 0;
+      processedEvents.current.clear();
+      return;
+    }
 
+    setIsActive(true);
+    
+    if (walk.latest_location) {
+      const ts = new Date(walk.latest_location.timestamp).getTime();
+      if (ts >= latestTimestamp.current) {
+        setCurrentLocation(walk.latest_location);
+        latestTimestamp.current = ts;
+      }
+    }
+    
+    if (walk.history) {
+      setRouteHistory((prevHistory) => {
+        const existingTimestamps = new Set(prevHistory.map(p => p.timestamp));
+        const newPoints = walk.history.filter((p: any) => !existingTimestamps.has(p.timestamp));
+        
+        const sorted = [...prevHistory, ...newPoints].sort((a, b) => 
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+        
+        if (sorted.length > 0) {
+          const lastTs = new Date(sorted[sorted.length - 1].timestamp).getTime();
+          if (lastTs > latestTimestamp.current) latestTimestamp.current = lastTs;
+        }
+        
+        return sorted;
+      });
+    }
+  };
+
+  // 1. Snapshot Recovery: Fetch active walk state (REST Initial Load)
+  async function rehydrateState(isReconnect = false) {
+    if (isLoading && isReconnect) return; 
+    
     if (!userToken && !deviceToken) {
       setIsLoading(false);
       setIsReady(true);
@@ -43,7 +83,7 @@ export function useLivePatientLocation(
 
     try {
       if (!isReconnect) setIsLoading(true);
-
+      
       const response = await fetch(`${API_BASE_URL}/walks/active`, {
         headers: {
           'Content-Type': 'application/json',
@@ -54,44 +94,7 @@ export function useLivePatientLocation(
 
       if (response.ok) {
         const data = await response.json();
-        if (data.active_walk) {
-          const walk = data.active_walk;
-
-          // Detect walk transition (important for multi-tab or reconnect)
-          setIsActive(true);
-
-          if (walk.latest_location) {
-            setCurrentLocation(walk.latest_location);
-            const ts = new Date(walk.latest_location.timestamp).getTime();
-            if (ts > latestTimestamp.current) latestTimestamp.current = ts;
-          }
-
-          if (walk.history) {
-            setRouteHistory((prevHistory) => {
-              const existingTimestamps = new Set(prevHistory.map(p => p.timestamp));
-              const newPoints = walk.history.filter((p: any) => !existingTimestamps.has(p.timestamp));
-
-              const combined = [...prevHistory, ...newPoints];
-
-              const sorted = combined.sort((a, b) =>
-                new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-              );
-
-              if (sorted.length > 0) {
-                const lastTs = new Date(sorted[sorted.length - 1].timestamp).getTime();
-                if (lastTs > latestTimestamp.current) latestTimestamp.current = lastTs;
-              }
-
-              return sorted;
-            });
-          }
-        } else {
-          setIsActive(false);
-          setCurrentLocation(null);
-          setRouteHistory([]);
-          latestTimestamp.current = 0;
-          processedEvents.current.clear();
-        }
+        applySnapshot(data.active_walk);
       }
     } catch (error) {
       console.error('[useLivePatientLocation] Recovery failed:', error);
@@ -144,6 +147,11 @@ export function useLivePatientLocation(
     if (eventTime > 0) latestTimestamp.current = eventTime;
 
     // C. Event Dispatch
+    if (lastMessage.type === 'snapshot') {
+      applySnapshot(lastMessage.active_walk);
+      return;
+    }
+
     if (lastMessage.type === 'walk_started') {
       setIsActive(true);
       setCurrentLocation(null);

@@ -109,9 +109,54 @@ async def websocket_endpoint(
 
     await manager.connect(websocket, group_id)
     
+    # ⚡ LATE JOIN CONSISTENCY: Send atomic snapshot as first message
+    if role == "caregiver":
+        # Find active walk for this group
+        active_walk = db.query(Walk).filter(
+            Walk.active == True, 
+            Walk.patient_id == db.query(Patient.id).filter(Patient.group_id == group_id).scalar_subquery()
+        ).first()
+        
+        if active_walk:
+            cached = walk_state_cache.get(active_walk.id)
+            snapshot_payload = {
+                "type": "snapshot",
+                "group_id": group_id,
+                "server_timestamp": f"{datetime.utcnow().isoformat()}Z",
+                "active_walk": {
+                    "id": active_walk.id,
+                    "patient_id": active_walk.patient_id,
+                    "start_time": f"{active_walk.start_time.isoformat()}Z",
+                    "status": "active"
+                }
+            }
+            
+            if cached:
+                snapshot_payload["active_walk"]["latest_location"] = cached["latest"]
+                snapshot_payload["active_walk"]["history"] = cached["history"]
+            else:
+                # DB Fallback
+                history = db.query(Location)\
+                    .filter(Location.walk_id == active_walk.id)\
+                    .order_by(Location.timestamp.desc())\
+                    .limit(50).all()
+                history.reverse()
+                history_dicts = [{"latitude": loc.latitude, "longitude": loc.longitude, "timestamp": f"{loc.timestamp.isoformat()}Z"} for loc in history]
+                snapshot_payload["active_walk"]["latest_location"] = history_dicts[-1] if history_dicts else None
+                snapshot_payload["active_walk"]["history"] = history_dicts
+            
+            await websocket.send_json(snapshot_payload)
+        else:
+            await websocket.send_json({
+                "type": "snapshot",
+                "group_id": group_id,
+                "active_walk": None,
+                "server_timestamp": f"{datetime.utcnow().isoformat()}Z"
+            })
+
     try:
         while True:
-            # Keep connection alive
+            # Maintain connection
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket, group_id)
