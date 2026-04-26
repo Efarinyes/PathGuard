@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -19,6 +20,8 @@ class LocationCreate(BaseModel):
     longitude: float
     timestamp: datetime
     walk_id: int
+    client_id: Optional[str] = None
+
 @router.post("", response_model=dict)
 async def save_location(
     location: LocationCreate, 
@@ -27,12 +30,26 @@ async def save_location(
     user: User | None = Depends(get_optional_caregiver)
 ):
     """
-    Saves a new location point and broadcasts it to all connected caregivers.
-    Also updates the in-memory state cache for fast recovery.
+    Saves a new location point with Idempotency support.
     """
     # Authorize
     active_patient = resolve_patient(patient, user)
     
+    # 1. Idempotency Check (Production Resilience)
+    if location.client_id:
+        existing = db.query(Location).filter(Location.client_id == location.client_id).first()
+        if existing:
+            # Conflict: return existing data but don't re-insert or broadcast
+            return {
+                "type": "location",
+                "id": existing.id,
+                "walk_id": existing.walk_id,
+                "latitude": existing.latitude,
+                "longitude": existing.longitude,
+                "timestamp": f"{existing.timestamp.isoformat()}Z",
+                "status": "already_synced"
+            }
+
     # Verify the walk exists and belongs to the authorized patient
     walk = db.query(Walk).filter(
         Walk.id == location.walk_id,
@@ -56,7 +73,8 @@ async def save_location(
         walk_id=location.walk_id,
         latitude=location.latitude,
         longitude=location.longitude,
-        timestamp=location.timestamp
+        timestamp=location.timestamp,
+        client_id=location.client_id
     )
     
     db.add(new_location)

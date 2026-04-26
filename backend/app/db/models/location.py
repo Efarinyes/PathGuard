@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, Float, DateTime, ForeignKey, String
 from sqlalchemy.orm import relationship
 from app.db.base.base_class import Base
 
@@ -11,6 +11,7 @@ class Location(Base):
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     timestamp = Column(DateTime, nullable=False)
+    client_id = Column(String(50), unique=True, index=True, nullable=True) # UUID for deduplication
     
     # Relationships
     walk = relationship("Walk", back_populates="locations")
