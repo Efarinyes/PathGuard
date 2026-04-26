@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppState } from '../../hooks/useAppState';
+import { useLocationTracking } from '../../hooks/useLocationTracking';
 import { locationService } from '../../services/locationService';
 import NotificationBanner from '../NotificationBanner';
 
@@ -20,10 +21,10 @@ interface Notification {
  */
 export default function PatientWalkController() {
   const { deviceToken, activeWalkId, startWalk, endWalk } = useAppState();
+  const { isTracking, currentPosition, startTracking, stopTracking } = useLocationTracking();
   const isWalking = activeWalkId !== null;
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<Notification | null>(null);
-  const geoWatchId = useRef<number | null>(null);
   const notifCounter = useRef(0);
 
   const showNotification = (message: string, type: Notification['type']) => {
@@ -31,41 +32,26 @@ export default function PatientWalkController() {
     setNotification({ message, type, id: notifCounter.current });
   };
 
-  // Start sending GPS positions while walk is active
+  // Sync hook tracking with active walk state
   useEffect(() => {
-    if (!isWalking || !activeWalkId) {
-      // Stop watching position when walk ends
-      if (geoWatchId.current !== null) {
-        navigator.geolocation.clearWatch(geoWatchId.current);
-        geoWatchId.current = null;
-      }
-      return;
+    if (isWalking && !isTracking) {
+      startTracking();
+    } else if (!isWalking && isTracking) {
+      stopTracking();
     }
+  }, [isWalking, isTracking, startTracking, stopTracking]);
 
-    if (!navigator.geolocation) return;
-
-    geoWatchId.current = navigator.geolocation.watchPosition(
-      (position) => {
-        locationService.saveLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          timestamp: new Date().toISOString(),
-          walk_id: activeWalkId,
-        });
-      },
-      () => {
-        showNotification('Connexió perduda temporalment', 'warning');
-      },
-      { enableHighAccuracy: true, maximumAge: 15000, timeout: 10000 }
-    );
-
-    return () => {
-      if (geoWatchId.current !== null) {
-        navigator.geolocation.clearWatch(geoWatchId.current);
-        geoWatchId.current = null;
-      }
-    };
-  }, [isWalking, activeWalkId]);
+  // Push updates to API when the hook emits a valid, filtered point
+  useEffect(() => {
+    if (isWalking && activeWalkId && currentPosition) {
+      locationService.saveLocation({
+        latitude: currentPosition.latitude,
+        longitude: currentPosition.longitude,
+        timestamp: new Date().toISOString(),
+        walk_id: activeWalkId,
+      });
+    }
+  }, [currentPosition, isWalking, activeWalkId]);
 
   const handleStartWalk = async () => {
     setIsLoading(true);
