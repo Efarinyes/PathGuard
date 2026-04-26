@@ -86,6 +86,14 @@ async def stop_walk(
             detail="No active walk found"
         )
     
+    # ⚡ Final Trajectory Integrity Check (Order of Ingestion)
+    locations = sorted(active_walk.locations, key=lambda l: l.id)
+    integrity_errors = []
+    if len(locations) > 1:
+        for i in range(1, len(locations)):
+            if locations[i].timestamp < locations[i-1].timestamp:
+                integrity_errors.append(f"Temporal regression at {locations[i].id}")
+    
     # Update the walk
     active_walk.active = False
     active_walk.end_time = datetime.utcnow()
@@ -95,20 +103,27 @@ async def stop_walk(
     # ⚡ Clear the live cache
     walk_state_cache.clear(active_walk.id)
     
-    location_count = len(active_walk.locations)
     db.commit()
     
+    integrity_report = {
+        "is_valid": len(integrity_errors) == 0,
+        "points_count": len(locations),
+        "errors": integrity_errors if integrity_errors else None
+    }
+
     # Broadcast to caregivers
     await manager.broadcast_to_group(active_patient.group_id, {
         "type": "walk_stopped",
         "walk_id": active_walk.id,
         "patient_id": active_patient.id,
-        "end_time": active_walk.end_time.isoformat()
+        "end_time": active_walk.end_time.isoformat(),
+        "integrity": integrity_report
     })
 
     return {
         "id": active_walk.id,
-        "location_count": location_count
+        "location_count": len(locations),
+        "integrity": integrity_report
     }
 
 @router.get("/{id}/locations", response_model=list)
