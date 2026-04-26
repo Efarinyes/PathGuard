@@ -9,10 +9,10 @@ export default function RegisterPage() {
   const router = useRouter();
   const { setPatientSession } = useAppState();
 
-  const handleRegisterSuccess = (deviceToken: string, patientId: number) => {
+  const handleRegisterSuccess = (deviceToken: string, patientId: number, caregiverJwt: string) => {
     // 1. Store locally effectively via global state manager
-    setPatientSession(deviceToken, patientId);
-    
+    setPatientSession(deviceToken, patientId, caregiverJwt);
+
     // 2. Redirect to dashboard (assuming patient scope default entry)
     router.push('/patient');
   };

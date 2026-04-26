@@ -9,7 +9,7 @@ interface AppState {
   activeWalkId: number | null;
   isHydrated: boolean;
   setUserSession: (token: string) => void;
-  setPatientSession: (token: string, id: number) => void;
+  setPatientSession: (token: string, id: number, caregiverToken?: string) => void;
   startWalk: (walkId: number) => void;
   endWalk: () => void;
   clearAll: () => void;
@@ -66,10 +66,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   const setUserSession = (token: string) => setUserToken(token);
   
-  const setPatientSession = (token: string, id: number) => {
+  const setPatientSession = (token: string, id: number, caregiverToken?: string) => {
     setDeviceToken(token);
     setPatientId(id);
-    setUserToken(null);
+    if (caregiverToken) {
+      setUserToken(caregiverToken);
+    } else {
+      setUserToken(null);
+    }
   };
 
   const startWalk = (walkId: number) => setActiveWalkId(walkId);

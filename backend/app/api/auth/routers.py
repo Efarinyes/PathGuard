@@ -61,16 +61,16 @@ def register(
         # 5. Atomic Commit
         db.commit()
         
-        # Refresh to ensure we return persisted state
-        db.refresh(new_patient)
-        db.refresh(new_user)
-        db.refresh(new_group)
+        # 6. Generate Caregiver JWT for immediate session bootstrapping
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        caregiver_jwt = create_access_token(
+            new_user.id, expires_delta=access_token_expires
+        )
         
         return {
             "device_token": new_patient.device_token,
             "patient_id": new_patient.id,
-            "caregiver_id": new_user.id,
-            "group_id": new_group.id
+            "caregiver_jwt": caregiver_jwt
         }
 
     except Exception as e:

@@ -10,8 +10,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/a
 
 
 export interface RegistrationFormProps {
-  /** Callback fired upon successful registration, providing the deviceToken and patientId */
-  onRegisterSuccess: (deviceToken: string, patientId: number) => void;
+  /** Callback fired upon successful registration, providing the deviceToken, patientId, and caregiverJwt */
+  onRegisterSuccess: (deviceToken: string, patientId: number, caregiverJwt: string) => void;
 }
 
 /**
@@ -36,23 +36,18 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
     try {
       const payload = {
         patient_name: patientName,
-        caregivers: [
-          {
-            email: email,
-            password: password,
-          }
-        ]
+        email: email,
+        password: password
       };
-      console.log('REGISTER URL:', `${API_BASE_URL}/auth/register`);
+      
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-
         body: JSON.stringify(payload),
       });
-      console.log('STATUS:', response.status);
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(errorData?.detail || 'No s\'ha pogut completar el registre');
@@ -60,9 +55,8 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
 
       const data = await response.json();
 
-      if (data.device_token && data.patient_id) {
-        setPatientSession(data.device_token, data.patient_id);
-        router.push('/patient');
+      if (data.device_token && data.patient_id && data.caregiver_jwt) {
+        onRegisterSuccess(data.device_token, data.patient_id, data.caregiver_jwt);
       }
     } catch (err: any) {
       setError(err.message || 'Hi ha hagut un problema en connectar.');

@@ -10,8 +10,7 @@ class RegisterRequest(BaseModel):
 class RegisterResponse(BaseModel):
     device_token: UUID
     patient_id: int
-    caregiver_id: int
-    group_id: int
+    caregiver_jwt: str
 
 class Token(BaseModel):
     access_token: str
