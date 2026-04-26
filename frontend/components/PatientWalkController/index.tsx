@@ -104,6 +104,9 @@ export default function PatientWalkController() {
   const handleStopWalk = async () => {
     setIsLoading(true);
     try {
+      // Flush any remaining batched points before stopping
+      await locationService.flushFinal();
+
       const response = await fetch(`${API_BASE_URL}/walks/stop`, {
         method: 'POST',
         headers: {
