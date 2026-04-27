@@ -46,7 +46,7 @@ class OfflineSyncService {
     });
   }
 
-  async enqueue(location: Omit<QueuedLocation, 'synced'>): Promise<void> {
+  async add(location: Omit<QueuedLocation, 'synced'>): Promise<void> {
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readwrite');

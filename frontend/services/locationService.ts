@@ -28,6 +28,7 @@ export const locationService = {
   async saveLocation(payload: LocationPayload): Promise<void> {
     // Generate unique ID for deduplication (idempotency)
     const eventId = crypto.randomUUID();
+
     const point = {
       id: eventId,
       latitude: payload.latitude,
@@ -35,6 +36,7 @@ export const locationService = {
       timestamp: payload.timestamp,
       walk_id: payload.walk_id || 0
     };
+    await offlineSyncService.add(point);
 
     batchBuffer.push(point);
 
@@ -55,7 +57,7 @@ export const locationService = {
    */
   async flushBatch(): Promise<void> {
     if (batchBuffer.length === 0) return;
-    
+
     if (batchTimer) {
       clearTimeout(batchTimer);
       batchTimer = null;
@@ -91,14 +93,26 @@ export const locationService = {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Batch sync failed");
+      if (response.ok || response.status === 409) {
+        // Success or Conflict (Duplicate): Mark as synced to prevent retries
+        for (const point of currentBatch) {
+          await offlineSyncService.markSynced(point.id);
+        }
+        await offlineSyncService.clearSynced();
+        return;
       }
+
+      // Any other HTTP error (e.g. 500, 400) should be persisted for retry
+      throw new Error(`Batch sync failed: ${response.status}`);
     } catch (error) {
       console.debug("[locationService] Batch sync failed, buffering to IndexedDB:", error);
       // Resilience: Persist entire batch to IndexedDB for later recovery
       for (const point of currentBatch) {
-        await offlineSyncService.enqueue(point);
+        try {
+          await offlineSyncService.add(point);
+        } catch (e) {
+          // Already in IndexedDB (from saveLocation), which is fine
+        }
       }
     }
   },
