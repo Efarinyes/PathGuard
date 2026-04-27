@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:8000/api/v1/ws/";
+const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000/api/v1/ws/";
 
 export interface UseWebSocketReturn<T> {
   lastMessage: T | null;
@@ -12,7 +12,7 @@ export interface UseWebSocketReturn<T> {
  * Handles React Strict Mode double-invoke, automatic reconnects with
  * exponential backoff, and safe cleanup on unmount.
  */
-export function useWebSocket<T = any>(enabled: boolean = true): UseWebSocketReturn<T> {
+export function useWebSocket<T = any>(enabled: boolean = true, urlParams: string = ''): UseWebSocketReturn<T> {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [lastMessage, setLastMessage] = useState<T | null>(null);
 
@@ -33,7 +33,7 @@ export function useWebSocket<T = any>(enabled: boolean = true): UseWebSocketRetu
       if (state === WebSocket.OPEN || state === WebSocket.CONNECTING) return;
 
       try {
-        const socket = new WebSocket(WS_BASE_URL);
+        const socket = new WebSocket(`${WS_BASE_URL}${urlParams}`);
         ws.current = socket;
 
         socket.onopen = () => {
@@ -46,6 +46,7 @@ export function useWebSocket<T = any>(enabled: boolean = true): UseWebSocketRetu
         socket.onmessage = (event) => {
           if (!isMounted.current) return;
           try {
+            console.log(`[WS] Received: ${event.data}`);
             const data: T = JSON.parse(event.data);
             setLastMessage(data);
           } catch {

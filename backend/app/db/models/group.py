@@ -6,7 +6,7 @@ from app.db.base.base_class import Base
 
 
 class Group(Base):
-
+    __tablename__ = "family_group"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)

@@ -28,6 +28,9 @@ test.describe('PathGuard Golden Path', () => {
 
     patientPage = await patientContext.newPage();
     caregiverPage = await caregiverContext.newPage();
+
+    patientPage.on('console', msg => console.log('PATIENT:', msg.text()));
+    caregiverPage.on('console', msg => console.log('CAREGIVER:', msg.text()));
   });
 
   test('should complete a full walk lifecycle with real-time updates', async () => {

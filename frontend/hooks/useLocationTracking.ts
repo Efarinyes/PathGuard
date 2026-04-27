@@ -97,16 +97,19 @@ export const useLocationTracking = () => {
 
     watchId.current = navigator.geolocation.watchPosition(
       (position) => {
+        console.log(`[GEO] watchPosition fired: ${position.coords.latitude}, ${position.coords.longitude}`);
         latestPositionRef.current = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         };
         // Initial point
         if (!lastSentPositionRef.current) {
+          console.log('[GEO] Processing initial point');
           processLocation();
         }
       },
       (err) => {
+        console.error(`[GEO] watchPosition error: ${err.message}`);
         setError(err.message);
         stopTracking();
       },

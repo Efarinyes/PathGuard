@@ -4,7 +4,7 @@
  */
 import { offlineSyncService } from "./offlineSyncService";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 export interface LocationPayload {
   latitude: number;
@@ -26,6 +26,7 @@ export const locationService = {
    * 2. Flush if buffer is full (size threshold) or 5s have passed (time threshold).
    */
   async saveLocation(payload: LocationPayload): Promise<void> {
+    console.log(`[locationService] saveLocation called for ${payload.latitude}, ${payload.longitude}`);
     // Generate unique ID for deduplication (idempotency)
     const eventId = crypto.randomUUID();
 
@@ -42,10 +43,12 @@ export const locationService = {
 
     // Threshold check: Size
     if (batchBuffer.length >= BATCH_SIZE_THRESHOLD) {
+      console.log(`[locationService] Flushing batch due to size threshold (${batchBuffer.length})`);
       await this.flushBatch();
     } else if (!batchTimer) {
       // Threshold check: Time
       batchTimer = setTimeout(() => {
+        console.log(`[locationService] Flushing batch due to time threshold (5s)`);
         this.flushBatch();
       }, BATCH_TIME_THRESHOLD_MS);
     }
@@ -70,10 +73,16 @@ export const locationService = {
     const batchId = crypto.randomUUID();
     const deviceToken = typeof window !== "undefined" ? localStorage.getItem("pg_device_token") : null;
 
+    console.log(`[locationService] flushBatch executing. Batch size: ${currentBatch.length}, Walk ID: ${walkId}`);
+
     try {
       // Fast check for connectivity
-      if (!navigator.onLine) throw new Error("Offline");
+      if (!navigator.onLine) {
+        console.warn("[locationService] navigator.onLine is false, throwing Offline error.");
+        throw new Error("Offline");
+      }
 
+      console.log(`[locationService] Fetching ${API_BASE_URL}/locations/batch...`);
       const response = await fetch(`${API_BASE_URL}/locations/batch`, {
         method: "POST",
         headers: {
@@ -93,6 +102,8 @@ export const locationService = {
         }),
       });
 
+      console.log(`[locationService] flushBatch response status: ${response.status}`);
+
       if (response.ok || response.status === 409) {
         // Success or Conflict (Duplicate): Mark as synced to prevent retries
         for (const point of currentBatch) {
@@ -103,6 +114,8 @@ export const locationService = {
       }
 
       // Any other HTTP error (e.g. 500, 400) should be persisted for retry
+      const errorText = await response.text();
+      console.error(`[locationService] Batch sync failed: ${response.status} - ${errorText}`);
       throw new Error(`Batch sync failed: ${response.status}`);
     } catch (error) {
       console.debug("[locationService] Batch sync failed, buffering to IndexedDB:", error);

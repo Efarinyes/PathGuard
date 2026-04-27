@@ -71,11 +71,15 @@ async def save_location_batch(
         inserted_count += 1
         
         # Prepare for broadcast
+        ts_str = p.timestamp.isoformat().replace('+00:00', 'Z')
+        if not ts_str.endswith('Z') and '+' not in ts_str:
+            ts_str += 'Z'
+        
         broadcast_events.append({
             "type": "location",
             "latitude": p.latitude,
             "longitude": p.longitude,
-            "timestamp": f"{p.timestamp.isoformat()}Z",
+            "timestamp": ts_str,
             "walk_id": batch.walk_id
         })
 
@@ -84,10 +88,14 @@ async def save_location_batch(
         
         # Update cache with LATEST point from batch
         latest_point = batch.points[-1]
+        latest_ts_str = latest_point.timestamp.isoformat().replace('+00:00', 'Z')
+        if not latest_ts_str.endswith('Z') and '+' not in latest_ts_str:
+            latest_ts_str += 'Z'
+            
         walk_state_cache.update(batch.walk_id, {
             "latitude": latest_point.latitude,
             "longitude": latest_point.longitude,
-            "timestamp": f"{latest_point.timestamp.isoformat()}Z"
+            "timestamp": latest_ts_str
         })
         
         # Expand batch -> Individual WS Events (Real-time compatibility)
@@ -117,13 +125,17 @@ async def save_location(
     if location.client_id:
         existing = db.query(Location).filter(Location.client_id == location.client_id).first()
         if existing:
+            ex_ts_str = existing.timestamp.isoformat().replace('+00:00', 'Z')
+            if not ex_ts_str.endswith('Z') and '+' not in ex_ts_str:
+                ex_ts_str += 'Z'
+                
             return {
                 "type": "location",
                 "id": existing.id,
                 "walk_id": existing.walk_id,
                 "latitude": existing.latitude,
                 "longitude": existing.longitude,
-                "timestamp": f"{existing.timestamp.isoformat()}Z",
+                "timestamp": ex_ts_str,
                 "status": "already_synced"
             }
 
@@ -149,13 +161,17 @@ async def save_location(
     db.commit()
     db.refresh(new_location)
     
+    new_ts_str = new_location.timestamp.isoformat().replace('+00:00', 'Z')
+    if not new_ts_str.endswith('Z') and '+' not in new_ts_str:
+        new_ts_str += 'Z'
+
     location_data = {
         "type": "location",
         "id": new_location.id,
         "walk_id": new_location.walk_id,
         "latitude": new_location.latitude,
         "longitude": new_location.longitude,
-        "timestamp": f"{new_location.timestamp.isoformat()}Z"
+        "timestamp": new_ts_str
     }
     
     # Update cache & Broadcast

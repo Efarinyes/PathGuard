@@ -3,8 +3,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { useAppState } from "@/hooks/useAppState"
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
 
@@ -23,7 +21,6 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
   const [patientName, setPatientName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setPatientSession } = useAppState();
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorError, setError] = useState<string | null>(null);
@@ -36,23 +33,17 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
     try {
       const payload = {
         patient_name: patientName,
-        caregivers: [
-          {
-            email: email,
-            password: password,
-          }
-        ]
+        email: email,
+        password: password,
       };
-      console.log('REGISTER URL:', `${API_BASE_URL}/auth/register`);
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-
         body: JSON.stringify(payload),
       });
-      console.log('STATUS:', response.status);
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(errorData?.detail || 'No s\'ha pogut completar el registre');
@@ -60,10 +51,12 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
 
       const data = await response.json();
 
-      if (data.device_token && data.patient_id) {
-        setPatientSession(data.device_token, data.patient_id);
-        router.push('/patient');
+      // Ensure state is updated and then redirect
+      if (data.device_token || data.patient_id) {
+        onRegisterSuccess(data.device_token, data.patient_id);
       }
+      
+      router.push('/patient');
     } catch (err: any) {
       setError(err.message || 'Hi ha hagut un problema en connectar.');
     } finally {

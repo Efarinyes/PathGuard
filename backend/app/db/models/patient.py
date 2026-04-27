@@ -13,5 +13,5 @@ class Patient(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     walks = relationship("Walk", back_populates="patient")
-    group_id = Column(Integer, ForeignKey("group.id"), nullable=False)
+    group_id = Column(Integer, ForeignKey("family_group.id"), nullable=False)
     group = relationship("Group", back_populates="patient")

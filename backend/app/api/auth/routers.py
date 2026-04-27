@@ -38,7 +38,8 @@ def register(
         # Using a derived name: "[Patient Name]'s Family"
         new_group = Group(name=f"Família {data.patient_name}")
         db.add(new_group)
-        db.flush() # Flush to generate new_group.id for FKs
+        db.commit()
+        db.refresh(new_group)
         
         # 3. Create Patient
         new_patient = Patient(
@@ -58,7 +59,7 @@ def register(
         )
         db.add(new_user)
         
-        # 5. Atomic Commit
+        # 5. Commit Users
         db.commit()
         
         # Refresh to ensure we return persisted state
@@ -74,11 +75,13 @@ def register(
         }
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         db.rollback()
         # In production, we would log the full exception 'e' here
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Registration failed"
+            detail=f"Registration failed: {str(e)}"
         )
 
 @router.post("/login", response_model=auth_schemas.Token)

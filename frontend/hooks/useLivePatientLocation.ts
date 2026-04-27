@@ -45,9 +45,9 @@ export function useLivePatientLocation(
 
   // Helper to apply a full state snapshot (Atomic Join Consistency)
   const applySnapshot = (walk: any) => {
-    const walkData = walk?.active_walk || walk;
+    const walkData = (walk && 'active_walk' in walk) ? walk.active_walk : walk;
     
-    if (!walkData || walkData.active_walk_id === null) {
+    if (!walkData || walkData.id === undefined) {
       setIsActive(false);
       setCurrentLocation(null);
       setRouteHistory([]);
@@ -127,7 +127,8 @@ export function useLivePatientLocation(
   }, [userToken, deviceToken, appIsHydrated]);
 
   // 2. Real-time Updates: Connect WS only after we have the REST snapshot
-  const { lastMessage, isConnected } = useWebSocket<any>(isReady);
+  const wsUrlParams = userToken ? `?token=${userToken}` : deviceToken ? `?patient_token=${deviceToken}` : '';
+  const { lastMessage, isConnected } = useWebSocket<any>(isReady, wsUrlParams);
 
   // ⚡ Re-fetch on reconnect
   useEffect(() => {
