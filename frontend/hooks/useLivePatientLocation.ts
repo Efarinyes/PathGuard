@@ -14,6 +14,18 @@ export interface UseLivePatientLocationReturn {
 }
 
 /**
+ * Helper to safely append a location point to a history array.
+ * Ensures immutability, deduplication by timestamp, and chronological sorting.
+ */
+const appendLocation = (history: LocationPayload[], newPoint: LocationPayload): LocationPayload[] => {
+  if (history.some((p) => p.timestamp === newPoint.timestamp)) return [...history];
+
+  return [...history, newPoint].sort((a, b) =>
+    a.timestamp.localeCompare(b.timestamp)
+  );
+};
+
+/**
  * A hook that manages the live state of a walk session.
  */
 export function useLivePatientLocation(
@@ -33,7 +45,9 @@ export function useLivePatientLocation(
 
   // Helper to apply a full state snapshot (Atomic Join Consistency)
   const applySnapshot = (walk: any) => {
-    if (!walk) {
+    const walkData = walk?.active_walk || walk;
+    
+    if (!walkData || walkData.active_walk_id === null) {
       setIsActive(false);
       setCurrentLocation(null);
       setRouteHistory([]);
@@ -43,38 +57,40 @@ export function useLivePatientLocation(
     }
 
     setIsActive(true);
-    
-    if (walk.latest_location) {
-      const ts = new Date(walk.latest_location.timestamp).getTime();
-      if (ts >= latestTimestamp.current) {
-        setCurrentLocation(walk.latest_location);
-        latestTimestamp.current = ts;
-      }
-    }
-    
-    if (walk.history) {
-      setRouteHistory((prevHistory) => {
-        const existingTimestamps = new Set(prevHistory.map(p => p.timestamp));
-        const newPoints = walk.history.filter((p: any) => !existingTimestamps.has(p.timestamp));
-        
-        const sorted = [...prevHistory, ...newPoints].sort((a, b) => 
-          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-        );
-        
-        if (sorted.length > 0) {
-          const lastTs = new Date(sorted[sorted.length - 1].timestamp).getTime();
-          if (lastTs > latestTimestamp.current) latestTimestamp.current = lastTs;
-        }
-        
-        return sorted;
-      });
+
+    // Normalize and sort history
+    const history = (walkData.history || [])
+      .map((p: any) => ({
+        latitude: p.latitude,
+        longitude: p.longitude,
+        timestamp: p.timestamp,
+        ...(p.walk_id !== undefined ? { walk_id: p.walk_id } : {}),
+      }))
+      .sort((a: any, b: any) => a.timestamp.localeCompare(b.timestamp));
+
+    setRouteHistory(history);
+
+    // Set currentLocation = last element
+    if (history.length > 0) {
+      const latest = history[history.length - 1];
+      setCurrentLocation(latest);
+      latestTimestamp.current = new Date(latest.timestamp).getTime();
+    } else if (walkData.latest_location) {
+      const normalized = {
+        latitude: walkData.latest_location.latitude,
+        longitude: walkData.latest_location.longitude,
+        timestamp: walkData.latest_location.timestamp,
+        ...(walkData.latest_location.walk_id !== undefined ? { walk_id: walkData.latest_location.walk_id } : {}),
+      };
+      setCurrentLocation(normalized);
+      latestTimestamp.current = new Date(normalized.timestamp).getTime();
     }
   };
 
   // 1. Snapshot Recovery: Fetch active walk state (REST Initial Load)
   async function rehydrateState(isReconnect = false) {
-    if (isLoading && isReconnect) return; 
-    
+    if (isLoading && isReconnect) return;
+
     if (!userToken && !deviceToken) {
       setIsLoading(false);
       setIsReady(true);
@@ -83,7 +99,7 @@ export function useLivePatientLocation(
 
     try {
       if (!isReconnect) setIsLoading(true);
-      
+
       const response = await fetch(`${API_BASE_URL}/walks/active`, {
         headers: {
           'Content-Type': 'application/json',
@@ -92,9 +108,9 @@ export function useLivePatientLocation(
         },
       });
 
-      if (response.ok) {
+      if (response?.ok) {
         const data = await response.json();
-        applySnapshot(data.active_walk);
+        applySnapshot(data);
       }
     } catch (error) {
       console.error('[useLivePatientLocation] Recovery failed:', error);
@@ -148,7 +164,7 @@ export function useLivePatientLocation(
 
     // C. Event Dispatch
     if (lastMessage.type === 'snapshot') {
-      applySnapshot(lastMessage.active_walk);
+      applySnapshot(lastMessage);
       return;
     }
 
@@ -168,14 +184,34 @@ export function useLivePatientLocation(
       return;
     }
 
-    if (lastMessage.type === 'location' || !lastMessage.type) {
+    const isLocation = lastMessage.type === 'location' || 
+                       (!lastMessage.type && lastMessage.latitude != null && lastMessage.longitude != null);
+
+    if (isLocation) {
       if (typeof lastMessage.latitude !== 'number' || typeof lastMessage.longitude !== 'number') {
         return;
       }
 
+      const normalized: LocationPayload = {
+        latitude: lastMessage.latitude,
+        longitude: lastMessage.longitude,
+        timestamp: lastMessage.timestamp,
+        ...(lastMessage.walk_id !== undefined ? { walk_id: lastMessage.walk_id } : {}),
+      };
+
       setIsActive(true);
-      setCurrentLocation(lastMessage);
-      setRouteHistory((prevHistory) => [...prevHistory, lastMessage]);
+      setRouteHistory((prevHistory) => {
+        const next = appendLocation(prevHistory, normalized);
+        const latest = next[next.length - 1];
+
+        // Ensure we don't overwrite with older data
+        const latestTs = new Date(latest.timestamp).getTime();
+        if (latestTs >= latestTimestamp.current) {
+          setCurrentLocation(latest);
+          latestTimestamp.current = latestTs;
+        }
+        return next;
+      });
     }
   }, [lastMessage]);
 
