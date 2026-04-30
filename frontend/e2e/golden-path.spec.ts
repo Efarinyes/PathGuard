@@ -38,6 +38,7 @@ test.describe('PathGuard Golden Path', () => {
     // ── STEP 1: Patient Registration ──
     await patientPage.goto('http://localhost:3000/register');
 
+    await patientPage.fill('input#groupName', 'Família Test');
     await patientPage.fill('input#patientName', PATIENT_NAME);
     await patientPage.fill('input#email', TEST_EMAIL);
     await patientPage.fill('input#password', TEST_PASSWORD);

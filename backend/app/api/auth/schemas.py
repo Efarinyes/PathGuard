@@ -4,6 +4,7 @@ from uuid import UUID
 
 class RegisterRequest(BaseModel):
     patient_name: str
+    group_name: Optional[str] = None
     email: EmailStr
     password: str
 

@@ -18,7 +18,7 @@ export interface UseLivePatientLocationReturn {
  * Ensures immutability, deduplication by timestamp, and chronological sorting.
  */
 const appendLocation = (history: LocationPayload[], newPoint: LocationPayload): LocationPayload[] => {
-  if (history.some((p) => p.timestamp === newPoint.timestamp)) return [...history];
+  if (history.some((p) => p.timestamp === newPoint.timestamp)) return history;
 
   return [...history, newPoint].sort((a, b) =>
     a.timestamp.localeCompare(b.timestamp)
@@ -46,8 +46,9 @@ export function useLivePatientLocation(
   // Helper to apply a full state snapshot (Atomic Join Consistency)
   const applySnapshot = (walk: any) => {
     const walkData = (walk && 'active_walk' in walk) ? walk.active_walk : walk;
+    const walkId = walkData?.id ?? walkData?.active_walk_id;
     
-    if (!walkData || walkData.id === undefined) {
+    if (!walkData || walkId === undefined || walkId === null) {
       setIsActive(false);
       setCurrentLocation(null);
       setRouteHistory([]);
@@ -64,7 +65,7 @@ export function useLivePatientLocation(
         latitude: p.latitude,
         longitude: p.longitude,
         timestamp: p.timestamp,
-        ...(p.walk_id !== undefined ? { walk_id: p.walk_id } : {}),
+        ...(p.walk_id !== undefined ? { walk_id: p.walk_id } : { walk_id: walkId }),
       }))
       .sort((a: any, b: any) => a.timestamp.localeCompare(b.timestamp));
 
@@ -80,7 +81,7 @@ export function useLivePatientLocation(
         latitude: walkData.latest_location.latitude,
         longitude: walkData.latest_location.longitude,
         timestamp: walkData.latest_location.timestamp,
-        ...(walkData.latest_location.walk_id !== undefined ? { walk_id: walkData.latest_location.walk_id } : {}),
+        ...(walkData.latest_location.walk_id !== undefined ? { walk_id: walkData.latest_location.walk_id } : { walk_id: walkId }),
       };
       setCurrentLocation(normalized);
       latestTimestamp.current = new Date(normalized.timestamp).getTime();

@@ -47,9 +47,9 @@ export const locationService = {
       await this.flushBatch();
     } else if (!batchTimer) {
       // Threshold check: Time
-      batchTimer = setTimeout(() => {
+      batchTimer = setTimeout(async () => {
         console.log(`[locationService] Flushing batch due to time threshold (5s)`);
-        this.flushBatch();
+        await this.flushBatch();
       }, BATCH_TIME_THRESHOLD_MS);
     }
   },

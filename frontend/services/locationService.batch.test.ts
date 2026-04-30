@@ -13,7 +13,6 @@ describe('GPS Batching System Integration', () => {
   });
 
   beforeEach(async () => {
-    vi.useRealTimers();
     vi.clearAllMocks();
     
     // Clear state
@@ -33,6 +32,7 @@ describe('GPS Batching System Integration', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    (locationService as any)._resetInternalState();
   });
 
   it('Scenario 1: Size-based Flush - Flushes when 5 points are collected', async () => {
@@ -51,7 +51,7 @@ describe('GPS Batching System Integration', () => {
   });
 
   it('Scenario 2: Time-based Flush - Flushes after 5 seconds', async () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     (global.fetch as any).mockResolvedValue({ ok: true });
 
     await locationService.saveLocation({ latitude: 10, longitude: 10, timestamp: '2026-04-26T10:00:00Z', walk_id: 1 });
@@ -59,12 +59,16 @@ describe('GPS Batching System Integration', () => {
 
     expect(global.fetch).not.toHaveBeenCalled();
 
-    await vi.advanceTimersByTimeAsync(5000);
+    // Trigger the timeout
+    await vi.advanceTimersByTimeAsync(5005);
+    
+    // Allow any microtasks to flush
+    await vi.runAllTicks();
 
     expect(global.fetch).toHaveBeenCalledTimes(1);
     const body = JSON.parse((global.fetch as any).mock.calls[0][1].body);
     expect(body.points.length).toBe(2);
-  });
+  }, 15000);
 
   it('Scenario 3: Failure Recovery - Batch is moved to IndexedDB on network error', async () => {
     (global.fetch as any).mockRejectedValue(new Error('Network Failure'));

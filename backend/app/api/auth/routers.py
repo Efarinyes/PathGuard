@@ -35,8 +35,9 @@ def register(
 
     try:
         # 2. Create Group (Environment)
-        # Using a derived name: "[Patient Name]'s Family"
-        new_group = Group(name=f"Família {data.patient_name}")
+        # Fallback to "[Patient Name]'s Family" if group_name is not provided
+        group_name = data.group_name or f"Família {data.patient_name}"
+        new_group = Group(name=group_name)
         db.add(new_group)
         db.commit()
         db.refresh(new_group)
@@ -58,8 +59,12 @@ def register(
             group_id=new_group.id
         )
         db.add(new_user)
+        db.flush()
         
-        # 5. Commit Users
+        # 5. Set Group Owner
+        new_group.owner_id = new_user.id
+        
+        # 6. Commit All
         db.commit()
         
         # Refresh to ensure we return persisted state

@@ -11,5 +11,5 @@ class User(Base):
     is_caregiver = Column(Boolean, default=True)
     is_active = Column(Boolean, default=True)
 
-    group_id = Column(Integer, ForeignKey("family_group.id"), nullable=False)
-    group = relationship("Group", back_populates="caregivers")
+    group_id = Column(Integer, ForeignKey("family_group.id"), nullable=False, index=True)
+    group = relationship("Group", back_populates="caregivers", foreign_keys=[group_id])
