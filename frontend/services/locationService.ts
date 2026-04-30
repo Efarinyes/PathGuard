@@ -16,6 +16,7 @@ export interface LocationPayload {
 // In-memory buffer for adaptive batching
 let batchBuffer: any[] = [];
 let batchTimer: NodeJS.Timeout | null = null;
+let _isSyncing = false; // Internal lock for chronological sync
 const BATCH_SIZE_THRESHOLD = 5;
 const BATCH_TIME_THRESHOLD_MS = 5000;
 
@@ -59,7 +60,7 @@ export const locationService = {
    * If network fails, entire batch is moved to persistent IndexedDB.
    */
   async flushBatch(): Promise<void> {
-    if (batchBuffer.length === 0) return;
+    if (batchBuffer.length === 0 || _isSyncing) return;
 
     if (batchTimer) {
       clearTimeout(batchTimer);
@@ -142,8 +143,12 @@ export const locationService = {
    * Flushes all unsynced points from the IndexedDB queue to the backend.
    */
   async syncQueuedPoints(): Promise<void> {
-    const unsynced = await offlineSyncService.getUnsynced();
-    if (unsynced.length === 0) return;
+    if (_isSyncing) return;
+    _isSyncing = true;
+
+    try {
+      const unsynced = await offlineSyncService.getUnsynced();
+      if (unsynced.length === 0) return;
 
     const deviceToken = typeof window !== "undefined" ? localStorage.getItem("pg_device_token") : null;
 
@@ -173,7 +178,10 @@ export const locationService = {
         break;
       }
     }
-    await offlineSyncService.clearSynced();
+    } finally {
+      _isSyncing = false;
+      await offlineSyncService.clearSynced();
+    }
   },
 
   /**

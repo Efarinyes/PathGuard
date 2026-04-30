@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { getDistanceHaversine, estimateSpeed, Position } from "../lib/gpsUtils";
 
 // Constants for Adaptive Sampling & Filtering
-const MIN_DISTANCE_M = 8;        // Don't send if moved < 8m
+const MIN_DISTANCE_M = 10;       // Don't send if moved < 10m
 const SPEED_IDLE_M_MIN = 5;     // < 5m/min is idle
 const INTERVAL_IDLE_MS = 15000; // 15s when idle
 const INTERVAL_NORMAL_MS = 5000; // 5s when walking

@@ -51,7 +51,7 @@ class OfflineSyncService {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readwrite');
       const store = transaction.objectStore(STORE_NAME);
-      const request = store.add({ ...location, synced: 0 });
+      const request = store.put({ ...location, synced: 0 }); // Idempotent put
 
       request.onsuccess = () => resolve();
       request.onerror = () => reject('Failed to enqueue location');
@@ -97,20 +97,17 @@ class OfflineSyncService {
 
   async clearSynced(): Promise<void> {
     const db = await this.initDB();
-    const unsynced = await this.getUnsynced();
-    // We only keep unsynced in memory briefly to delete synced ones
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readwrite');
       const store = transaction.objectStore(STORE_NAME);
+      const index = store.index('synced');
       
-      // Realistically we'd use a cursor to delete where synced == 1
-      const request = store.openCursor();
+      // Efficiently target only synced records
+      const request = index.openCursor(IDBKeyRange.only(1));
       request.onsuccess = (event: any) => {
         const cursor = event.target.result;
         if (cursor) {
-          if (cursor.value.synced === 1) {
-            cursor.delete();
-          }
+          cursor.delete();
           cursor.continue();
         } else {
           resolve();
