@@ -86,8 +86,31 @@ export function useWebSocket<T = any>(enabled: boolean = true, urlParams: string
 
     connect();
 
+    // Foreground recovery: Force reconnect when app returns to visibility
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && enabled) {
+        console.debug('[WS] App visible, checking connection...');
+        reconnectAttempt.current = 0; // Reset backoff on manual return
+        connect();
+      }
+    };
+
+    // Network recovery: Force reconnect when connection returns
+    const handleOnline = () => {
+      if (enabled) {
+        console.debug('[WS] Network online, reconnecting...');
+        reconnectAttempt.current = 0;
+        connect();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('online', handleOnline);
+
     return () => {
       isMounted.current = false;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('online', handleOnline);
 
       // Cancel any pending reconnect timer
       if (reconnectTimeout.current) {

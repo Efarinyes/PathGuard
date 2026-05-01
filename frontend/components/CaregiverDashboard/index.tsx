@@ -7,17 +7,22 @@ import { useLivePatientLocation } from '../../hooks/useLivePatientLocation';
 import { useAppState } from '../../hooks/useAppState';
 import { walkService, AnalyticsData } from '../../services/walkService';
 
+import { useRouter } from 'next/navigation';
+
 /**
  * Clean, minimalistic dashboard serving as the primary interface for caregivers.
  * Split view: Map on top/left, critical status overview card on bottom/right.
  */
 export default function CaregiverDashboard() {
-  const { userToken } = useAppState();
+  const { userToken, clearUserSession } = useAppState();
+  const router = useRouter();
   const { currentLocation, routeHistory, isConnected, isLoading, isActive } = useLivePatientLocation();
   const [timeAgo, setTimeAgo] = useState<string>('Esperant dades...');
   const [walks, setWalks] = useState<WalkHistoryItem[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [isExtraInfoOpen, setIsExtraInfoOpen] = useState(false);
+  const [isMonitoringPaused, setIsMonitoringPaused] = useState(false);
+
   
   // Fetch walks history
   useEffect(() => {
@@ -88,31 +93,73 @@ export default function CaregiverDashboard() {
       
       {/* Primary Area: The Map */}
       <div className="flex-grow order-1 md:order-1 h-[60vh] md:h-auto">
-        {routeHistory.length > 0 ? (
+        {(routeHistory.length > 0 && !isMonitoringPaused) ? (
           <CaregiverMap locations={routeHistory} />
         ) : (
-          <div className="w-full h-full min-h-[400px] border border-slate-200 rounded-xl bg-slate-100 flex items-center justify-center">
-            <span className="text-slate-500 font-medium tracking-wide">Pendent de la primera connexió...</span>
+          <div className="w-full h-full min-h-[400px] border border-slate-200 rounded-xl bg-slate-100 flex flex-col items-center justify-center gap-4">
+            <span className="text-slate-500 font-medium tracking-wide">
+              {isMonitoringPaused ? 'Seguiment en temps real pausat' : 'Pendent de la primera connexió...'}
+            </span>
+            {isMonitoringPaused && (
+              <button 
+                onClick={() => setIsMonitoringPaused(false)}
+                className="px-4 py-2 bg-[#1E3A8A] text-white rounded-lg font-bold text-sm shadow-md hover:bg-[#1E3A8A]/90 transition-all"
+              >
+                Reprendre seguiment
+              </button>
+            )}
           </div>
         )}
       </div>
+
 
       {/* Secondary Area: Status Card */}
       <div className="w-full md:w-[350px] shrink-0 order-2 md:order-2">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col gap-4 sticky top-6">
           
-          <div>
-            <h2 className="text-[#0F172A] font-bold text-xl mb-1">Estat del passeig</h2>
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-3 w-3">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${(isConnected && isActive) ? 'bg-[#22C55E]' : 'bg-[#F59E0B]'}`}></span>
-                <span className={`relative inline-flex rounded-full h-3 w-3 ${(isConnected && isActive) ? 'bg-[#22C55E]' : 'bg-[#F59E0B]'}`}></span>
-              </span>
-              <p className="text-slate-600 text-sm font-medium">
-                {(isConnected && isActive) ? 'Passeig actiu - En línia' : isActive ? 'Passeig actiu - Connectant...' : 'Passeig finalitzat'}
-              </p>
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <h2 className="text-[#0F172A] font-bold text-xl mb-1">Estat del passeig</h2>
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-3 w-3">
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${(isConnected && isActive) ? 'bg-[#22C55E]' : 'bg-[#F59E0B]'}`}></span>
+                  <span className={`relative inline-flex rounded-full h-3 w-3 ${(isConnected && isActive) ? 'bg-[#22C55E]' : 'bg-[#F59E0B]'}`}></span>
+                </span>
+                <p className="text-slate-600 text-sm font-medium">
+                  {(isConnected && isActive) ? 'Passeig actiu - En línia' : isActive ? 'Passeig actiu - Connectant...' : 'Passeig finalitzat'}
+                </p>
+              </div>
             </div>
+            
+            <button
+              onClick={() => {
+                clearUserSession();
+                // NO redirect to '/' - stay on /caregiver to show login form
+              }}
+              className="ml-4 flex-shrink-0 text-[11px] font-bold uppercase tracking-wider text-slate-400 hover:text-[#EF4444] transition-all border border-slate-200 hover:border-red-100 rounded-lg px-2 py-1 hover:bg-red-50/50 flex flex-col items-center gap-1 group"
+              title="Logout caregiver"
+              id="logout-btn"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300 group-hover:text-red-400 transition-colors">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              <span>Sortir</span>
+            </button>
           </div>
+
+          {/* Action 1: Stop Following Patient */}
+          {isActive && !isMonitoringPaused && (
+            <button
+              onClick={() => setIsMonitoringPaused(true)}
+              className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-2 border border-slate-200 mt-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              Deixar de seguir
+            </button>
+          )}
+
+
+
 
           <div className="h-px bg-slate-100 w-full" />
 

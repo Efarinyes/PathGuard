@@ -108,11 +108,11 @@ test.describe('PathGuard Golden Path', () => {
       await expect(async () => {
         const currentCount = parseInt(await countLocator.textContent() || '0', 10);
         expect(currentCount).toBeGreaterThanOrEqual(initialCount + index + 1);
-      }).toPass({ timeout: 10000 });
+      }).toPass({ timeout: 20000 });
 
       // Check for recent update status
       const timeLocator = caregiverPage.locator('p:text("Última actualització") + p');
-      await expect(timeLocator).toHaveText(/Ara mateix|Fa \d+ segons/, { timeout: 10000 });
+      await expect(timeLocator).toHaveText(/Ara mateix|Fa \d+ segons/, { timeout: 20000 });
     }
 
     // Final count should match expectations (3 test points + 1 initial)

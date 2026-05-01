@@ -196,9 +196,22 @@ export const locationService = {
   }
 };
 
-// Auto-sync when network returns
+// Auto-sync when network returns or app returns to foreground
 if (typeof window !== "undefined") {
   window.addEventListener("online", () => {
+    console.log("[locationService] Network online, triggering sync.");
+    locationService.syncQueuedPoints();
+  });
+
+  // Critical for PWA recovery after being backgrounded/suspended
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      console.log("[locationService] App foregrounded, triggering sync.");
+      locationService.syncQueuedPoints();
+    }
+  });
+
+  window.addEventListener("focus", () => {
     locationService.syncQueuedPoints();
   });
 }

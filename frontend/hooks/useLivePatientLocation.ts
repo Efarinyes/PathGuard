@@ -127,6 +127,19 @@ export function useLivePatientLocation(
     }
   }, [userToken, deviceToken, appIsHydrated]);
 
+  // Handle app foregrounding for the caregiver (recovery after inactivity)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && appIsHydrated && (userToken || deviceToken)) {
+        console.log("[useLivePatientLocation] App returned to foreground, re-syncing state...");
+        rehydrateState(true);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [appIsHydrated, userToken, deviceToken]);
+
   // 2. Real-time Updates: Connect WS only after we have the REST snapshot
   const wsUrlParams = userToken ? `?token=${userToken}` : deviceToken ? `?patient_token=${deviceToken}` : '';
   const { lastMessage, isConnected } = useWebSocket<any>(isReady, wsUrlParams);

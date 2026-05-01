@@ -13,7 +13,9 @@ interface AppState {
   startWalk: (walkId: number) => void;
   endWalk: () => void;
   clearAll: () => void;
+  clearUserSession: () => void;
 }
+
 
 const AppStateContext = createContext<AppState | undefined>(undefined);
 
@@ -37,6 +39,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     if (storedWalkId) setActiveWalkId(parseInt(storedWalkId, 10));
     
     setIsHydrated(true);
+  }, []);
+
+  // 🔄 Multi-tab/window sync (PWA stability)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'pg_user_token') setUserToken(e.newValue);
+      if (e.key === 'pg_device_token') setDeviceToken(e.newValue);
+      if (e.key === 'pg_patient_id') setPatientId(e.newValue ? parseInt(e.newValue, 10) : null);
+      if (e.key === 'pg_active_walk_id') setActiveWalkId(e.newValue ? parseInt(e.newValue, 10) : null);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // 💾 Persistence
@@ -69,12 +84,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const setPatientSession = (token: string, id: number) => {
     setDeviceToken(token);
     setPatientId(id);
-    setUserToken(null);
+    // DO NOT clear userToken here to allow coexistence
   };
 
   const startWalk = (walkId: number) => setActiveWalkId(walkId);
   const endWalk = () => setActiveWalkId(null);
 
+  // Clear everything (used for complete reset)
   const clearAll = () => {
     setUserToken(null);
     setDeviceToken(null);
@@ -82,15 +98,21 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setActiveWalkId(null);
   };
 
+  // Clear ONLY caregiver session (preserves patient device link)
+  const clearUserSession = () => {
+    setUserToken(null);
+  };
+
   return (
     <AppStateContext.Provider value={{
       userToken, deviceToken, patientId, activeWalkId, isHydrated,
-      setUserSession, setPatientSession, startWalk, endWalk, clearAll
+      setUserSession, setPatientSession, startWalk, endWalk, clearAll, clearUserSession
     }}>
       {children}
     </AppStateContext.Provider>
   );
 }
+
 
 export function useAppState() {
   const context = useContext(AppStateContext);

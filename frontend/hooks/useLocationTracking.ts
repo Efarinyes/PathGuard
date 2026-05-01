@@ -109,20 +109,49 @@ export const useLocationTracking = () => {
         }
       },
       (err) => {
-        console.error(`[GEO] watchPosition error: ${err.message}`);
-        setError(err.message);
-        stopTracking();
+        console.error(`[GEO] watchPosition error: ${err.message}. Retrying in 5s...`);
+        setError(`GPS Error: ${err.message}`);
+        
+        // Don't kill tracking on transient errors (e.g. timeout, signal loss)
+        // Only stop on permanent failures if desired, but for PWA we retry
+        if (watchId.current !== null) {
+          navigator.geolocation.clearWatch(watchId.current);
+          watchId.current = null;
+        }
+        setTimeout(() => {
+          if (isTrackingRef.current) startTracking();
+        }, 5000);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
 
     // Initial processing cycle
     scheduleNextSample();
   }, [processLocation, stopTracking]);
 
+  // Handle app foregrounding: ensure tracking is still alive
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && isTrackingRef.current) {
+        console.log("[GEO] App returned to foreground, verifying tracking state...");
+        // Re-sync the processing cycle in case timeout was suspended
+        processLocation();
+        
+        // If watchId was somehow lost, restart it
+        if (watchId.current === null) {
+          startTracking();
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [processLocation, startTracking]);
+
   useEffect(() => {
     return () => stopTracking();
   }, [stopTracking]);
+
 
   return { isTracking, currentPosition, error, startTracking, stopTracking };
 };

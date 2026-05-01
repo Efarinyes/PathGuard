@@ -5,22 +5,30 @@ import { useEffect, useState } from "react";
 export function PWAInstallPrompt() {
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [isIosFallback, setIsIosFallback] = useState(false);
 
   useEffect(() => {
+    // Check if already installed
+    if (window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone) {
+      setIsVisible(false);
+      return;
+    }
+
     const handleBeforeInstallPrompt = (e: any) => {
-      // Prevent the default browser prompt
       e.preventDefault();
-      // Store the event for later use
       setInstallPrompt(e);
-      // Show our custom prompt after a short delay
       setTimeout(() => setIsVisible(true), 3000);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-    // Check if already installed
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setIsVisible(false);
+    // iOS Safari fallback detection
+    const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    const isSafari = /safari/.test(window.navigator.userAgent.toLowerCase()) && !/chrome/.test(window.navigator.userAgent.toLowerCase());
+    
+    if (isIos && isSafari) {
+      setIsIosFallback(true);
+      setTimeout(() => setIsVisible(true), 3000);
     }
 
     return () => {
@@ -30,13 +38,8 @@ export function PWAInstallPrompt() {
 
   const handleInstallClick = async () => {
     if (!installPrompt) return;
-
-    // Show the browser install prompt
     installPrompt.prompt();
-
-    // Wait for the user to respond to the prompt
     const { outcome } = await installPrompt.userChoice;
-    
     if (outcome === "accepted") {
       setInstallPrompt(null);
       setIsVisible(false);
@@ -57,23 +60,29 @@ export function PWAInstallPrompt() {
           <div className="flex-1">
             <h3 className="font-bold text-slate-900">Instal·la PathGuard</h3>
             <p className="text-sm text-slate-500 leading-snug">
-              Afegeix l'aplicació a la teva pantalla d'inici per a un accés ràpid i segur.
+              {isIosFallback 
+                ? "Prem el botó de compartir (quadrat amb fletxa cap amunt) i selecciona 'Afegir a la pantalla d'inici' per a una millor experiència."
+                : "Afegeix l'aplicació a la teva pantalla d'inici per a un accés ràpid i segur."}
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        
+        <div className="flex gap-2 mt-2">
           <button 
             onClick={() => setIsVisible(false)}
             className="flex-1 px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
           >
             Més tard
           </button>
-          <button 
-            onClick={handleInstallClick}
-            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
-          >
-            Instal·lar ara
-          </button>
+          
+          {!isIosFallback && (
+            <button 
+              onClick={handleInstallClick}
+              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+            >
+              Instal·lar ara
+            </button>
+          )}
         </div>
       </div>
     </div>
