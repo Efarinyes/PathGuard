@@ -50,5 +50,28 @@ export const walkService = {
     }
     
     return response.json();
+  },
+
+  /**
+   * Fetches the active walk state (snapshot) for initial hydration.
+   */
+  async getActiveWalk(userToken: string | null, deviceToken: string | null): Promise<any> {
+    if (!userToken && !deviceToken) {
+      return null;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/walks/active`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(userToken ? { 'Authorization': `Bearer ${userToken}` } : {}),
+        ...(deviceToken ? { 'X-Patient-Token': deviceToken } : {}),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch active walk: ${response.status}`);
+    }
+
+    return response.json();
   }
 };

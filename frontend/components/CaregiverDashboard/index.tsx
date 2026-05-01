@@ -5,8 +5,8 @@ import CaregiverMap from '../CaregiverMap';
 import WalkHistoryList, { WalkHistoryItem } from '../WalkHistoryList';
 import { useLivePatientLocation } from '../../hooks/useLivePatientLocation';
 import { useAppState } from '../../hooks/useAppState';
-import { walkService, AnalyticsData } from '../../services/walkService';
-
+import { walkService } from '../../services/walkService';
+import { useCaregiverAnalytics } from '../../hooks/useCaregiverAnalytics';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -18,47 +18,11 @@ export default function CaregiverDashboard() {
   const router = useRouter();
   const { currentLocation, routeHistory, isConnected, isLoading, isActive } = useLivePatientLocation();
   const [timeAgo, setTimeAgo] = useState<string>('Esperant dades...');
-  const [walks, setWalks] = useState<WalkHistoryItem[]>([]);
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [isExtraInfoOpen, setIsExtraInfoOpen] = useState(false);
   const [isMonitoringPaused, setIsMonitoringPaused] = useState(false);
 
-  
-  // Fetch walks history
-  useEffect(() => {
-    if (!userToken) return;
-
-    const fetchHistory = async () => {
-      try {
-        const data = await walkService.getWalks(userToken);
-        setWalks(data);
-      } catch (err) {
-        console.error('Failed to fetch walks:', err);
-      }
-    };
-
-    fetchHistory();
-    
-    // Refresh history when walk status changes
-    const interval = setInterval(fetchHistory, 30000); // Every 30s
-    return () => clearInterval(interval);
-  }, [userToken, isActive]);
-
-  // Fetch analytics
-  useEffect(() => {
-    if (!userToken) return;
-
-    const fetchAnalytics = async () => {
-      try {
-        const data = await walkService.getAnalytics(userToken);
-        setAnalytics(data);
-      } catch (err) {
-        console.error('Failed to fetch analytics:', err);
-      }
-    };
-
-    fetchAnalytics();
-  }, [userToken, isActive]);
+  // Consume extracted data fetching logic
+  const { walks, analytics } = useCaregiverAnalytics(userToken, isActive);
 
   // Effect to calculate "Last seen X ago" string based strictly on location payload
   useEffect(() => {

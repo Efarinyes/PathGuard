@@ -1,4 +1,5 @@
 import { AppStateProvider } from "@/hooks/useAppState";
+import { RoleGuard } from "@/components/RoleGuard";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -52,8 +53,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         <AppStateProvider>
-          {children}
-          <PWAInstallPrompt />
+          <RoleGuard>
+            {children}
+            <PWAInstallPrompt />
+          </RoleGuard>
         </AppStateProvider>
       </body>
     </html>

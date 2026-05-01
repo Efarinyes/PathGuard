@@ -1,19 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAppState } from '@/hooks/useAppState';
 import CaregiverDashboard from '@/components/CaregiverDashboard';
 import LoginForm from '@/components/LoginForm';
 
 export default function CaregiverPage() {
-  const { userToken, deviceToken, isHydrated, setUserSession } = useAppState();
-  const router = useRouter();
+  const { userToken, setUserSession } = useAppState();
 
-  // 🔄 Hydration gate
-  if (!isHydrated) return null;
-
-
+  // Hydration is guaranteed to be complete by RoleGuard before this renders
+  
   // 🔑 Auth gate
   if (!userToken) {
     return (

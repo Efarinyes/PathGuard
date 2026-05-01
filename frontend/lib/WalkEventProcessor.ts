@@ -1,0 +1,168 @@
+import { LocationPayload } from '../services/locationService';
+
+export interface WalkState {
+  currentLocation: LocationPayload | null;
+  routeHistory: LocationPayload[];
+  isActive: boolean;
+}
+
+export type WalkAction = 
+  | { type: 'SNAPSHOT'; payload: any }
+  | { type: 'WALK_STARTED'; timestamp: number }
+  | { type: 'WALK_STOPPED' }
+  | { type: 'LOCATION_UPDATE'; payload: LocationPayload }
+  | { type: 'RESET' };
+
+/**
+ * Helper to safely append a location point to a history array.
+ * Ensures immutability, deduplication by timestamp, and chronological sorting.
+ */
+const appendLocation = (history: LocationPayload[], newPoint: LocationPayload): LocationPayload[] => {
+  if (history.some((p) => p.timestamp === newPoint.timestamp)) return history;
+
+  return [...history, newPoint].sort((a, b) =>
+    a.timestamp.localeCompare(b.timestamp)
+  );
+};
+
+export class WalkEventProcessor {
+  private processedEvents = new Set<string>();
+  private latestTimestamp = 0;
+
+  /**
+   * Evaluates if a raw message should be processed, based on deduplication and chronological ordering.
+   * Returns true if valid, false if it should be ignored.
+   */
+  public shouldProcessMessage(message: any): boolean {
+    if (!message) return false;
+
+    // A. Event Deduplication (Strict UUID check)
+    if (message.event_id) {
+      if (this.processedEvents.has(message.event_id)) {
+        return false;
+      }
+      this.processedEvents.add(message.event_id);
+
+      // Keep memory usage low by capping the set
+      if (this.processedEvents.size > 200) {
+        const first = this.processedEvents.values().next().value;
+        if (first) this.processedEvents.delete(first);
+      }
+    }
+
+    // B. Chronological Ordering (Strict Timestamp check)
+    const eventTime = message.timestamp ? new Date(message.timestamp).getTime() : 0;
+    if (eventTime > 0 && eventTime < this.latestTimestamp) {
+      console.debug('[WalkEventProcessor] Ignoring out-of-order event:', message);
+      return false;
+    }
+    if (eventTime > 0) this.latestTimestamp = eventTime;
+
+    return true;
+  }
+
+  /**
+   * Resets the internal deduplication and timestamp tracking.
+   */
+  public reset() {
+    this.processedEvents.clear();
+    this.latestTimestamp = 0;
+  }
+
+  /**
+   * Updates the tracking state based on the provided action.
+   */
+  public reduceState(state: WalkState, action: WalkAction): WalkState {
+    switch (action.type) {
+      case 'SNAPSHOT': {
+        const walkData = (action.payload && 'active_walk' in action.payload) 
+            ? action.payload.active_walk 
+            : action.payload;
+        
+        const walkId = walkData?.id ?? walkData?.active_walk_id;
+        
+        if (!walkData || walkId === undefined || walkId === null) {
+          this.reset();
+          return { isActive: false, currentLocation: null, routeHistory: [] };
+        }
+
+        const history = (walkData.history || [])
+          .map((p: any) => ({
+            latitude: p.latitude,
+            longitude: p.longitude,
+            timestamp: p.timestamp,
+            ...(p.walk_id !== undefined ? { walk_id: p.walk_id } : { walk_id: walkId }),
+          }))
+          .sort((a: any, b: any) => a.timestamp.localeCompare(b.timestamp));
+
+        let latestLoc = null;
+        if (history.length > 0) {
+          latestLoc = history[history.length - 1];
+          this.latestTimestamp = new Date(latestLoc.timestamp).getTime();
+        } else if (walkData.latest_location) {
+          latestLoc = {
+            latitude: walkData.latest_location.latitude,
+            longitude: walkData.latest_location.longitude,
+            timestamp: walkData.latest_location.timestamp,
+            ...(walkData.latest_location.walk_id !== undefined ? { walk_id: walkData.latest_location.walk_id } : { walk_id: walkId }),
+          };
+          this.latestTimestamp = new Date(latestLoc.timestamp).getTime();
+        }
+
+        return {
+          isActive: true,
+          routeHistory: history,
+          currentLocation: latestLoc
+        };
+      }
+
+      case 'WALK_STARTED': {
+        this.processedEvents.clear();
+        this.latestTimestamp = action.timestamp;
+        return {
+          isActive: true,
+          currentLocation: null,
+          routeHistory: []
+        };
+      }
+
+      case 'WALK_STOPPED': {
+        this.latestTimestamp = 0;
+        return {
+          ...state,
+          isActive: false,
+          currentLocation: null
+        };
+      }
+
+      case 'LOCATION_UPDATE': {
+        const nextHistory = appendLocation(state.routeHistory, action.payload);
+        const latest = nextHistory[nextHistory.length - 1];
+
+        // Ensure we don't overwrite with older data
+        const latestTs = new Date(latest.timestamp).getTime();
+        let nextCurrentLocation = state.currentLocation;
+        
+        if (latestTs >= this.latestTimestamp) {
+          nextCurrentLocation = latest;
+          this.latestTimestamp = latestTs;
+        }
+
+        return {
+          ...state,
+          isActive: true,
+          routeHistory: nextHistory,
+          currentLocation: nextCurrentLocation
+        };
+      }
+
+      case 'RESET': {
+        this.reset();
+        return { isActive: false, currentLocation: null, routeHistory: [] };
+      }
+
+      default:
+        return state;
+    }
+  }
+}
