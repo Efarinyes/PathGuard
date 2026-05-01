@@ -5,11 +5,10 @@ import CaregiverDashboard from '@/components/CaregiverDashboard';
 import LoginForm from '@/components/LoginForm';
 
 export default function CaregiverPage() {
-  const { userToken, isHydrated, setUserSession } = useAppState();
+  const { userToken, setUserSession } = useAppState();
 
-  // 🔄 Hydration gate
-  if (!isHydrated) return null;
-
+  // Hydration is guaranteed to be complete by RoleGuard before this renders
+  
   // 🔑 Auth gate
   if (!userToken) {
     return (

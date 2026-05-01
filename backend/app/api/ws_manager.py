@@ -1,52 +1,168 @@
-from typing import List
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+import uuid
+from datetime import datetime
+from typing import List, Dict, Optional, Tuple
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends
+from sqlalchemy.orm import Session
+from app.api import deps
+from app.db.session.database import SessionLocal
+from app.core.security.jwt import verify_token
+from app.api.users.models import User
+from app.db.models.patient import Patient
+from app.db.models.walk import Walk
+from app.db.models.location import Location
+from app.db.state import walk_state_cache
 
 router = APIRouter()
 
 class ConnectionManager:
     """
-    Manages active WebSocket connections for real-time broadcasting.
+    Manages WebSocket connections with strict Group-based isolation.
+    Connections are registered into rooms scoped by group_id.
     """
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        # group_id -> list of active websockets
+        self.group_rooms: Dict[int, List[WebSocket]] = {}
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, group_id: int):
         await websocket.accept()
-        self.active_connections.append(websocket)
+        if group_id not in self.group_rooms:
+            self.group_rooms[group_id] = []
+        self.group_rooms[group_id].append(websocket)
+        
+        # Send connection confirmation
+        await websocket.send_json({
+            "type": "connection_established",
+            "group_id": group_id,
+            "timestamp": f"{datetime.utcnow().isoformat()}Z"
+        })
 
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+    def disconnect(self, websocket: WebSocket, group_id: int):
+        if group_id in self.group_rooms:
+            if websocket in self.group_rooms[group_id]:
+                self.group_rooms[group_id].remove(websocket)
+            if not self.group_rooms[group_id]:
+                del self.group_rooms[group_id]
 
-    async def broadcast(self, message: dict):
+    async def broadcast_to_group(self, group_id: int, message: dict):
         """
-        Sends a JSON message to all connected clients.
+        Sends a message ONLY to the specified group channel.
+        Enforces standardized payload format and includes unique event_id for deduplication.
         """
-        for connection in self.active_connections:
+        if group_id not in self.group_rooms:
+            return
+            
+        # Standardize payload and ensure unique event_id
+        message.setdefault("group_id", group_id)
+        if "event_id" not in message:
+            message["event_id"] = str(uuid.uuid4())
+            
+        if "timestamp" not in message:
+            message["timestamp"] = f"{datetime.utcnow().isoformat()}Z"
+
+        for connection in self.group_rooms[group_id]:
             try:
                 await connection.send_json(message)
             except Exception:
-                # Handle unexpected connection drops during broadcast
+                # Cleanup is handled by the websocket_endpoint loop
                 pass
 
 manager = ConnectionManager()
 
+def authenticate_ws(db: Session, token: Optional[str], patient_token: Optional[str]) -> Tuple[Optional[int], Optional[str]]:
+    """
+    Helper to authenticate WS connection via JWT (caregiver) or device_token (patient).
+    Returns (group_id, role)
+    """
+    if token:
+        user_id = verify_token(token)
+        if user_id:
+            user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+            if user:
+                return user.group_id, "caregiver"
+    
+    if patient_token:
+        try:
+            token_uuid = uuid.UUID(patient_token)
+            patient = db.query(Patient).filter(Patient.device_token == token_uuid).first()
+            if patient:
+                return patient.group_id, "patient"
+        except ValueError:
+            pass
+            
+    return None, None
+
 @router.websocket("/")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(
+    websocket: WebSocket,
+    token: Optional[str] = Query(None),
+    patient_token: Optional[str] = Query(None),
+    db: Session = Depends(deps.get_db)
+):
     """
-    WebSocket endpoint for real-time communication.
-    Registers the connection with the global manager to receive broadcasts.
+    Main WebSocket entry point. Handles authentication, group scoping, and rehydration.
     """
-    await manager.connect(websocket)
+    group_id, role = authenticate_ws(db, token, patient_token)
+    
+    if group_id is None:
+        await websocket.close(code=4003) # Forbidden
+        return
+
+    await manager.connect(websocket, group_id)
+    
+    # ⚡ LATE JOIN CONSISTENCY: Send atomic snapshot as first message
+    if role == "caregiver":
+        # Find active walk for this group
+        active_walk = db.query(Walk).filter(
+            Walk.active == True, 
+            Walk.patient_id == db.query(Patient.id).filter(Patient.group_id == group_id).scalar_subquery()
+        ).first()
+        
+        if active_walk:
+            cached = walk_state_cache.get(active_walk.id)
+            snapshot_payload = {
+                "type": "snapshot",
+                "group_id": group_id,
+                "server_timestamp": f"{datetime.utcnow().isoformat()}Z",
+                "active_walk": {
+                    "id": active_walk.id,
+                    "patient_id": active_walk.patient_id,
+                    "start_time": f"{active_walk.start_time.isoformat()}Z",
+                    "status": "active"
+                }
+            }
+            
+            if cached:
+                snapshot_payload["active_walk"]["latest_location"] = cached["latest"]
+                snapshot_payload["active_walk"]["history"] = cached["history"]
+            else:
+                # DB Fallback
+                history = db.query(Location)\
+                    .filter(Location.walk_id == active_walk.id)\
+                    .order_by(Location.timestamp.desc())\
+                    .limit(50).all()
+                history.reverse()
+                history_dicts = [{"latitude": loc.latitude, "longitude": loc.longitude, "timestamp": f"{loc.timestamp.isoformat()}Z"} for loc in history]
+                snapshot_payload["active_walk"]["latest_location"] = history_dicts[-1] if history_dicts else None
+                snapshot_payload["active_walk"]["history"] = history_dicts
+            
+            await websocket.send_json(snapshot_payload)
+        else:
+            await websocket.send_json({
+                "type": "snapshot",
+                "group_id": group_id,
+                "active_walk": None,
+                "server_timestamp": f"{datetime.utcnow().isoformat()}Z"
+            })
+
     try:
         while True:
-            # Maintain the connection and listen for any client messages
+            # Maintain connection
             await websocket.receive_text()
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        manager.disconnect(websocket, group_id)
     except Exception:
-        manager.disconnect(websocket)
-        await websocket.close()
+        manager.disconnect(websocket, group_id)
 
 @router.get("/")
-def read_websockets():
-    return {"message": "WebSockets endpoint is active"}
+def check_ws_status():
+    return {"status": "active", "rooms": len(manager.group_rooms)}

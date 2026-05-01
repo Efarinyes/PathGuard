@@ -10,7 +10,7 @@ const withPWA = withPWAInit({
     disableDevLogs: true,
     runtimeCaching: [
       {
-        urlPattern: /^http:\/\/127\.0\.0\.1:8000\/api\/.*/i,
+        urlPattern: /^http:\/\/localhost:8000\/api\/.*/i,
         handler: "NetworkOnly",
       },
     ],

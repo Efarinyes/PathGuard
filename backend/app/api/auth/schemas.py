@@ -1,18 +1,17 @@
-from typing import Optional, List
-from pydantic import BaseModel
+from typing import Optional
+from pydantic import BaseModel, EmailStr
 from uuid import UUID
-
-class CaregiverCreate(BaseModel):
-    email: str
-    password: str
 
 class RegisterRequest(BaseModel):
     patient_name: str
-    caregivers: List[CaregiverCreate]
+    group_name: Optional[str] = None
+    email: EmailStr
+    password: str
 
 class RegisterResponse(BaseModel):
-    patient_id: int
     device_token: UUID
+    patient_id: int
+    caregiver_jwt: str
 
 class Token(BaseModel):
     access_token: str

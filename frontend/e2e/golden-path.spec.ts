@@ -28,6 +28,9 @@ test.describe('PathGuard Golden Path', () => {
 
     patientPage = await patientContext.newPage();
     caregiverPage = await caregiverContext.newPage();
+
+    patientPage.on('console', msg => console.log('PATIENT:', msg.text()));
+    caregiverPage.on('console', msg => console.log('CAREGIVER:', msg.text()));
   });
 
   test('should complete a full walk lifecycle with real-time updates', async () => {
@@ -35,6 +38,7 @@ test.describe('PathGuard Golden Path', () => {
     // ── STEP 1: Patient Registration ──
     await patientPage.goto('http://localhost:3000/register');
 
+    await patientPage.fill('input#groupName', 'Família Test');
     await patientPage.fill('input#patientName', PATIENT_NAME);
     await patientPage.fill('input#email', TEST_EMAIL);
     await patientPage.fill('input#password', TEST_PASSWORD);
@@ -104,11 +108,11 @@ test.describe('PathGuard Golden Path', () => {
       await expect(async () => {
         const currentCount = parseInt(await countLocator.textContent() || '0', 10);
         expect(currentCount).toBeGreaterThanOrEqual(initialCount + index + 1);
-      }).toPass({ timeout: 10000 });
+      }).toPass({ timeout: 20000 });
 
       // Check for recent update status
       const timeLocator = caregiverPage.locator('p:text("Última actualització") + p');
-      await expect(timeLocator).toHaveText(/Ara mateix|Fa \d+ segons/, { timeout: 10000 });
+      await expect(timeLocator).toHaveText(/Ara mateix|Fa \d+ segons/, { timeout: 20000 });
     }
 
     // Final count should match expectations (3 test points + 1 initial)

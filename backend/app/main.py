@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.auth import routers as auth_routers
 from app.api.routers import locations as locations_router
 from app.api.routers import walks as walks_router
+from app.api.routers import analytics as analytics_router
 from app.api import ws_manager as websockets_router
 from app.core.config.settings import settings
 
@@ -44,6 +45,7 @@ app.add_middleware(
 app.include_router(auth_routers.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
 app.include_router(locations_router.router, prefix=f"{settings.API_V1_STR}/locations", tags=["locations"])
 app.include_router(walks_router.router, prefix=f"{settings.API_V1_STR}/walks", tags=["walks"])
+app.include_router(analytics_router.router, prefix=f"{settings.API_V1_STR}/analytics", tags=["analytics"])
 app.include_router(websockets_router.router, prefix=f"{settings.API_V1_STR}/ws", tags=["websocket"])
 
 @app.get("/")

@@ -5,3 +5,4 @@ from app.api.users.models import User  # noqa
 from app.db.models.walk import Walk  # noqa
 from app.db.models.location import Location  # noqa
 from app.db.models.patient import Patient  # noqa
+from app.db.models.group import Group  # noqa

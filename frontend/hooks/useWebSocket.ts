@@ -12,7 +12,7 @@ export interface UseWebSocketReturn<T> {
  * Handles React Strict Mode double-invoke, automatic reconnects with
  * exponential backoff, and safe cleanup on unmount.
  */
-export function useWebSocket<T = any>(enabled: boolean = true): UseWebSocketReturn<T> {
+export function useWebSocket<T = any>(enabled: boolean = true, urlParams: string = ''): UseWebSocketReturn<T> {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [lastMessage, setLastMessage] = useState<T | null>(null);
 
@@ -33,7 +33,7 @@ export function useWebSocket<T = any>(enabled: boolean = true): UseWebSocketRetu
       if (state === WebSocket.OPEN || state === WebSocket.CONNECTING) return;
 
       try {
-        const socket = new WebSocket(WS_BASE_URL);
+        const socket = new WebSocket(`${WS_BASE_URL}${urlParams}`);
         ws.current = socket;
 
         socket.onopen = () => {
@@ -46,6 +46,7 @@ export function useWebSocket<T = any>(enabled: boolean = true): UseWebSocketRetu
         socket.onmessage = (event) => {
           if (!isMounted.current) return;
           try {
+            console.log(`[WS] Received: ${event.data}`);
             const data: T = JSON.parse(event.data);
             setLastMessage(data);
           } catch {
@@ -85,8 +86,31 @@ export function useWebSocket<T = any>(enabled: boolean = true): UseWebSocketRetu
 
     connect();
 
+    // Foreground recovery: Force reconnect when app returns to visibility
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && enabled) {
+        console.debug('[WS] App visible, checking connection...');
+        reconnectAttempt.current = 0; // Reset backoff on manual return
+        connect();
+      }
+    };
+
+    // Network recovery: Force reconnect when connection returns
+    const handleOnline = () => {
+      if (enabled) {
+        console.debug('[WS] Network online, reconnecting...');
+        reconnectAttempt.current = 0;
+        connect();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('online', handleOnline);
+
     return () => {
       isMounted.current = false;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('online', handleOnline);
 
       // Cancel any pending reconnect timer
       if (reconnectTimeout.current) {

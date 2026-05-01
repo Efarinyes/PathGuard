@@ -15,7 +15,7 @@ def get_current_caregiver(
     token: str = Depends(oauth2_scheme)
 ) -> User:
     """
-    Dependency to validate the JWT and ensure the user is a caregiver.
+    Dependency to validate the JWT and ensure the user is an active caregiver.
     """
     user_id = verify_token(token)
     if not user_id:
@@ -32,10 +32,10 @@ def get_current_caregiver(
             detail="User not found"
         )
         
-    if not user.is_caregiver:
+    if not user.is_caregiver or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="The user does not have enough privileges",
+            detail="The user does not have enough privileges or is inactive",
         )
         
     return user
@@ -46,6 +46,7 @@ def get_patient_from_device_token(
 ) -> Patient:
     """
     Dependency to validate X-Patient-Token header and return the Patient.
+    The Patient is implicitly bound to their Group via their DB record.
     """
     try:
         token_uuid = uuid.UUID(x_patient_token)
@@ -79,7 +80,7 @@ def get_optional_caregiver(
     if not user_id:
         return None
     user = db.query(User).filter(User.id == user_id).first()
-    if user and user.is_caregiver:
+    if user and user.is_caregiver and user.is_active:
         return user
     return None
 
@@ -97,8 +98,26 @@ def get_optional_patient(
         return None
 
 def resolve_patient(patient: Patient | None, user: User | None) -> Patient:
+    """
+    Core authorization logic: 
+    - If a patient token is provided, it must be valid (checked by dependency).
+    - If a caregiver user is provided, they can ONLY access the patient in their Group.
+    """
     if patient:
         return patient
-    if user and user.patients:
-        return user.patients[0]
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authorized")
+    if user and user.group and user.group.patient:
+        return user.group.patient
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN, 
+        detail="Not authorized to access this patient environment"
+    )
+
+def require_group_access(target_group_id: int, user: User):
+    """
+    Explicit helper to ensure a caregiver is not crossing group boundaries.
+    """
+    if user.group_id != target_group_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: Resource belongs to another family group"
+        )

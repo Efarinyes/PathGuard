@@ -37,6 +37,16 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  /* PWA: Prevent elastic scroll and handle safe areas */
+  overscroll-behavior-y: none;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* App-like behavior: disable text selection and highlight on interactive elements */
+button, a, .no-select {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 /* Accessibility: Ensure minimum touch target */
@@ -45,3 +55,4 @@ body {
     @apply min-h-[44px];
   }
 }
+

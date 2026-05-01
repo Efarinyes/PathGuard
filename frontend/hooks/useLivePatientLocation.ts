@@ -1,36 +1,36 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useReducer } from 'react';
 import { useWebSocket } from './useWebSocket';
 import { useAppState } from './useAppState';
 import { LocationPayload } from '../services/locationService';
+import { walkService } from '../services/walkService';
+import { WalkEventProcessor, WalkState, WalkAction } from '../lib/WalkEventProcessor';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
-
-export interface UseLivePatientLocationReturn {
-  currentLocation: LocationPayload | null;
-  routeHistory: LocationPayload[];
+export interface UseLivePatientLocationReturn extends WalkState {
   isConnected: boolean;
   isLoading: boolean;
-  isActive: boolean;
 }
 
-/**
- * A hook that manages the live state of a walk session.
- */
 export function useLivePatientLocation(
   initialHistory: LocationPayload[] = []
 ): UseLivePatientLocationReturn {
   const { userToken, deviceToken, isHydrated: appIsHydrated } = useAppState();
-  
-  const [currentLocation, setCurrentLocation] = useState<LocationPayload | null>(null);
-  const [routeHistory, setRouteHistory] = useState<LocationPayload[]>(initialHistory);
+
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isActive, setIsActive] = useState(false);
 
-  // 1. Snapshot Recovery: Fetch active walk state
+  // Initialize the event processor
+  const processor = useRef(new WalkEventProcessor());
+
+  // Core state managed by reducer
+  const [walkState, dispatch] = useReducer(
+    (state: WalkState, action: WalkAction) => processor.current.reduceState(state, action),
+    { currentLocation: null, routeHistory: initialHistory, isActive: false }
+  );
+
+  // 1. Snapshot Recovery: Fetch active walk state (REST Initial Load)
   async function rehydrateState(isReconnect = false) {
-    if (isLoading && isReconnect) return; 
-    
+    if (isLoading && isReconnect) return;
+
     if (!userToken && !deviceToken) {
       setIsLoading(false);
       setIsReady(true);
@@ -39,33 +39,9 @@ export function useLivePatientLocation(
 
     try {
       if (!isReconnect) setIsLoading(true);
-      
-      const response = await fetch(`${API_BASE_URL}/walks/active`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(userToken ? { 'Authorization': `Bearer ${userToken}` } : {}),
-          ...(deviceToken ? { 'X-Patient-Token': deviceToken } : {}),
-        },
-      });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.active_walk_id) {
-          setIsActive(true);
-          if (data.latest_location) setCurrentLocation(data.latest_location);
-          if (data.history) {
-            setRouteHistory((prevHistory) => {
-              const existingTimestamps = new Set(prevHistory.map(p => p.timestamp));
-              const newPoints = data.history.filter((p: any) => !existingTimestamps.has(p.timestamp));
-              return [...prevHistory, ...newPoints].sort((a, b) => 
-                new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-              );
-            });
-          }
-        } else {
-          setIsActive(false);
-        }
-      }
+      const snapshot = await walkService.getActiveWalk(userToken, deviceToken);
+      dispatch({ type: 'SNAPSHOT', payload: snapshot });
     } catch (error) {
       console.error('[useLivePatientLocation] Recovery failed:', error);
     } finally {
@@ -80,8 +56,22 @@ export function useLivePatientLocation(
     }
   }, [userToken, deviceToken, appIsHydrated]);
 
+  // Handle app foregrounding for the caregiver (recovery after inactivity)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && appIsHydrated && (userToken || deviceToken)) {
+        console.log("[useLivePatientLocation] App returned to foreground, re-syncing state...");
+        rehydrateState(true);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [appIsHydrated, userToken, deviceToken]);
+
   // 2. Real-time Updates: Connect WS only after we have the REST snapshot
-  const { lastMessage, isConnected } = useWebSocket<any>(isReady);
+  const wsUrlParams = userToken ? `?token=${userToken}` : deviceToken ? `?patient_token=${deviceToken}` : '';
+  const { lastMessage, isConnected } = useWebSocket<any>(isReady, wsUrlParams);
 
   // ⚡ Re-fetch on reconnect
   useEffect(() => {
@@ -89,47 +79,40 @@ export function useLivePatientLocation(
       rehydrateState(true);
     }
   }, [isConnected]);
-  
-  // 3. Seamless Integration: Handle new messages
+
+  // 3. Seamless Integration: Handle new messages via Processor
   useEffect(() => {
-    if (!lastMessage) return;
-
-    if (lastMessage.type === 'walk_started') {
-      setIsActive(true);
-      setCurrentLocation(null);
-      setRouteHistory([]);
+    if (!processor.current.shouldProcessMessage(lastMessage)) {
       return;
     }
 
-    if (lastMessage.type === 'walk_stopped') {
-      setIsActive(false);
-      setCurrentLocation(null);
-      return;
-    }
+    const eventTime = lastMessage.timestamp ? new Date(lastMessage.timestamp).getTime() : 0;
 
-    if (lastMessage.type === 'location' || !lastMessage.type) {
-      if (typeof lastMessage.latitude !== 'number' || typeof lastMessage.longitude !== 'number') {
-        console.warn('[useLivePatientLocation] Received malformed location message:', lastMessage);
-        return;
+    if (lastMessage.type === 'snapshot') {
+      dispatch({ type: 'SNAPSHOT', payload: lastMessage });
+    } else if (lastMessage.type === 'walk_started') {
+      dispatch({ type: 'WALK_STARTED', timestamp: eventTime });
+    } else if (lastMessage.type === 'walk_stopped') {
+      dispatch({ type: 'WALK_STOPPED' });
+    } else {
+      const isLocation = lastMessage.type === 'location' || 
+                         (!lastMessage.type && lastMessage.latitude != null && lastMessage.longitude != null);
+
+      if (isLocation && typeof lastMessage.latitude === 'number' && typeof lastMessage.longitude === 'number') {
+        const normalized: LocationPayload = {
+          latitude: lastMessage.latitude,
+          longitude: lastMessage.longitude,
+          timestamp: lastMessage.timestamp,
+          ...(lastMessage.walk_id !== undefined ? { walk_id: lastMessage.walk_id } : {}),
+        };
+        dispatch({ type: 'LOCATION_UPDATE', payload: normalized });
       }
-
-      setIsActive(true);
-      setCurrentLocation((prevCurrent) => {
-        const isNewer = !prevCurrent || new Date(lastMessage.timestamp) > new Date(prevCurrent.timestamp);
-        if (isNewer) {
-          setRouteHistory((prevHistory) => [...prevHistory, lastMessage]);
-          return lastMessage;
-        }
-        return prevCurrent;
-      });
     }
   }, [lastMessage]);
 
   return {
-    currentLocation,
-    routeHistory,
+    ...walkState,
     isConnected,
-    isLoading,
-    isActive
+    isLoading
   };
 }

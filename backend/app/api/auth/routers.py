@@ -12,6 +12,7 @@ from app.core.security.auth import create_access_token
 from app.core.security.password import hash_password
 from app.db.models.patient import Patient
 from app.api.users.models import User
+from app.db.models.group import Group
 
 router = APIRouter()
 
@@ -21,48 +22,71 @@ def register(
     db: Session = Depends(deps.get_db)
 ) -> Any:
     """
-    Register a patient and one or more caregivers atomically.
+    Register a Family Group, a Patient and a Caregiver atomically.
+    This is the bootstrap entry point for new environments.
     """
+    # 1. Security Check: Validate email uniqueness
+    existing_user = db.query(User).filter(User.email == data.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User with this email already exists"
+        )
+
     try:
-        # Create patient
-        patient = Patient(name=data.patient_name, device_token=uuid.uuid4())
-        db.add(patient)
-        
-        # Create caregivers
-        for cg_data in data.caregivers:
-            # Check if user already exists
-            existing_user = db.query(User).filter(User.email == cg_data.email).first()
-            if existing_user:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"User with email {cg_data.email} already exists"
-                )
-            user = User(
-                email=cg_data.email,
-                hashed_password=hash_password(cg_data.password),
-                is_caregiver=True,
-                is_active=True
-            )
-            # Link caregiver to patient
-            user.patients.append(patient)
-            db.add(user)
-        
-        # Commit transaction atomically
+        # 2. Create Group (Environment)
+        # Fallback to "[Patient Name]'s Family" if group_name is not provided
+        group_name = data.group_name or f"Família {data.patient_name}"
+        new_group = Group(name=group_name)
+        db.add(new_group)
         db.commit()
-        db.refresh(patient)
+        db.refresh(new_group)
+        
+        # 3. Create Patient
+        new_patient = Patient(
+            name=data.patient_name,
+            device_token=uuid.uuid4(),
+            group_id=new_group.id
+        )
+        db.add(new_patient)
+        
+        # 4. Create Caregiver User
+        new_user = User(
+            email=data.email,
+            hashed_password=hash_password(data.password),
+            is_caregiver=True,
+            is_active=True,
+            group_id=new_group.id
+        )
+        db.add(new_user)
+        db.flush()
+        
+        # 5. Set Group Owner
+        new_group.owner_id = new_user.id
+        
+        # 6. Commit All
+        db.commit()
+        
+        # 6. Generate Caregiver JWT for immediate session bootstrapping
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        caregiver_jwt = create_access_token(
+            new_user.id, expires_delta=access_token_expires
+        )
         
         return {
-            "patient_id": patient.id,
-            "device_token": patient.device_token
+            "device_token": new_patient.device_token,
+            "patient_id": new_patient.id,
+            "caregiver_jwt": caregiver_jwt
         }
-    except HTTPException:
-        db.rollback()
-        raise
+
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         db.rollback()
+        # In production, we would log the full exception 'e' here
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Registration failed"
+            detail=f"Registration failed: {str(e)}"
         )
 
 @router.post("/login", response_model=auth_schemas.Token)
@@ -70,15 +94,21 @@ def login_access_token(
     db: Session = Depends(deps.get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
     """
-    OAuth2 compatible token login, get an access token for future requests
+    OAuth2 compatible token login, restricted to caregivers.
     """
     user = auth_services.authenticate(
         db, email=form_data.username, password=form_data.password
     )
     if not user:
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Incorrect email or password"
+        )
     elif not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Inactive user"
+        )
     
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return {
