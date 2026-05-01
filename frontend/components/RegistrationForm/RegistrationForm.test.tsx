@@ -25,8 +25,7 @@ describe('RegistrationForm Component', () => {
       ok: true,
       json: async () => ({
         device_token: 'test-token',
-        patient_id: 123,
-        caregiver_jwt: 'test-jwt'
+        patient_id: 123
       }),
     });
 
@@ -37,21 +36,23 @@ describe('RegistrationForm Component', () => {
     );
 
     // Fill form
+    fireEvent.change(screen.getByLabelText(/Nom de la Família/i), { target: { value: 'Família Soler' } });
     fireEvent.change(screen.getByLabelText(/Nom del Pacient/i), { target: { value: 'Joan' } });
-    fireEvent.change(screen.getByLabelText(/Correu del Cuidador/i), { target: { value: 'joan@example.com' } });
-    fireEvent.change(screen.getByLabelText(/Contrasenya/i), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText(/El teu correu/i), { target: { value: 'joan@example.com' } });
+    fireEvent.change(screen.getByLabelText(/Contrasenya de seguretat/i), { target: { value: 'password123' } });
 
     // Submit
-    fireEvent.click(screen.getByRole('button', { name: /Registrar-se/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Continuar cap a l'activació/i }));
 
     await waitFor(() => {
-      expect(mockOnSuccess).toHaveBeenCalledWith('test-token', 123, 'test-jwt');
+      expect(mockOnSuccess).toHaveBeenCalledWith('test-token', 123, true);
     });
 
     // Verify fetch call
     expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/auth/register'), expect.objectContaining({
       method: 'POST',
       body: JSON.stringify({
+        group_name: 'Família Soler',
         patient_name: 'Joan',
         email: 'joan@example.com',
         password: 'password123'
@@ -72,11 +73,12 @@ describe('RegistrationForm Component', () => {
       </AppStateProvider>
     );
 
+    fireEvent.change(screen.getByLabelText(/Nom de la Família/i), { target: { value: 'Família Soler' } });
     fireEvent.change(screen.getByLabelText(/Nom del Pacient/i), { target: { value: 'Joan' } });
-    fireEvent.change(screen.getByLabelText(/Correu del Cuidador/i), { target: { value: 'joan@example.com' } });
-    fireEvent.change(screen.getByLabelText(/Contrasenya/i), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText(/El teu correu/i), { target: { value: 'joan@example.com' } });
+    fireEvent.change(screen.getByLabelText(/Contrasenya de seguretat/i), { target: { value: 'password123' } });
 
-    fireEvent.click(screen.getByRole('button', { name: /Registrar-se/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Continuar cap a l'activació/i }));
 
     // Assert UI shows error
     await waitFor(() => {
@@ -95,14 +97,15 @@ describe('RegistrationForm Component', () => {
       </AppStateProvider>
     );
 
+    fireEvent.change(screen.getByLabelText(/Nom de la Família/i), { target: { value: 'Família Soler' } });
     fireEvent.change(screen.getByLabelText(/Nom del Pacient/i), { target: { value: 'Joan' } });
-    fireEvent.change(screen.getByLabelText(/Correu del Cuidador/i), { target: { value: 'joan@example.com' } });
-    fireEvent.change(screen.getByLabelText(/Contrasenya/i), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByLabelText(/El teu correu/i), { target: { value: 'joan@example.com' } });
+    fireEvent.change(screen.getByLabelText(/Contrasenya de seguretat/i), { target: { value: 'password123' } });
 
-    fireEvent.click(screen.getByRole('button', { name: /Registrar-se/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Continuar cap a l'activació/i }));
 
     // Check button text changes
-    expect(screen.getByRole('button')).toHaveTextContent(/Registrant/i);
+    expect(screen.getByRole('button')).toHaveTextContent(/Creant entorn/i);
     expect(screen.getByRole('button')).toBeDisabled();
   });
 });

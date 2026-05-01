@@ -1,8 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AppStateProvider } from '@/hooks/useAppState';
 import CaregiverPage from '@/app/caregiver/page';
-import { useRouter } from 'next/navigation';
+import { RoleGuard } from '@/components/RoleGuard';
 
 // Mock useRouter
 const mockReplace = vi.fn();
@@ -12,6 +12,7 @@ vi.mock('next/navigation', () => ({
     replace: mockReplace,
     push: mockPush,
   }),
+  usePathname: () => '/caregiver',
 }));
 
 describe('Caregiver Session & Protection Integration', () => {
@@ -24,7 +25,9 @@ describe('Caregiver Session & Protection Integration', () => {
   it('Scenario 3 & 5: Route Protection - Redirects to login if NO token', async () => {
     render(
       <AppStateProvider>
-        <CaregiverPage />
+        <RoleGuard>
+          <CaregiverPage />
+        </RoleGuard>
       </AppStateProvider>
     );
 
@@ -41,7 +44,9 @@ describe('Caregiver Session & Protection Integration', () => {
 
     render(
       <AppStateProvider>
-        <CaregiverPage />
+        <RoleGuard>
+          <CaregiverPage />
+        </RoleGuard>
       </AppStateProvider>
     );
 
@@ -59,20 +64,18 @@ describe('Caregiver Session & Protection Integration', () => {
 
     render(
       <AppStateProvider>
-        <CaregiverPage />
+        <RoleGuard>
+          <CaregiverPage />
+        </RoleGuard>
       </AppStateProvider>
     );
 
     // Dashboard loaded
-    const logoutBtn = await screen.findByText(/Tancar sessió/i);
+    const logoutBtn = await screen.findByText(/Sortir/i);
     
     // Trigger Logout
-    // Note: CaregiverDashboard uses window.location.href for redirect, 
-    // we can mock it or just check localStorage
     fireEvent.click(logoutBtn);
 
     expect(localStorage.getItem('pg_user_token')).toBeNull();
   });
 });
-
-import { fireEvent } from '@testing-library/react';
