@@ -239,13 +239,12 @@ def read_walks(
     user: User | None = Depends(get_optional_caregiver)
 ):
     """
-    Returns a list of past walk sessions for the family group.
+    Returns a list of walk sessions for the family group, including active one.
     """
     active_patient = resolve_patient(patient, user)
     
-    # Fetch only walks belonging to the active patient
-    past_walks = db.query(Walk).filter(
-        Walk.active == False,
+    # Fetch all walks belonging to the active patient, newest first
+    walks = db.query(Walk).filter(
         Walk.patient_id == active_patient.id
     ).order_by(Walk.start_time.desc()).all()
     
@@ -254,7 +253,8 @@ def read_walks(
             "id": walk.id,
             "start_time": walk.start_time,
             "end_time": walk.end_time,
-            "duration_seconds": int((walk.end_time - walk.start_time).total_seconds()) if walk.end_time else 0
+            "active": walk.active,
+            "duration_seconds": int((walk.end_time - walk.start_time).total_seconds()) if (walk.end_time and walk.start_time) else 0
         }
-        for walk in past_walks
+        for walk in walks
     ]

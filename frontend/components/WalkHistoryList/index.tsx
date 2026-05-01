@@ -6,6 +6,7 @@ export interface WalkHistoryItem {
   id: number;
   start_time: string;
   end_time?: string | null;
+  active: boolean;
   duration_seconds: number;
 }
 
@@ -70,13 +71,20 @@ export default function WalkHistoryList({ walks, onWalkClick }: WalkHistoryListP
           
           <div className="flex-grow flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4">
             {/* Primary Info: Date */}
-            <p className="text-[#0F172A] font-semibold text-base tracking-wide">
-              {formatWalkDate(walk.start_time)}
-            </p>
+            <div className="flex flex-col">
+              <p className="text-[#0F172A] font-semibold text-base tracking-wide">
+                {formatWalkDate(walk.start_time)}
+              </p>
+              {walk.active && (
+                <span className="text-[#22C55E] text-xs font-bold uppercase tracking-wider mt-0.5">
+                  Actiu ara
+                </span>
+              )}
+            </div>
             
             {/* Secondary Info: Duration */}
             <p className="text-slate-500 text-sm font-medium whitespace-nowrap">
-              {walk.duration_seconds > 0 ? formatDuration(walk.duration_seconds) : "Menys d'un minut"}
+              {walk.active ? '--' : (walk.duration_seconds > 0 ? formatDuration(walk.duration_seconds) : "Menys d'un minut")}
             </p>
           </div>
         </button>
