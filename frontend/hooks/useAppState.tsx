@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useOfflineRecovery } from "./useOfflineRecovery";
 
 interface AppState {
   userToken: string | null;
@@ -25,6 +26,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [patientId, setPatientId] = useState<number | null>(null);
   const [activeWalkId, setActiveWalkId] = useState<number | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+
+  // Mount offline recovery listener globally
+  useOfflineRecovery();
 
   // 🔄 Hydration
   useEffect(() => {

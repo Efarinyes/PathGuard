@@ -3,6 +3,7 @@
  * API service for handling location tracking data with Adaptive Batching and Offline-First buffering.
  */
 import { offlineSyncService } from "./offlineSyncService";
+import { gpsTransportService } from "./gpsTransportService";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
@@ -77,47 +78,24 @@ export const locationService = {
     console.log(`[locationService] flushBatch executing. Batch size: ${currentBatch.length}, Walk ID: ${walkId}`);
 
     try {
-      // Fast check for connectivity
-      if (!navigator.onLine) {
-        console.warn("[locationService] navigator.onLine is false, throwing Offline error.");
-        throw new Error("Offline");
+      console.log(`[locationService] Sending batch via gpsTransportService...`);
+      await gpsTransportService.sendBatch({
+        walk_id: walkId,
+        batch_id: batchId,
+        points: currentBatch.map(p => ({
+          latitude: p.latitude,
+          longitude: p.longitude,
+          timestamp: p.timestamp,
+          walk_id: p.walk_id,
+          client_id: p.id
+        }))
+      }, deviceToken);
+
+      // Success or Conflict (Duplicate): Mark as synced to prevent retries
+      for (const point of currentBatch) {
+        await offlineSyncService.markSynced(point.id);
       }
-
-      console.log(`[locationService] Fetching ${API_BASE_URL}/locations/batch...`);
-      const response = await fetch(`${API_BASE_URL}/locations/batch`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(deviceToken ? { "X-Patient-Token": deviceToken } : {}),
-        },
-        body: JSON.stringify({
-          walk_id: walkId,
-          batch_id: batchId,
-          points: currentBatch.map(p => ({
-            latitude: p.latitude,
-            longitude: p.longitude,
-            timestamp: p.timestamp,
-            walk_id: p.walk_id,
-            client_id: p.id
-          }))
-        }),
-      });
-
-      console.log(`[locationService] flushBatch response status: ${response.status}`);
-
-      if (response.ok || response.status === 409) {
-        // Success or Conflict (Duplicate): Mark as synced to prevent retries
-        for (const point of currentBatch) {
-          await offlineSyncService.markSynced(point.id);
-        }
-        await offlineSyncService.clearSynced();
-        return;
-      }
-
-      // Any other HTTP error (e.g. 500, 400) should be persisted for retry
-      const errorText = await response.text();
-      console.error(`[locationService] Batch sync failed: ${response.status} - ${errorText}`);
-      throw new Error(`Batch sync failed: ${response.status}`);
+      await offlineSyncService.clearSynced();
     } catch (error) {
       console.debug("[locationService] Batch sync failed, buffering to IndexedDB:", error);
       // Resilience: Persist entire batch to IndexedDB for later recovery
@@ -153,29 +131,18 @@ export const locationService = {
     const deviceToken = typeof window !== "undefined" ? localStorage.getItem("pg_device_token") : null;
 
     for (const point of unsynced) {
-      try {
-        const response = await fetch(`${API_BASE_URL}/locations`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(deviceToken ? { "X-Patient-Token": deviceToken } : {}),
-          },
-          body: JSON.stringify({
-            client_id: point.id,
-            latitude: point.latitude,
-            longitude: point.longitude,
-            timestamp: point.timestamp,
-            walk_id: point.walk_id
-          }),
-        });
+      const success = await gpsTransportService.sendPoint({
+        client_id: point.id,
+        latitude: point.latitude,
+        longitude: point.longitude,
+        timestamp: point.timestamp,
+        walk_id: point.walk_id
+      }, deviceToken);
 
-        if (response.ok || response.status === 409) {
-          await offlineSyncService.markSynced(point.id);
-        } else {
-          break;
-        }
-      } catch (error) {
-        break;
+      if (success) {
+        await offlineSyncService.markSynced(point.id);
+      } else {
+        break; // Stop syncing on first network failure to maintain order
       }
     }
     } finally {
@@ -196,22 +163,5 @@ export const locationService = {
   }
 };
 
-// Auto-sync when network returns or app returns to foreground
-if (typeof window !== "undefined") {
-  window.addEventListener("online", () => {
-    console.log("[locationService] Network online, triggering sync.");
-    locationService.syncQueuedPoints();
-  });
-
-  // Critical for PWA recovery after being backgrounded/suspended
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-      console.log("[locationService] App foregrounded, triggering sync.");
-      locationService.syncQueuedPoints();
-    }
-  });
-
-  window.addEventListener("focus", () => {
-    locationService.syncQueuedPoints();
-  });
-}
+// DOM Event Listeners (online, visibilitychange, focus) have been moved to hooks/useOfflineRecovery.ts 
+// to ensure they are safely mounted within the React lifecycle and adhere to SRP.
