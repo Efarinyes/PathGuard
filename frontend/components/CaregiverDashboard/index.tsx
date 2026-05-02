@@ -142,12 +142,17 @@ export default function CaregiverDashboard() {
             </div>
           )}
 
-          {/* Mobile CTA to toggle history/analytics */}
+          {/* CTA to toggle history/analytics */}
           <button 
             onClick={() => setIsExtraInfoOpen(!isExtraInfoOpen)}
-            className="md:hidden w-full flex items-center justify-between px-4 py-3 bg-slate-50 rounded-lg border border-slate-100 text-slate-600 font-bold text-sm transition-all hover:bg-slate-100"
+            className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 rounded-lg border border-slate-100 text-slate-600 font-bold text-sm transition-all hover:bg-slate-100 group"
           >
-            <span>{isExtraInfoOpen ? 'Amagar historial' : 'Veure historial i analítiques'}</span>
+            <div className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 group-hover:text-blue-600 transition-colors">
+                <path d="M12 20v-6M9 20v-10M15 20v-2M3 20h18"/>
+              </svg>
+              <span>{isExtraInfoOpen ? 'Amagar historial' : 'Veure historial de passejos'}</span>
+            </div>
             <svg 
               className={`w-4 h-4 transition-transform duration-300 ${isExtraInfoOpen ? 'rotate-180' : ''}`} 
               fill="none" 
@@ -160,7 +165,7 @@ export default function CaregiverDashboard() {
         </div>
 
         {/* Collapsible Section for Analytics and History */}
-        <div className={`${isExtraInfoOpen ? 'block' : 'hidden md:block'} transition-all duration-300`}>
+        <div className={`${isExtraInfoOpen ? 'block' : 'hidden'} transition-all duration-300`}>
           {/* Analytics Section */}
           {analytics && (
             <div className="mt-6">
@@ -213,12 +218,16 @@ export default function CaregiverDashboard() {
           )}
 
           {/* Walk History Section */}
-          <div className="mt-6">
-            <h3 className="text-[#0F172A] font-bold text-lg mb-4 ml-1">Activitat recent</h3>
-            <WalkHistoryList 
-              walks={walks} 
-              onWalkClick={(id) => console.log('View walk map:', id)} 
-            />
+          <div className="mt-6 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+              <h3 className="text-[#0F172A] font-bold text-base">Historial detallat</h3>
+            </div>
+            <div className="p-2">
+              <WalkHistoryList 
+                walks={walks} 
+                onWalkClick={(id) => console.log('View walk map:', id)} 
+              />
+            </div>
           </div>
         </div>
       </div>
