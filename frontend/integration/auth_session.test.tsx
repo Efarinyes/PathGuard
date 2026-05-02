@@ -71,7 +71,7 @@ describe('Caregiver Session & Protection Integration', () => {
     );
 
     // Dashboard loaded
-    const logoutBtn = await screen.findByText(/Sortir/i);
+    const logoutBtn = await screen.findByText(/Tancar sessió/i);
     
     // Trigger Logout
     fireEvent.click(logoutBtn);

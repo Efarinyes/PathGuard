@@ -86,39 +86,27 @@ export default function CaregiverDashboard() {
               <h2 className="text-[#0F172A] font-bold text-xl mb-1">Estat del passeig</h2>
               <div className="flex items-center gap-2">
                 <span className="relative flex h-3 w-3">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${(isConnected && isActive) ? 'bg-[#22C55E]' : 'bg-[#F59E0B]'}`}></span>
-                  <span className={`relative inline-flex rounded-full h-3 w-3 ${(isConnected && isActive) ? 'bg-[#22C55E]' : 'bg-[#F59E0B]'}`}></span>
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${(isConnected && isActive && !isMonitoringPaused) ? 'bg-[#22C55E]' : 'bg-[#F59E0B]'}`}></span>
+                  <span className={`relative inline-flex rounded-full h-3 w-3 ${(isConnected && isActive && !isMonitoringPaused) ? 'bg-[#22C55E]' : 'bg-[#F59E0B]'}`}></span>
                 </span>
                 <p className="text-slate-600 text-sm font-medium">
-                  {(isConnected && isActive) ? 'Passeig actiu - En línia' : isActive ? 'Passeig actiu - Connectant...' : 'Passeig finalitzat'}
+                  {isMonitoringPaused ? 'Mode Tauler - Seguiment pausat' : (isConnected && isActive) ? 'Passeig actiu - En línia' : isActive ? 'Passeig actiu - Connectant...' : 'Passeig finalitzat'}
                 </p>
               </div>
             </div>
-            
-            <button
-              onClick={() => {
-                clearUserSession();
-                // NO redirect to '/' - stay on /caregiver to show login form
-              }}
-              className="ml-4 flex-shrink-0 text-[11px] font-bold uppercase tracking-wider text-slate-400 hover:text-[#EF4444] transition-all border border-slate-200 hover:border-red-100 rounded-lg px-2 py-1 hover:bg-red-50/50 flex flex-col items-center gap-1 group"
-              title="Logout caregiver"
-              id="logout-btn"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300 group-hover:text-red-400 transition-colors">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-              <span>Sortir</span>
-            </button>
           </div>
 
-          {/* Action 1: Stop Following Patient */}
+          {/* Action 1: Stop Following Patient (Dashboard Transition) */}
           {isActive && !isMonitoringPaused && (
             <button
-              onClick={() => setIsMonitoringPaused(true)}
-              className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-2 border border-slate-200 mt-2"
+              onClick={() => {
+                setIsMonitoringPaused(true);
+                setIsExtraInfoOpen(true);
+              }}
+              className="w-full py-3 px-4 bg-slate-50 hover:bg-slate-100 text-[#1E3A8A] font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-2 border border-slate-200 mt-2 group shadow-sm"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              Deixar de seguir
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:scale-110 transition-transform"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              Aturar seguiment en directe
             </button>
           )}
 
@@ -161,6 +149,20 @@ export default function CaregiverDashboard() {
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
             </svg>
+          </button>
+
+          <div className="h-px bg-slate-100 w-full mt-2" />
+
+          {/* Action 2: Full Logout */}
+          <button
+            onClick={() => clearUserSession()}
+            className="w-full py-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors flex items-center justify-center gap-2 group"
+            id="logout-btn"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="opacity-50 group-hover:opacity-100 transition-opacity">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Tancar sessió de cuidador
           </button>
         </div>
 
