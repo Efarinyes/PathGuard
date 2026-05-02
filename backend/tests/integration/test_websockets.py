@@ -1,69 +1,88 @@
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from app.api.models.walk import Walk
-from app.db.websockets_router import manager
+from app.db.models.walk import Walk
+from app.db.models.patient import Patient
+from app.api.users.models import User
+from app.api.ws_manager import manager
 from datetime import datetime, timezone
-from app.api.models.patient import Patient
 from uuid import uuid4
 
-def test_websocket_connect(client: TestClient) -> None:
+
+def test_websocket_connect(client: TestClient, auth_headers: dict) -> None:
     """
     Test that a WebSocket can connect and is registered by the manager.
+    Requires authentication — unauthenticated connections are closed with 4003.
     """
-    initial_count = len(manager.active_connections)
-    with client.websocket_connect("/api/v1/ws/") as websocket:
-        # Connection should be accepted and added to the manager
-        assert len(manager.active_connections) == initial_count + 1
+    jwt = auth_headers["Authorization"].split(" ")[1]
+    initial_count = len(manager.group_rooms)
+    with client.websocket_connect(f"/api/v1/ws/?token={jwt}") as websocket:
+        assert len(manager.group_rooms) == initial_count + 1
+        websocket.receive_json()  # connection_established
+        websocket.receive_json()  # snapshot
         assert websocket is not None
 
-def test_websocket_disconnect(client: TestClient) -> None:
+
+def test_websocket_disconnect(client: TestClient, auth_headers: dict) -> None:
     """
-    Test that a WebSocket is un-registered when it disconnects.
+    Test that a WebSocket room is cleaned up when the connection closes.
     """
-    initial_count = len(manager.active_connections)
-    with client.websocket_connect("/api/v1/ws/") as websocket:
-        assert len(manager.active_connections) == initial_count + 1
+    jwt = auth_headers["Authorization"].split(" ")[1]
+    initial_count = len(manager.group_rooms)
+    with client.websocket_connect(f"/api/v1/ws/?token={jwt}") as websocket:
+        assert len(manager.group_rooms) == initial_count + 1
+        websocket.receive_json()  # connection_established
+        websocket.receive_json()  # snapshot
         websocket.close()
-        # We need to give the asyncio event loop a moment to handle the disconnect exception
-        # But TestClient might not yield yielding control directly since it's synchronous externally.
-        # Actually, TestClient's context manager closure handles the disconnect synchronously.
-        
-    # Once context block ends, connection is closed and manager should have removed it
-    assert len(manager.active_connections) == initial_count
 
-def test_websocket_receive_updates(client: TestClient, auth_headers: dict, db: Session, caregiver_user) -> None:
+    assert len(manager.group_rooms) == initial_count
+
+
+def test_websocket_receive_updates(
+    client: TestClient, auth_headers: dict, db: Session,
+    caregiver_user: User, group
+) -> None:
     """
-    Test that the WebSocket receives broadcasts when a new location is saved.
+    Test that a broadcast location event is received over WebSocket.
     """
-    # Ensure caregiver has a patient linked
-    if not caregiver_user.patients:
-        patient = Patient(name="WS Test Patient", device_token=uuid4())
-        caregiver_user.patients.append(patient)
-        db.add(caregiver_user)
+    jwt = auth_headers["Authorization"].split(" ")[1]
+
+    # Ensure caregiver's group has a patient
+    patient = db.query(Patient).filter(Patient.group_id == caregiver_user.group_id).first()
+    if not patient:
+        patient = Patient(
+            name="WS Test Patient",
+            device_token=uuid4(),
+            group_id=caregiver_user.group_id
+        )
+        db.add(patient)
         db.commit()
+        db.refresh(patient)
 
-    # Create an active walk first to allow saving locations
-    walk = Walk(start_time=datetime.now(timezone.utc), active=True, initiated_by_type="caregiver")
+    # Create an active walk linked to that patient
+    walk = Walk(
+        start_time=datetime.now(timezone.utc),
+        active=True,
+        initiated_by_type="caregiver",
+        patient_id=patient.id
+    )
     db.add(walk)
     db.commit()
     db.refresh(walk)
 
-    # Open WebSocket
-    with client.websocket_connect("/api/v1/ws/") as websocket:
-        
-        # Post a new location via standard HTTP
+    with client.websocket_connect(f"/api/v1/ws/?token={jwt}") as websocket:
+        websocket.receive_json()  # connection_established
+        websocket.receive_json()  # snapshot
+
         payload = {
             "latitude": 42.123,
             "longitude": 2.456,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "walk_id": walk.id
         }
-        
-        # We need to make the post request using the same client to trigger the broadcast
+
         response = client.post("/api/v1/locations/", json=payload, headers=auth_headers)
         assert response.status_code == 200
-        
-        # Now the websocket should have received the exact same data payload JSON
+
         data = websocket.receive_json()
         assert "latitude" in data
         assert data["latitude"] == 42.123

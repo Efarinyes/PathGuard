@@ -7,34 +7,40 @@ from app.core.security.password import hash_password
 def test_register_atomic_success(client: TestClient, db: Session) -> None:
     """
     Test the atomic registration flow (Group + Patient + Caregiver).
+    RegisterResponse returns: { device_token, patient_id, caregiver_jwt }
     """
     register_data = {
         "patient_name": "Joan Garcia",
-        "email": "caregiver@example.com",
+        "email": "caregiver_auth_test@example.com",
         "password": "password123"
     }
-    
+
     response = client.post("/api/v1/auth/register", json=register_data)
-    
+
     assert response.status_code == 200
     content = response.json()
-    
-    # Verify response structure
+
+    # Verify response structure matches RegisterResponse schema
     assert "device_token" in content
     assert "patient_id" in content
-    assert "caregiver_id" in content
-    assert "group_id" in content
-    
-    # Verify DB persistence
-    group = db.query(Group).filter(Group.id == content["group_id"]).first()
+    assert "caregiver_jwt" in content  # not caregiver_id
+
+    # Verify DB persistence via patient_id
+    from app.db.models.patient import Patient
+    patient = db.query(Patient).filter(Patient.id == content["patient_id"]).first()
+    assert patient is not None
+    assert patient.name == "Joan Garcia"
+
+    # Caregiver must be in the same group as the patient
+    user = db.query(User).filter(User.email == "caregiver_auth_test@example.com").first()
+    assert user is not None
+    assert user.group_id == patient.group_id
+
+    # Group name falls back to f"Família {patient_name}" when not provided
+    group = db.query(Group).filter(Group.id == patient.group_id).first()
     assert group is not None
     assert group.name == "Família Joan Garcia"
-    
-    user = db.query(User).filter(User.id == content["caregiver_id"]).first()
-    assert user is not None
-    assert user.email == "caregiver@example.com"
-    assert user.group_id == group.id
-    
+
     # Verify double registration fails
     response_dup = client.post("/api/v1/auth/register", json=register_data)
     assert response_dup.status_code == 400

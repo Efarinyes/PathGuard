@@ -4,8 +4,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config.settings import settings
-from app.api.models.walk import Walk
-from app.api.models.location import Location
+from app.db.models.walk import Walk
+from app.db.models.location import Location
 
 def test_full_core_integration_flow(client: TestClient, db: Session):
     # Ensure a clean slate for walks
@@ -15,14 +15,10 @@ def test_full_core_integration_flow(client: TestClient, db: Session):
     # --- 1. Register ---
     register_payload = {
         "patient_name": "Integration Patient",
-        "caregivers": [
-            {
-                "email": "integration_caregiver@test.com",
-                "password": "IntegrationPassword123!"
-            }
-        ]
+        "email": "integration_caregiver@test.com",
+        "password": "IntegrationPassword123!"
     }
-    
+
     register_res = client.post(f"{settings.API_V1_STR}/auth/register", json=register_payload)
     assert register_res.status_code == 200, f"Registration failed: {register_res.text}"
     

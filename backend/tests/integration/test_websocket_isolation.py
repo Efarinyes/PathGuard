@@ -38,11 +38,13 @@ def test_websocket_isolation(client: TestClient, db: Session):
         msg_a = ws_a.receive_json()
         assert msg_a["type"] == "connection_established"
         assert msg_a["group_id"] == group_a.id
+        ws_a.receive_json() # snapshot (empty)
         
         with client.websocket_connect(f"/api/v1/ws/?token={token_b}") as ws_b:
             msg_b = ws_b.receive_json()
             assert msg_b["type"] == "connection_established"
             assert msg_b["group_id"] == group_b.id
+            ws_b.receive_json() # snapshot (empty)
             
             # 4. Trigger event in Group A (Start Walk)
             # Use the /start endpoint
@@ -89,4 +91,4 @@ def test_websocket_rehydration_on_connect(client: TestClient, db: Session):
         # 2. Snapshot
         msg2 = ws_c.receive_json()
         assert msg2["type"] == "snapshot"
-        assert msg2["active_walk_id"] == walk_c.id
+        assert msg2["active_walk"]["id"] == walk_c.id

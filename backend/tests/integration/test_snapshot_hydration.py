@@ -44,14 +44,15 @@ def test_snapshot_rehydration_consistency(client: TestClient, db: Session):
     assert data["active_walk"]["latest_location"]["latitude"] == 41.1
     
     # 4. VERIFY WEBSOCKET INCREMENTAL RULE
-    # The WS should NOT resend the history. It should only send "connection_established" and wait for NEW events.
+    # The WS should send "connection_established" and then a "snapshot".
     with client.websocket_connect(f"/api/v1/ws/?token={token}") as ws:
         msg = ws.receive_json()
         assert msg["type"] == "connection_established"
         
-        # Ensure no snapshot follows (since we now rely on REST for initial hydration)
-        with pytest.raises(Exception):
-            ws.receive_json(timeout=0.1)
+        # ⚡ LATE JOIN CONSISTENCY: A snapshot must follow if a walk is active
+        snapshot = ws.receive_json()
+        assert snapshot["type"] == "snapshot"
+        assert snapshot["active_walk"]["id"] == walk.id
             
         # 5. Trigger NEW location update and verify it arrives via WS
         loc2_data = {

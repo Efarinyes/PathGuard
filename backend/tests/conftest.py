@@ -71,25 +71,41 @@ def client(db) -> Generator:
     app.dependency_overrides.clear()
 
 @pytest.fixture
-def caregiver_user(db: Session) -> User:
+def group(db: Session) -> Group:
     """
-    Produce a test caregiver user.
+    Provide a shared test Group (family_group row).
+    Required by caregiver_user and any test fixture that creates a Patient.
     """
-    # Use existing user if already created in this test session
+    g = Group(name="Test Family Group")
+    db.add(g)
+    db.commit()
+    db.refresh(g)
+    return g
+
+
+@pytest.fixture
+def caregiver_user(db: Session, group: Group) -> User:
+    """
+    Produce a test caregiver user, correctly linked to a Group.
+    group_id is non-nullable on the User model — omitting it causes
+    an IntegrityError on every test that uses JWT authentication.
+    """
     existing = db.query(User).filter(User.email == "caregiver@example.com").first()
     if existing:
         return existing
-        
+
     user = User(
         email="caregiver@example.com",
         hashed_password=hash_password("password"),
         is_caregiver=True,
-        is_active=True
+        is_active=True,
+        group_id=group.id  # required — User.group_id is nullable=False
     )
     db.add(user)
     db.commit()
     db.refresh(user)
     return user
+
 
 @pytest.fixture
 def auth_headers(caregiver_user: User) -> dict:
@@ -98,3 +114,4 @@ def auth_headers(caregiver_user: User) -> dict:
     """
     token = create_access_token(caregiver_user.id)
     return {"Authorization": f"Bearer {token}"}
+

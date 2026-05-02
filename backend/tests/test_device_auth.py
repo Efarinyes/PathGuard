@@ -5,8 +5,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.main import app
-from app.api.models.patient import Patient
-from app.db.auth_deps import get_patient_from_device_token
+from app.db.models.patient import Patient
+from app.api.dependencies.auth import get_patient_from_device_token
 
 # Setting up a dummy endpoint to strictly test the dependency without the full application logic flows
 router = APIRouter()
@@ -17,14 +17,14 @@ def mock_device_endpoint(patient: Patient = Depends(get_patient_from_device_toke
 
 app.include_router(router)
 
-def test_device_auth_valid_token(client: TestClient, db: Session):
+def test_device_auth_valid_token(client: TestClient, db: Session, group):
     """
     Test that a valid X-Patient-Token properly resolves to the database Patient.
     Expect: 200 OK
     """
-    # Setup Patient
+    # Setup Patient — group_id is required (nullable=False)
     token = uuid4()
-    patient = Patient(name="Device Auth Patient", device_token=token)
+    patient = Patient(name="Device Auth Patient", device_token=token, group_id=group.id)
     db.add(patient)
     db.commit()
 

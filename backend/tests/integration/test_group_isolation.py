@@ -76,7 +76,7 @@ def test_group_isolation_enforcement(client: TestClient, db: Session):
     # Caregiver B gets the walk
     response = client.get("/api/v1/walks/active", headers=headers_b)
     assert response.status_code == 200
-    assert response.json()["active_walk_id"] == walk_b_active.id
+    assert response.json()["active_walk"]["id"] == walk_b_active.id
 
     # TEST: Patient B cannot access caregiver-only endpoints (e.g. read_walks list)
     # Wait, read_walks currently allows patients in the code.

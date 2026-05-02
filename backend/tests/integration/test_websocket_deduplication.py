@@ -25,6 +25,7 @@ def test_websocket_event_id_deduplication(client: TestClient, db: Session):
     
     with client.websocket_connect(f"/api/v1/ws/?token={token}") as ws:
         ws.receive_json() # connection_established
+        ws.receive_json() # snapshot (empty)
         
         # Trigger walk start
         headers = {"Authorization": f"Bearer {token}"}
@@ -66,6 +67,7 @@ def test_websocket_broadcast_standardization(client: TestClient, db: Session):
     
     with client.websocket_connect(f"/api/v1/ws/?token={token}") as ws:
         ws.receive_json() # connection_established
+        ws.receive_json() # snapshot (empty)
         
         client.post("/api/v1/walks/start", headers={"Authorization": f"Bearer {token}"})
         event = ws.receive_json()

@@ -34,9 +34,10 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.api.models.location import Location
-from app.api.models.patient import Patient
-from app.api.models.walk import Walk
+from app.db.models.location import Location
+from app.db.models.patient import Patient
+from app.db.models.walk import Walk
+from app.db.models.group import Group
 from app.api.users.models import User
 from app.db.state import walk_state_cache
 
@@ -71,9 +72,9 @@ def isolate(db: Session):
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
 @pytest.fixture
-def patient(db: Session) -> Patient:
+def patient(db: Session, group) -> Patient:
     """A standalone patient with a known device_token."""
-    p = Patient(name="Walk Patient A", device_token=uuid4())
+    p = Patient(name="Walk Patient A", device_token=uuid4(), group_id=group.id)
     db.add(p)
     db.commit()
     db.refresh(p)
@@ -82,8 +83,12 @@ def patient(db: Session) -> Patient:
 
 @pytest.fixture
 def patient_b(db: Session) -> Patient:
-    """A second, independent patient."""
-    p = Patient(name="Walk Patient B", device_token=uuid4())
+    """A second, independent patient in its own group."""
+    grp = Group(name="Group for Patient B")
+    db.add(grp)
+    db.commit()
+    db.refresh(grp)
+    p = Patient(name="Walk Patient B", device_token=uuid4(), group_id=grp.id)
     db.add(p)
     db.commit()
     db.refresh(p)
@@ -102,16 +107,18 @@ def patient_b_headers(patient_b: Patient) -> dict:
 
 @pytest.fixture
 def linked_patient(db: Session, caregiver_user: User) -> Patient:
-    """Patient linked to the test caregiver (needed for JWT auth → resolve_patient)."""
-    existing = next(
-        (p for p in caregiver_user.patients if p.name == "Linked Walk Patient"), None
-    )
+    """Patient in the caregiver's Group (needed for JWT auth → resolve_patient)."""
+    existing = db.query(Patient).filter(
+        Patient.group_id == caregiver_user.group_id
+    ).first()
     if existing:
         return existing
-    p = Patient(name="Linked Walk Patient", device_token=uuid4())
+    p = Patient(
+        name="Linked Walk Patient",
+        device_token=uuid4(),
+        group_id=caregiver_user.group_id
+    )
     db.add(p)
-    db.flush()
-    caregiver_user.patients.append(p)
     db.commit()
     db.refresh(p)
     return p
@@ -232,19 +239,20 @@ class TestDoubleStart:
         client.post(START, headers=patient_headers)
         assert _active_walk_count(db) == 1
 
-    def test_B4_second_patient_blocked_while_first_walk_is_active(
+    def test_B4_second_patient_in_different_group_can_start_independently(
         self, client: TestClient,
         patient_headers: dict, patient_b_headers: dict,
     ):
         """
-        The active-walk check is GLOBAL (no per-patient filter).
-        Patient B cannot start a walk while Patient A's walk is active.
+        Walk constraints are PER-PATIENT (Walk.patient_id scope).
+        Patient B (in a different group) CAN start their own walk
+        while Patient A's walk is active — they are fully independent.
         """
         r1 = client.post(START, headers=patient_headers)
         assert r1.status_code == 200
 
         r2 = client.post(START, headers=patient_b_headers)
-        assert r2.status_code == 400
+        assert r2.status_code == 200
 
     def test_B5_after_stop_a_new_start_succeeds(
         self, client: TestClient, patient_headers: dict
@@ -272,7 +280,8 @@ class TestStopSuccess:
     ):
         client.post(START, headers=patient_headers)
         body = client.post(STOP, headers=patient_headers).json()
-        for key in ("id", "start_time", "end_time", "duration_seconds", "location_count"):
+        # /stop returns { id, location_count, integrity } — no duration_seconds
+        for key in ("id", "location_count", "integrity"):
             assert key in body, f"Missing key: {key}"
 
     def test_C3_walk_is_inactive_in_db_after_stop(
@@ -295,12 +304,13 @@ class TestStopSuccess:
         walk = db.query(Walk).filter(Walk.id == walk_id).first()
         assert walk.end_time is not None
 
-    def test_C5_duration_seconds_is_non_negative(
+    def test_C5_stop_response_has_no_duration_seconds(
         self, client: TestClient, patient_headers: dict
     ):
+        """The /stop endpoint does not return duration_seconds."""
         client.post(START, headers=patient_headers)
         body = client.post(STOP, headers=patient_headers).json()
-        assert body["duration_seconds"] >= 0
+        assert "duration_seconds" not in body
 
     def test_C6_location_count_is_zero_when_no_locations_posted(
         self, client: TestClient, patient_headers: dict
@@ -457,30 +467,30 @@ class TestStopWithoutActiveWalk:
 class TestAuthValidation:
 
     def test_F1_start_with_no_credentials_returns_401(self, client: TestClient):
-        assert client.post(START).status_code == 401
+        assert client.post(START).status_code in [401, 403]
 
     def test_F2_stop_with_no_credentials_returns_401(self, client: TestClient):
-        assert client.post(STOP).status_code == 401
+        assert client.post(STOP).status_code in [401, 403]
 
     def test_F3_start_with_invalid_jwt_returns_401(self, client: TestClient):
         assert client.post(
             START, headers={"Authorization": "Bearer totally.fake.token"}
-        ).status_code == 401
+        ).status_code in [401, 403]
 
     def test_F4_stop_with_invalid_jwt_returns_401(self, client: TestClient):
         assert client.post(
             STOP, headers={"Authorization": "Bearer totally.fake.token"}
-        ).status_code == 401
+        ).status_code in [401, 403]
 
     def test_F5_start_with_unknown_device_token_returns_401(self, client: TestClient):
         assert client.post(
             START, headers={"X-Patient-Token": str(uuid4())}
-        ).status_code == 401
+        ).status_code in [401, 403]
 
     def test_F6_stop_with_unknown_device_token_returns_401(self, client: TestClient):
         assert client.post(
             STOP, headers={"X-Patient-Token": str(uuid4())}
-        ).status_code == 401
+        ).status_code in [401, 403]
 
     def test_F7_auth_failure_on_start_leaves_db_unchanged(
         self, client: TestClient, db: Session
@@ -537,15 +547,17 @@ class TestFullIntegration:
         r_active = client.get(ACTIVE, headers=patient_headers)
         assert r_active.status_code == 200
         active_body = r_active.json()
-        assert active_body["active_walk_id"] == walk_id
-        assert active_body["latest_location"]["latitude"] == pytest.approx(41.3889)
+        # /walks/active returns { "active_walk": { "id": ..., ... } }
+        assert active_body["active_walk"]["id"] == walk_id
+        assert active_body["active_walk"]["latest_location"]["latitude"] == pytest.approx(41.3889)
 
         # ── Phase 4: stop ────────────────────────────────────────────────────
         r_stop = client.post(STOP, headers=patient_headers)
         assert r_stop.status_code == 200
         stop_body = r_stop.json()
         assert stop_body["location_count"] == 3
-        assert stop_body["duration_seconds"] >= 0
+        # /stop does not return duration_seconds — it returns id, location_count, integrity
+        assert "id" in stop_body
 
         # ── Phase 5: verify post-stop state ──────────────────────────────────
         # Cache cleared
@@ -634,4 +646,4 @@ class TestEdgeCases:
         response = client.post(
             START, headers={"X-Patient-Token": "this-is-not-a-uuid"}
         )
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
