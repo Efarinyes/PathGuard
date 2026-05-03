@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useOfflineRecovery } from "./useOfflineRecovery";
 
 interface AppState {
@@ -26,23 +26,29 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [patientId, setPatientId] = useState<number | null>(null);
   const [activeWalkId, setActiveWalkId] = useState<number | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  const hydrationRef = useRef(false);
 
   // Mount offline recovery listener globally
   useOfflineRecovery();
 
   // 🔄 Hydration
   useEffect(() => {
+    if (hydrationRef.current) return;
+
     const storedUserToken = localStorage.getItem('pg_user_token');
     const storedDeviceToken = localStorage.getItem('pg_device_token');
     const storedPatientId = localStorage.getItem('pg_patient_id');
     const storedWalkId = localStorage.getItem('pg_active_walk_id');
 
+    // Update state all at once to ensure batching
     if (storedUserToken) setUserToken(storedUserToken);
     if (storedDeviceToken) setDeviceToken(storedDeviceToken);
     if (storedPatientId) setPatientId(parseInt(storedPatientId, 10));
     if (storedWalkId) setActiveWalkId(parseInt(storedWalkId, 10));
     
+    // Mark as hydrated BEFORE potential persistence runs
     setIsHydrated(true);
+    hydrationRef.current = true;
   }, []);
 
   // 🔄 Multi-tab/window sync (PWA stability)

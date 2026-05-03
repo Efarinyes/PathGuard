@@ -51,18 +51,22 @@ export default function RootLayout({
       lang="ca"
       className={`${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">
-        {/* Early PWA install event capture */}
+      <head>
+        {/* Early PWA install event capture - MUST be in head */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 window.deferredPrompt = e;
+                // Dispatch custom event to notify listeners
+                window.dispatchEvent(new CustomEvent('pwa-installable'));
               });
             `,
           }}
         />
+      </head>
+      <body className="min-h-full flex flex-col font-sans">
         <AppStateProvider>
           <RoleGuard>
             {children}

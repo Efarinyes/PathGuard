@@ -53,22 +53,31 @@ export function usePWAInstall(options: PWAInstallOptions = {}) {
       clearTimeout(timerId);
     };
 
+    // Listener for custom event dispatched by head script
+    const handleCustomPwaEvent = () => {
+      const captured = (window as any).deferredPrompt;
+      if (captured) {
+        setInstallPrompt(captured);
+        showPrompt(options.isPriority ? 1000 : 3000);
+      }
+    };
+
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     window.addEventListener("appinstalled", handleAppInstalled);
+    window.addEventListener("pwa-installable", handleCustomPwaEvent);
 
-    // Initial check for captured event
+    // 2. Browser/Event detection
     const capturedPrompt = (window as any).deferredPrompt;
+    const supportsNativePrompt = 'onbeforeinstallprompt' in window;
+
     if (capturedPrompt) {
       setInstallPrompt(capturedPrompt);
       showPrompt(options.isPriority ? 1000 : 3000);
-    } else {
-      // Fallback detection (Safari only)
-      // Robust check: Chromium browsers (Chrome, Brave, Edge) have window.chrome.
-      // Real Safari has 'Apple' in the vendor string and lacks window.chrome.
-      const isChromium = !!(window as any).chrome;
+    } else if (!supportsNativePrompt) {
+      // Fallback detection (Safari and other browsers without native prompt support)
       const isApple = /Apple/.test(window.navigator.vendor);
       
-      if (isApple && !isChromium) {
+      if (isApple) {
         const ua = window.navigator.userAgent.toLowerCase();
         const isIos = /iphone|ipad|ipod/.test(ua);
         const isMac = /macintosh/.test(ua);
@@ -86,6 +95,7 @@ export function usePWAInstall(options: PWAInstallOptions = {}) {
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       window.removeEventListener("appinstalled", handleAppInstalled);
+      window.removeEventListener("pwa-installable", handleCustomPwaEvent);
       clearTimeout(timerId);
     };
   }, [options.isPriority]);
