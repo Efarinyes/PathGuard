@@ -24,8 +24,8 @@ export const metadata: Metadata = {
     telephone: false,
   },
   icons: {
-    icon: "/icons/icon.svg",
-    apple: "/icons/icon.svg",
+    icon: "/icons/icon-192.png",
+    apple: "/icons/icon-192.png",
   },
 };
 
@@ -59,9 +59,18 @@ export default function RootLayout({
               window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 window.deferredPrompt = e;
-                // Dispatch custom event to notify listeners
                 window.dispatchEvent(new CustomEvent('pwa-installable'));
               });
+
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/pathguard-sw.js').then(function(registration) {
+                    console.log('SW registered:', registration.scope);
+                  }, function(err) {
+                    console.log('SW registration failed:', err);
+                  });
+                });
+              }
             `,
           }}
         />
