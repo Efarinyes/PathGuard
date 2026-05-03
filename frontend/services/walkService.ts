@@ -66,8 +66,12 @@ export const walkService = {
     const response = await fetch(`${API_BASE_URL}/walks/active`, {
       headers: {
         'Content-Type': 'application/json',
-        ...(userToken ? { 'Authorization': `Bearer ${userToken}` } : {}),
-        ...(deviceToken ? { 'X-Patient-Token': deviceToken } : {}),
+        ...(userToken 
+          ? { 'Authorization': `Bearer ${userToken}` } 
+          : deviceToken 
+            ? { 'X-Patient-Token': deviceToken } 
+            : {}
+        ),
       },
     });
 
