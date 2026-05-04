@@ -18,10 +18,12 @@ const withPWA = withPWAInit({
       /\/_next\/static\/chunks\/app\/_not-found\/page.*\.js$/,
       /\/_next\/static\/chunks\/next\/dist\/client\/components\/builtin\/.*\.js$/,
       /middleware-manifest\.json$/,
+      /\/api\/v1\/.*/,
     ],
+    navigateFallbackDenylist: [/\/api\/v1\/.*/],
     runtimeCaching: [
       {
-        urlPattern: /^http:\/\/localhost:8000\/api\/.*/i,
+        urlPattern: /\/api\/v1\/.*/i,
         handler: "NetworkOnly",
       },
     ],
