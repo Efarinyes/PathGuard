@@ -23,8 +23,9 @@ const DynamicMapRenderer = dynamic(() => import('./MapRenderer'), {
 
 export interface CaregiverMapProps {
   locations: LocationPayload[];
+  isPatientOffline?: boolean;
 }
 
-export default function CaregiverMap({ locations }: CaregiverMapProps) {
-  return <DynamicMapRenderer locations={locations} />;
+export default function CaregiverMap({ locations, isPatientOffline }: CaregiverMapProps) {
+  return <DynamicMapRenderer locations={locations} isPatientOffline={isPatientOffline} />;
 }

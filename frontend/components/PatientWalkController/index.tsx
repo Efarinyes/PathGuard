@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppState } from '../../hooks/useAppState';
 import { useLocationTracking } from '../../hooks/useLocationTracking';
+import { useWebSocket } from '../../hooks/useWebSocket';
 import { locationService } from '../../services/locationService';
 import NotificationBanner from '../NotificationBanner';
 
@@ -26,6 +27,21 @@ export default function PatientWalkController() {
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<Notification | null>(null);
   const notifCounter = useRef(0);
+
+  // Presence WebSocket for Heartbeat
+  const wsUrlParams = deviceToken ? `?patient_token=${deviceToken}` : '';
+  const { isConnected, sendMessage } = useWebSocket<any>(!!deviceToken, wsUrlParams);
+
+  useEffect(() => {
+    if (!isConnected) return;
+    
+    sendMessage({ type: 'heartbeat' });
+    const interval = setInterval(() => {
+      sendMessage({ type: 'heartbeat' });
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [isConnected, sendMessage]);
 
   const showNotification = (message: string, type: Notification['type']) => {
     notifCounter.current += 1;

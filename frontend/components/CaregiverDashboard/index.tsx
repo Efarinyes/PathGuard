@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import CaregiverMap from '../CaregiverMap';
+import NotificationBanner from '../NotificationBanner';
 import WalkHistoryList, { WalkHistoryItem } from '../WalkHistoryList';
 import { useLivePatientLocation } from '../../hooks/useLivePatientLocation';
 import { useAppState } from '../../hooks/useAppState';
@@ -16,10 +17,11 @@ import { useRouter } from 'next/navigation';
 export default function CaregiverDashboard() {
   const { userToken, clearUserSession } = useAppState();
   const router = useRouter();
-  const { currentLocation, routeHistory, isConnected, isLoading, isActive } = useLivePatientLocation();
+  const { currentLocation, routeHistory, isConnected, isPatientConnected, isLoading, isActive } = useLivePatientLocation();
   const [timeAgo, setTimeAgo] = useState<string>('Esperant dades...');
   const [isExtraInfoOpen, setIsExtraInfoOpen] = useState(false);
   const [isMonitoringPaused, setIsMonitoringPaused] = useState(false);
+  const [notification, setNotification] = useState<{ message: string, type: 'info' | 'warning' } | null>(null);
 
   // Consume extracted data fetching logic
   const { walks, analytics } = useCaregiverAnalytics(userToken, isActive);
@@ -51,14 +53,33 @@ export default function CaregiverDashboard() {
     return () => clearInterval(updateTimer);
   }, [currentLocation]);
 
+  // Handle patient connectivity notifications
+  useEffect(() => {
+    if (isLoading || !isActive) return;
+
+    if (!isPatientConnected) {
+      setNotification({ message: 'El pacient ha perdut la cobertura', type: 'warning' });
+    } else {
+      setNotification({ message: 'El pacient ha recuperat la cobertura', type: 'info' });
+    }
+  }, [isPatientConnected, isActive, isLoading]);
+
 
   return (
     <div className="w-full flex flex-col md:flex-row gap-6 p-4 md:p-6 bg-[#F8FAFC] min-h-screen">
       
+      {notification && (
+        <NotificationBanner 
+          message={notification.message} 
+          type={notification.type} 
+          onDismiss={() => setNotification(null)}
+        />
+      )}
+
       {/* Primary Area: The Map */}
       <div className="flex-grow order-1 md:order-1 h-[60vh] md:h-auto">
         {(routeHistory.length > 0 && !isMonitoringPaused) ? (
-          <CaregiverMap locations={routeHistory} />
+          <CaregiverMap locations={routeHistory} isPatientOffline={!isPatientConnected} />
         ) : (
           <div className="w-full h-full min-h-[400px] border border-slate-200 rounded-xl bg-slate-100 flex flex-col items-center justify-center gap-4">
             <span className="text-slate-500 font-medium tracking-wide">
@@ -86,11 +107,11 @@ export default function CaregiverDashboard() {
               <h2 className="text-[#0F172A] font-bold text-xl mb-1">Estat del passeig</h2>
               <div className="flex items-center gap-2">
                 <span className="relative flex h-3 w-3">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${(isConnected && isActive && !isMonitoringPaused) ? 'bg-[#22C55E]' : 'bg-[#F59E0B]'}`}></span>
-                  <span className={`relative inline-flex rounded-full h-3 w-3 ${(isConnected && isActive && !isMonitoringPaused) ? 'bg-[#22C55E]' : 'bg-[#F59E0B]'}`}></span>
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${(isConnected && isActive && !isMonitoringPaused) ? (isPatientConnected ? 'bg-[#22C55E]' : 'bg-[#F59E0B]') : 'bg-slate-400'}`}></span>
+                  <span className={`relative inline-flex rounded-full h-3 w-3 ${(isConnected && isActive && !isMonitoringPaused) ? (isPatientConnected ? 'bg-[#22C55E]' : 'bg-[#F59E0B]') : 'bg-slate-400'}`}></span>
                 </span>
                 <p className="text-slate-600 text-sm font-medium">
-                  {isMonitoringPaused ? 'Mode Tauler - Seguiment pausat' : (isConnected && isActive) ? 'Passeig actiu - En línia' : isActive ? 'Passeig actiu - Connectant...' : 'Passeig finalitzat'}
+                  {isMonitoringPaused ? 'Mode Tauler - Seguiment pausat' : (isConnected && isActive) ? (isPatientConnected ? 'Passeig actiu - En línia' : 'Passeig actiu - Sense cobertura') : isActive ? 'Passeig actiu - Connectant...' : 'Passeig finalitzat'}
                 </p>
               </div>
             </div>

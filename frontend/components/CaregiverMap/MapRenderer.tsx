@@ -5,13 +5,14 @@ import { MapContainer, TileLayer, Polyline, Marker } from 'react-leaflet';
 import type { Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LocationPayload } from '../../services/locationService';
-import { PulseDotIcon, StartFlagIcon } from './CustomIcons';
+import { PulseDotIcon, StartFlagIcon, OfflinePulseDotIcon } from './CustomIcons';
 
 export interface MapRendererProps {
   locations: LocationPayload[];
+  isPatientOffline?: boolean;
 }
 
-export default function MapRenderer({ locations }: MapRendererProps) {
+export default function MapRenderer({ locations, isPatientOffline }: MapRendererProps) {
   const mapRef = useRef<LeafletMap | null>(null);
 
   // Derive coordinates array for the Polyline, filtering out any invalid data
@@ -70,7 +71,7 @@ export default function MapRenderer({ locations }: MapRendererProps) {
 
         {/* Current Position Pulse Indicator */}
         {currentPosition && (
-          <Marker position={currentPosition} icon={PulseDotIcon} />
+          <Marker position={currentPosition} icon={isPatientOffline ? OfflinePulseDotIcon : PulseDotIcon} />
         )}
       </MapContainer>
     </div>

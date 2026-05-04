@@ -7,6 +7,7 @@ import { WalkEventProcessor, WalkState, WalkAction } from '../lib/WalkEventProce
 
 export interface UseLivePatientLocationReturn extends WalkState {
   isConnected: boolean;
+  isPatientConnected: boolean;
   isLoading: boolean;
 }
 
@@ -27,6 +28,8 @@ export function useLivePatientLocation(
     { currentLocation: null, routeHistory: initialHistory, isActive: false }
   );
 
+  const [isPatientConnected, setIsPatientConnected] = useState(true);
+
   // 1. Snapshot Recovery: Fetch active walk state (REST Initial Load)
   async function rehydrateState(isReconnect = false) {
     if (isLoading && isReconnect) return;
@@ -42,6 +45,8 @@ export function useLivePatientLocation(
 
       const snapshot = await walkService.getActiveWalk(userToken, deviceToken);
       dispatch({ type: 'SNAPSHOT', payload: snapshot });
+      // On rehydration, we assume patient might be connected if walk is active, 
+      // but the WS events will provide the definitive state.
     } catch (error) {
       console.error('[useLivePatientLocation] Recovery failed:', error);
     } finally {
@@ -94,6 +99,10 @@ export function useLivePatientLocation(
       dispatch({ type: 'WALK_STARTED', timestamp: eventTime });
     } else if (lastMessage.type === 'walk_stopped') {
       dispatch({ type: 'WALK_STOPPED' });
+    } else if (lastMessage.type === 'patient_online') {
+      setIsPatientConnected(true);
+    } else if (lastMessage.type === 'patient_offline') {
+      setIsPatientConnected(false);
     } else {
       const isLocation = lastMessage.type === 'location' || 
                          (!lastMessage.type && lastMessage.latitude != null && lastMessage.longitude != null);
@@ -113,6 +122,7 @@ export function useLivePatientLocation(
   return {
     ...walkState,
     isConnected,
+    isPatientConnected,
     isLoading
   };
 }

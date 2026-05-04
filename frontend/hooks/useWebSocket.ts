@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:8000/api/v1/ws/";
 
 export interface UseWebSocketReturn<T> {
   lastMessage: T | null;
   isConnected: boolean;
+  sendMessage: (msg: any) => void;
 }
 
 /**
@@ -20,6 +21,12 @@ export function useWebSocket<T = any>(enabled: boolean = true, urlParams: string
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttempt = useRef<number>(0);
   const isMounted = useRef<boolean>(false);
+
+  const sendMessage = useCallback((msg: any) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify(msg));
+    }
+  }, []);
 
   useEffect(() => {
     isMounted.current = true;
@@ -131,5 +138,5 @@ export function useWebSocket<T = any>(enabled: boolean = true, urlParams: string
     };
   }, [enabled]); // Run only once on mount
 
-  return { lastMessage, isConnected };
+  return { lastMessage, isConnected, sendMessage };
 }

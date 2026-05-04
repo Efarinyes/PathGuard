@@ -1,6 +1,7 @@
 import uuid
+import asyncio
 from datetime import datetime
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Set
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends
 from sqlalchemy.orm import Session
 from app.api import deps
@@ -22,8 +23,10 @@ class ConnectionManager:
     def __init__(self):
         # group_id -> list of active websockets
         self.group_rooms: Dict[int, List[WebSocket]] = {}
+        self.patient_connections: Dict[int, Set[WebSocket]] = {}
+        self.patient_status: Dict[int, str] = {}
 
-    async def connect(self, websocket: WebSocket, group_id: int):
+    async def connect(self, websocket: WebSocket, group_id: int, role: str):
         await websocket.accept()
         if group_id not in self.group_rooms:
             self.group_rooms[group_id] = []
@@ -35,13 +38,20 @@ class ConnectionManager:
             "group_id": group_id,
             "timestamp": f"{datetime.utcnow().isoformat()}Z"
         })
+        
+        if role == "patient":
+            if group_id not in self.patient_connections:
+                self.patient_connections[group_id] = set()
+            self.patient_connections[group_id].add(websocket)
 
-    def disconnect(self, websocket: WebSocket, group_id: int):
+    def disconnect(self, websocket: WebSocket, group_id: int, role: str):
         if group_id in self.group_rooms:
             if websocket in self.group_rooms[group_id]:
                 self.group_rooms[group_id].remove(websocket)
             if not self.group_rooms[group_id]:
                 del self.group_rooms[group_id]
+        if role == "patient" and group_id in self.patient_connections:
+            self.patient_connections[group_id].discard(websocket)
 
     async def broadcast_to_group(self, group_id: int, message: dict):
         """
@@ -107,7 +117,7 @@ async def websocket_endpoint(
         await websocket.close(code=4003) # Forbidden
         return
 
-    await manager.connect(websocket, group_id)
+    await manager.connect(websocket, group_id, role)
     
     # ⚡ LATE JOIN CONSISTENCY: Send atomic snapshot as first message
     if role == "caregiver":
@@ -155,13 +165,33 @@ async def websocket_endpoint(
             })
 
     try:
+        # Notify group when patient presence changes
+        if role == "patient":
+            manager.patient_status[group_id] = "online"
+            await manager.broadcast_to_group(group_id, {"type": "patient_online"})
+
         while True:
-            # Maintain connection
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        manager.disconnect(websocket, group_id)
-    except Exception:
-        manager.disconnect(websocket, group_id)
+            if role == "patient":
+                try:
+                    data = await asyncio.wait_for(websocket.receive_json(), timeout=12.0)
+                    if data.get("type") == "heartbeat":
+                        if manager.patient_status.get(group_id) != "online":
+                            manager.patient_status[group_id] = "online"
+                            await manager.broadcast_to_group(group_id, {"type": "patient_online"})
+                except asyncio.TimeoutError:
+                    if manager.patient_status.get(group_id) == "online":
+                        manager.patient_status[group_id] = "offline"
+                        await manager.broadcast_to_group(group_id, {"type": "patient_offline"})
+            else:
+                # Caregiver
+                await websocket.receive_text()
+    except (WebSocketDisconnect, Exception):
+        manager.disconnect(websocket, group_id, role)
+        if role == "patient":
+            if not manager.patient_connections.get(group_id):
+                if manager.patient_status.get(group_id) == "online":
+                    manager.patient_status[group_id] = "offline"
+                    await manager.broadcast_to_group(group_id, {"type": "patient_offline"})
 
 @router.get("/")
 def check_ws_status():
