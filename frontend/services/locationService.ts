@@ -71,6 +71,10 @@ export const locationService = {
     const currentBatch = [...batchBuffer];
     batchBuffer = [];
 
+    if (currentBatch.length === 0) {
+      return;
+    }
+
     const walkId = currentBatch[0].walk_id;
     const batchId = crypto.randomUUID();
     const deviceToken = typeof window !== "undefined" ? localStorage.getItem("pg_device_token") : null;
@@ -79,29 +83,37 @@ export const locationService = {
 
     try {
       console.log(`[locationService] Sending batch via gpsTransportService...`);
+      const pointsWithClientId = currentBatch.map(p => ({
+        latitude: p.latitude,
+        longitude: p.longitude,
+        timestamp: p.timestamp,
+        walk_id: p.walk_id,
+        client_id: crypto.randomUUID()
+      }));
       await gpsTransportService.sendBatch({
-        walk_id: walkId,
+        walk_id: walkId as number,
         batch_id: batchId,
-        points: currentBatch.map(p => ({
-          latitude: p.latitude,
-          longitude: p.longitude,
-          timestamp: p.timestamp,
-          walk_id: p.walk_id,
-          client_id: p.id
-        }))
+        points: pointsWithClientId
       }, deviceToken);
 
       // Success or Conflict (Duplicate): Mark as synced to prevent retries
-      for (const point of currentBatch) {
-        await offlineSyncService.markSynced(point.id);
+      for (const point of pointsWithClientId) {
+        await offlineSyncService.markSynced(point.client_id);
       }
       await offlineSyncService.clearSynced();
     } catch (error) {
       console.debug("[locationService] Batch sync failed, buffering to IndexedDB:", error);
       // Resilience: Persist entire batch to IndexedDB for later recovery
       for (const point of currentBatch) {
+        if (!point.walk_id) continue;
         try {
-          await offlineSyncService.add(point);
+          await offlineSyncService.add({
+            latitude: point.latitude,
+            longitude: point.longitude,
+            timestamp: point.timestamp,
+            walk_id: point.walk_id,
+            id: crypto.randomUUID()
+          });
         } catch (e) {
           // Already in IndexedDB (from saveLocation), which is fine
         }
