@@ -15,6 +15,8 @@ export interface QueuedLocation {
   longitude: number;
   timestamp: string;
   synced: number; // 0 for unsynced, 1 for synced
+  is_recovered?: boolean; // True if synced offline during recovery
+  client_id?: string; // UUID for backend deduplication
 }
 
 class OfflineSyncService {
@@ -51,7 +53,7 @@ class OfflineSyncService {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readwrite');
       const store = transaction.objectStore(STORE_NAME);
-      const request = store.put({ ...location, synced: 0 }); // Idempotent put
+      const request = store.put({ ...location, synced: 0 });
 
       request.onsuccess = () => resolve();
       request.onerror = () => reject('Failed to enqueue location');
@@ -68,8 +70,15 @@ class OfflineSyncService {
 
       request.onsuccess = () => {
         const results = request.result as QueuedLocation[];
-        // Ensure chronological order
-        results.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        // Ensure chronological order by timestamp
+        results.sort((a, b) => {
+          const timeA = new Date(a.timestamp).getTime();
+          const timeB = new Date(b.timestamp).getTime();
+          if (timeA === timeB) {
+            return a.id.localeCompare(b.id);
+          }
+          return timeA - timeB;
+        });
         resolve(results);
       };
       request.onerror = () => reject('Failed to fetch unsynced locations');
@@ -95,14 +104,49 @@ class OfflineSyncService {
     });
   }
 
+  async markSyncedBulk(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+
+    const db = await this.initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+
+      let completed = 0;
+      let hasError = false;
+
+      for (const id of ids) {
+        const getRequest = store.get(id);
+
+        getRequest.onsuccess = () => {
+          const data = getRequest.result;
+          if (data && !hasError) {
+            data.synced = 1;
+            store.put(data);
+          }
+          completed++;
+          if (completed === ids.length) {
+            resolve();
+          }
+        };
+
+        getRequest.onerror = () => {
+          if (!hasError) {
+            hasError = true;
+            reject('Failed to mark bulk as synced');
+          }
+        };
+      }
+    });
+  }
+
   async clearSynced(): Promise<void> {
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readwrite');
       const store = transaction.objectStore(STORE_NAME);
       const index = store.index('synced');
-      
-      // Efficiently target only synced records
+
       const request = index.openCursor(IDBKeyRange.only(1));
       request.onsuccess = (event: any) => {
         const cursor = event.target.result;
