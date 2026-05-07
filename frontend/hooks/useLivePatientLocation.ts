@@ -44,7 +44,23 @@ export function useLivePatientLocation(
       if (!isReconnect) setIsLoading(true);
 
       const snapshot = await walkService.getActiveWalk(userToken, deviceToken);
-      dispatch({ type: 'SNAPSHOT', payload: snapshot });
+      if (snapshot) {
+        dispatch({
+          type: 'SNAPSHOT',
+          payload: {
+            active_walk: {
+              id: snapshot.id,
+              active_walk_id: snapshot.id,
+              history: (snapshot.locations || []).map(loc => ({
+                latitude: loc.latitude,
+                longitude: loc.longitude,
+                timestamp: loc.timestamp,
+                walk_id: snapshot.id,
+              })),
+            },
+          },
+        });
+      }
       // On rehydration, we assume patient might be connected if walk is active, 
       // but the WS events will provide the definitive state.
     } catch (error) {

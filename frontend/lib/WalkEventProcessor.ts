@@ -11,8 +11,72 @@ export interface BatchLocationUpdatePayload {
   walk_id: number;
 }
 
+export interface WalkSnapshotMessage {
+  type: 'snapshot';
+  timestamp?: string;
+  event_id?: string;
+  active_walk?: {
+    id: number;
+    active_walk_id?: number;
+    history: Array<{
+      latitude: number;
+      longitude: number;
+      timestamp: string;
+      walk_id?: number;
+    }>;
+    latest_location?: {
+      latitude: number;
+      longitude: number;
+      timestamp: string;
+      walk_id?: number;
+    };
+  };
+  [key: string]: unknown;
+}
+
+export interface WalkLocationMessage {
+  type?: 'location';
+  timestamp?: string;
+  event_id?: string;
+  latitude: number;
+  longitude: number;
+  walk_id?: number;
+  [key: string]: unknown;
+}
+
+export interface WalkEventMessage {
+  type: 'walk_started' | 'walk_stopped';
+  timestamp?: string;
+  event_id?: string;
+  [key: string]: unknown;
+}
+
+export type WalkMessage = WalkSnapshotMessage | WalkLocationMessage | WalkEventMessage;
+
+interface SnapshotPayload {
+  active_walk?: ActiveWalkData;
+  [key: string]: unknown;
+}
+
+interface ActiveWalkData {
+  id: number;
+  active_walk_id?: number;
+  history: Array<{
+    latitude: number;
+    longitude: number;
+    timestamp: string;
+    walk_id?: number;
+  }>;
+  latest_location?: {
+    latitude: number;
+    longitude: number;
+    timestamp: string;
+    walk_id?: number;
+  };
+}
+
 export type WalkAction =
-  | { type: 'SNAPSHOT'; payload: any }
+  | { type: 'SNAPSHOT'; payload: SnapshotPayload }
   | { type: 'WALK_STARTED'; timestamp: number }
   | { type: 'WALK_STOPPED' }
   | { type: 'LOCATION_UPDATE'; payload: LocationPayload }
@@ -39,7 +103,7 @@ export class WalkEventProcessor {
    * Evaluates if a raw message should be processed, based on deduplication and chronological ordering.
    * Returns true if valid, false if it should be ignored.
    */
-  public shouldProcessMessage(message: any): boolean {
+  public shouldProcessMessage(message: WalkMessage | null): boolean {
     if (!message) return false;
 
     // A. Event Deduplication (Strict UUID check)
@@ -81,27 +145,26 @@ export class WalkEventProcessor {
   public reduceState(state: WalkState, action: WalkAction): WalkState {
     switch (action.type) {
       case 'SNAPSHOT': {
-        const walkData = (action.payload && 'active_walk' in action.payload) 
-            ? action.payload.active_walk 
-            : action.payload;
+        const rawPayload = action.payload as Record<string, unknown>;
+        const activeWalk = rawPayload.active_walk as ActiveWalkData | undefined;
+        const walkData = activeWalk || rawPayload as unknown as ActiveWalkData | undefined;
         
-        const walkId = walkData?.id ?? walkData?.active_walk_id;
-        
-        if (!walkData || walkId === undefined || walkId === null) {
+        if (!walkData || !walkData.id) {
           this.reset();
           return { isActive: false, currentLocation: null, routeHistory: [] };
         }
 
-        const history = (walkData.history || [])
-          .map((p: any) => ({
+        const walkId = walkData.id;
+        const history: LocationPayload[] = (walkData.history || [])
+          .map((p: { latitude: number; longitude: number; timestamp: string; walk_id?: number }): LocationPayload => ({
             latitude: p.latitude,
             longitude: p.longitude,
             timestamp: p.timestamp,
-            ...(p.walk_id !== undefined ? { walk_id: p.walk_id } : { walk_id: walkId }),
+            walk_id: p.walk_id ?? walkId,
           }))
-          .sort((a: any, b: any) => a.timestamp.localeCompare(b.timestamp));
+          .sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 
-        let latestLoc = null;
+        let latestLoc: LocationPayload | null = null;
         if (history.length > 0) {
           latestLoc = history[history.length - 1];
           this.latestTimestamp = new Date(latestLoc.timestamp).getTime();
@@ -110,7 +173,7 @@ export class WalkEventProcessor {
             latitude: walkData.latest_location.latitude,
             longitude: walkData.latest_location.longitude,
             timestamp: walkData.latest_location.timestamp,
-            ...(walkData.latest_location.walk_id !== undefined ? { walk_id: walkData.latest_location.walk_id } : { walk_id: walkId }),
+            walk_id: walkData.latest_location.walk_id ?? walkId,
           };
           this.latestTimestamp = new Date(latestLoc.timestamp).getTime();
         }
