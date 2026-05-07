@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -12,7 +12,7 @@ class Group(Base):
     name = Column(String, nullable=False)
     
     owner_id = Column(Integer, ForeignKey("user.id"), nullable=True, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     owner = relationship("User", foreign_keys=[owner_id])

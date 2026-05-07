@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.session import database as db_session
@@ -41,7 +41,7 @@ async def start_walk(
     
     # Create new walk
     new_walk = Walk(
-        start_time=datetime.utcnow(),
+        start_time=datetime.now(timezone.utc),
         active=True,
         patient_id=active_patient.id,
         initiated_by_type=initiated_by_type,
@@ -96,7 +96,7 @@ async def stop_walk(
     
     # Update the walk
     active_walk.active = False
-    active_walk.end_time = datetime.utcnow()
+    active_walk.end_time = datetime.now(timezone.utc)
     active_walk.stopped_by_type = stopped_by_type
     active_walk.stopped_by_id = stopped_by_id
     

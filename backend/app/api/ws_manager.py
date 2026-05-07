@@ -1,6 +1,6 @@
 import uuid
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Optional, Tuple, Set
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends
 from sqlalchemy.orm import Session
@@ -36,7 +36,7 @@ class ConnectionManager:
         await websocket.send_json({
             "type": "connection_established",
             "group_id": group_id,
-            "timestamp": f"{datetime.utcnow().isoformat()}Z"
+            "timestamp": f"{datetime.now(timezone.utc).isoformat()}Z"
         })
         
         if role == "patient":
@@ -132,7 +132,7 @@ async def websocket_endpoint(
             snapshot_payload = {
                 "type": "snapshot",
                 "group_id": group_id,
-                "server_timestamp": f"{datetime.utcnow().isoformat()}Z",
+                "server_timestamp": f"{datetime.now(timezone.utc).isoformat()}Z",
                 "active_walk": {
                     "id": active_walk.id,
                     "patient_id": active_walk.patient_id,
@@ -161,7 +161,7 @@ async def websocket_endpoint(
                 "type": "snapshot",
                 "group_id": group_id,
                 "active_walk": None,
-                "server_timestamp": f"{datetime.utcnow().isoformat()}Z"
+                "server_timestamp": f"{datetime.now(timezone.utc).isoformat()}Z"
             })
 
     try:

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -61,7 +61,7 @@ def get_analytics(
     
     # 3. Walk frequency trend (last 7 days)
     # Using UTC now as baseline for stability
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
     last_7_days = [(today - timedelta(days=i)) for i in range(6, -1, -1)]
     
     daily_counts = {day: 0 for day in last_7_days}
