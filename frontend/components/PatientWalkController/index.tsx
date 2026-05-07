@@ -6,8 +6,7 @@ import { useLocationTracking } from '../../hooks/useLocationTracking';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { locationService } from '../../services/locationService';
 import NotificationBanner from '../NotificationBanner';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+import { API_BASE_URL } from '@/lib/config';
 
 interface Notification {
   message: string;
