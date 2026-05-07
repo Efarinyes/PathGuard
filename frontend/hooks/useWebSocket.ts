@@ -2,6 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:8000/api/v1/ws/";
 
+export interface UseWebSocketOptions {
+  debounceMs?: number;
+}
+
 export interface UseWebSocketReturn<T> {
   lastMessage: T | null;
   isConnected: boolean;
@@ -11,9 +15,15 @@ export interface UseWebSocketReturn<T> {
 /**
  * A clean, UI-agnostic hook for managing a WebSocket connection.
  * Handles React Strict Mode double-invoke, automatic reconnects with
- * exponential backoff, and safe cleanup on unmount.
+ * exponential backoff, safe cleanup on unmount, and optional debouncing
+ * to reduce re-renders from high-frequency messages.
  */
-export function useWebSocket<T = any>(enabled: boolean = true, urlParams: string = ''): UseWebSocketReturn<T> {
+export function useWebSocket<T = any>(
+  enabled: boolean = true,
+  urlParams: string = '',
+  options: UseWebSocketOptions = {}
+): UseWebSocketReturn<T> {
+  const { debounceMs = 0 } = options;
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [lastMessage, setLastMessage] = useState<T | null>(null);
 
@@ -21,12 +31,31 @@ export function useWebSocket<T = any>(enabled: boolean = true, urlParams: string
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttempt = useRef<number>(0);
   const isMounted = useRef<boolean>(false);
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  const pendingMessage = useRef<T | null>(null);
 
   const sendMessage = useCallback((msg: any) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify(msg));
     }
   }, []);
+
+  const processMessage = useCallback((data: T) => {
+    if (debounceMs > 0) {
+      pendingMessage.current = data;
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+      debounceTimeout.current = setTimeout(() => {
+        if (isMounted.current && pendingMessage.current) {
+          setLastMessage(pendingMessage.current);
+          pendingMessage.current = null;
+        }
+      }, debounceMs);
+    } else {
+      setLastMessage(data);
+    }
+  }, [debounceMs]);
 
   useEffect(() => {
     isMounted.current = true;
@@ -35,7 +64,6 @@ export function useWebSocket<T = any>(enabled: boolean = true, urlParams: string
     function connect() {
       if (!isMounted.current) return;
 
-      // Do not attempt if a connection is already alive or connecting
       const state = ws.current?.readyState;
       if (state === WebSocket.OPEN || state === WebSocket.CONNECTING) return;
 
@@ -55,7 +83,7 @@ export function useWebSocket<T = any>(enabled: boolean = true, urlParams: string
           try {
             console.log(`[WS] Received: ${event.data}`);
             const data: T = JSON.parse(event.data);
-            setLastMessage(data);
+            processMessage(data);
           } catch {
             // Silently discard malformed messages
           }
@@ -69,7 +97,6 @@ export function useWebSocket<T = any>(enabled: boolean = true, urlParams: string
         };
 
         socket.onerror = () => {
-          // onerror always precedes onclose — close will trigger reconnect
           socket.close();
         };
       } catch {
@@ -83,8 +110,7 @@ export function useWebSocket<T = any>(enabled: boolean = true, urlParams: string
         console.warn('[WS] Maximum reconnect attempts reached (5). Stopping.');
         return;
       }
-      
-      // Exponential backoff capped at 10s
+
       const delay = Math.min(1000 * Math.pow(2, reconnectAttempt.current), 10_000);
       reconnectAttempt.current += 1;
       console.debug(`[WS] Reconnecting in ${delay}ms (attempt ${reconnectAttempt.current})`);
@@ -93,16 +119,14 @@ export function useWebSocket<T = any>(enabled: boolean = true, urlParams: string
 
     connect();
 
-    // Foreground recovery: Force reconnect when app returns to visibility
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && enabled) {
         console.debug('[WS] App visible, checking connection...');
-        reconnectAttempt.current = 0; // Reset backoff on manual return
+        reconnectAttempt.current = 0;
         connect();
       }
     };
 
-    // Network recovery: Force reconnect when connection returns
     const handleOnline = () => {
       if (enabled) {
         console.debug('[WS] Network online, reconnecting...');
@@ -119,14 +143,16 @@ export function useWebSocket<T = any>(enabled: boolean = true, urlParams: string
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('online', handleOnline);
 
-      // Cancel any pending reconnect timer
       if (reconnectTimeout.current) {
         clearTimeout(reconnectTimeout.current);
         reconnectTimeout.current = null;
       }
 
-      // Null out all handlers BEFORE closing to prevent onclose
-      // triggering a reconnect loop during unmount / Strict Mode cleanup
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+        debounceTimeout.current = null;
+      }
+
       if (ws.current) {
         ws.current.onopen = null;
         ws.current.onmessage = null;
@@ -136,7 +162,7 @@ export function useWebSocket<T = any>(enabled: boolean = true, urlParams: string
         ws.current = null;
       }
     };
-  }, [enabled]); // Run only once on mount
+  }, [enabled, processMessage]);
 
   return { lastMessage, isConnected, sendMessage };
 }

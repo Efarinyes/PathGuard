@@ -351,6 +351,76 @@ describe('useWebSocket', () => {
       vi.useRealTimers();
     });
 
+  // ── E. Debounce optimization ─────────────────────────────────────────────
+
+  describe('E. Debounce optimization', () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(()  => vi.useRealTimers());
+
+    it('E1 — without debounce, messages update immediately', () => {
+      const { hook, ws } = renderConnected();
+      const payload = { type: 'location_update', latitude: 41.3874, longitude: 2.1686 };
+
+      act(() => ws.simulateMessage(payload));
+      expect(hook.result.current.lastMessage).toEqual(payload);
+    });
+
+    it('E2 — with debounce, messages are delayed', () => {
+      const hook = renderHook(() => useWebSocket(true, '', { debounceMs: 100 }));
+      const ws = mockWsInstances[0];
+      act(() => ws.simulateOpen());
+
+      const payload = { type: 'location_update', latitude: 41.3874, longitude: 2.1686 };
+      act(() => ws.simulateMessage(payload));
+
+      // Before debounce delay, lastMessage should still be null
+      expect(hook.result.current.lastMessage).toBeNull();
+
+      // After debounce delay, lastMessage should be updated
+      act(() => vi.advanceTimersByTime(100));
+      expect(hook.result.current.lastMessage).toEqual(payload);
+    });
+
+    it('E3 — rapid messages are debounced, only last one shows', () => {
+      const hook = renderHook(() => useWebSocket(true, '', { debounceMs: 50 }));
+      const ws = mockWsInstances[0];
+      act(() => ws.simulateOpen());
+
+      act(() => ws.simulateMessage({ type: 'location_update', id: 1 }));
+      act(() => ws.simulateMessage({ type: 'location_update', id: 2 }));
+      act(() => ws.simulateMessage({ type: 'location_update', id: 3 }));
+
+      expect(hook.result.current.lastMessage).toBeNull();
+
+      act(() => vi.advanceTimersByTime(50));
+      expect(hook.result.current.lastMessage).toEqual({ type: 'location_update', id: 3 });
+    });
+
+    it('E4 — debounce timeout is cleared on unmount', () => {
+      const hook = renderHook(() => useWebSocket(true, '', { debounceMs: 100 }));
+      const ws = mockWsInstances[0];
+      act(() => ws.simulateOpen());
+
+      act(() => ws.simulateMessage({ type: 'test' }));
+
+      hook.unmount();
+
+      act(() => vi.advanceTimersByTime(100));
+      // No error thrown, debounce cleared properly
+    });
+
+    it('E5 — debounce of 0 behaves like no debounce', () => {
+      const hook = renderHook(() => useWebSocket(true, '', { debounceMs: 0 }));
+      const ws = mockWsInstances[0];
+      act(() => ws.simulateOpen());
+
+      const payload = { type: 'location_update', latitude: 41.3874, longitude: 2.1686 };
+      act(() => ws.simulateMessage(payload));
+
+      expect(hook.result.current.lastMessage).toEqual(payload);
+    });
   });
+
+});
 
 });
