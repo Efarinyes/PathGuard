@@ -6,9 +6,8 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "PathGuard"
     API_V1_STR: str = "/api/v1"
     
-    # Security
-    # In production, change this to a secure random string
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "b37a6b83f8b34c9c8e9b6a2d5f1e4a7c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5")
+    # Security - MUST be set via environment variable in production
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
@@ -19,5 +18,13 @@ class Settings(BaseSettings):
 
     class Config:
         case_sensitive = True
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.SECRET_KEY:
+            raise ValueError(
+                "SECRET_KEY environment variable is required. "
+                "Set it with: export SECRET_KEY='your-secure-random-string'"
+            )
 
 settings = Settings()
