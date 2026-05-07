@@ -21,6 +21,7 @@ class LocationCreate(BaseModel):
     timestamp: datetime
     walk_id: int
     client_id: Optional[str] = None
+    is_recovered: Optional[bool] = False
 
 class LocationBatch(BaseModel):
     walk_id: int
@@ -65,7 +66,8 @@ async def save_location_batch(
             latitude=p.latitude,
             longitude=p.longitude,
             timestamp=p.timestamp,
-            client_id=p.client_id
+            client_id=p.client_id,
+            is_recovered=p.is_recovered
         )
         db.add(new_loc)
         inserted_count += 1
@@ -80,7 +82,8 @@ async def save_location_batch(
             "latitude": p.latitude,
             "longitude": p.longitude,
             "timestamp": ts_str,
-            "walk_id": batch.walk_id
+            "walk_id": batch.walk_id,
+            "is_recovered": p.is_recovered or False
         })
 
     if inserted_count > 0:
@@ -136,6 +139,7 @@ async def save_location(
                 "latitude": existing.latitude,
                 "longitude": existing.longitude,
                 "timestamp": ex_ts_str,
+                "is_recovered": existing.is_recovered,
                 "status": "already_synced"
             }
 
@@ -154,7 +158,8 @@ async def save_location(
         latitude=location.latitude,
         longitude=location.longitude,
         timestamp=location.timestamp,
-        client_id=location.client_id
+        client_id=location.client_id,
+        is_recovered=location.is_recovered
     )
     
     db.add(new_location)
@@ -171,7 +176,8 @@ async def save_location(
         "walk_id": new_location.walk_id,
         "latitude": new_location.latitude,
         "longitude": new_location.longitude,
-        "timestamp": new_ts_str
+        "timestamp": new_ts_str,
+        "is_recovered": new_location.is_recovered
     }
     
     # Update cache & Broadcast
