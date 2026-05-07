@@ -28,8 +28,8 @@ class OfflineSyncService {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-      request.onupgradeneeded = (event: any) => {
-        const db = event.target.result;
+      request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+        const db = event.target.result as IDBDatabase;
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
           store.createIndex('synced', 'synced', { unique: false });
@@ -37,13 +37,13 @@ class OfflineSyncService {
         }
       };
 
-      request.onsuccess = (event: any) => {
-        this.db = event.target.result;
+      request.onsuccess = (event: Event) => {
+        this.db = (event.target as IDBOpenDBRequest).result;
         resolve(this.db!);
       };
 
-      request.onerror = (event: any) => {
-        reject('IndexedDB error: ' + event.target.errorCode);
+      request.onerror = (event: Event) => {
+        reject('IndexedDB error: ' + (event.target as IDBRequest).errorCode);
       };
     });
   }

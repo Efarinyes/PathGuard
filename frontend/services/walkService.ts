@@ -11,6 +11,25 @@ export interface WalkHistoryItem {
   signal_loss?: boolean;
 }
 
+export interface ActiveWalkSnapshot {
+  id: number;
+  active: boolean;
+  start_time: string;
+  end_time?: string | null;
+  patient_id: number;
+  initiated_by_type: string;
+  initiated_by_id?: number;
+  stopped_by_type?: string;
+  stopped_by_id?: number;
+  locations?: Array<{
+    id: number;
+    latitude: number;
+    longitude: number;
+    timestamp: string;
+    is_recovered?: boolean;
+  }>;
+}
+
 export interface AnalyticsData {
   avg_duration_minutes: number;
   common_start_hours: { hour: number; count: number }[];
@@ -58,7 +77,7 @@ export const walkService = {
   /**
    * Fetches the active walk state (snapshot) for initial hydration.
    */
-  async getActiveWalk(userToken: string | null, deviceToken: string | null): Promise<any> {
+  async getActiveWalk(userToken: string | null, deviceToken: string | null): Promise<ActiveWalkSnapshot | null> {
     if (!userToken && !deviceToken) {
       return null;
     }

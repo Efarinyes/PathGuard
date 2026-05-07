@@ -15,7 +15,7 @@ export interface LocationPayload {
 }
 
 // In-memory buffer for adaptive batching
-let batchBuffer: any[] = [];
+let batchBuffer: LocationPayload[] = [];
 let batchTimer: NodeJS.Timeout | null = null;
 let _isSyncing = false; // Internal lock for chronological sync
 const BATCH_SIZE_THRESHOLD = 5;

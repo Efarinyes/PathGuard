@@ -1,11 +1,24 @@
 import { useState, useEffect } from "react";
 
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: readonly string[];
+  readonly userChoice: Promise<{
+    outcome: "accepted" | "dismissed";
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+  userChoice: Promise<{
+    outcome: "accepted" | "dismissed";
+    platform: string;
+  }>;
+}
+
 interface PWAInstallOptions {
   isPriority?: boolean;
 }
 
 export function usePWAInstall(options: PWAInstallOptions = {}) {
-  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isIosFallback, setIsIosFallback] = useState(false);
   const [isMacSafari, setIsMacSafari] = useState(false);
