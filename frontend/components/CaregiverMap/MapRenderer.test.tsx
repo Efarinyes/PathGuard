@@ -1,6 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { LeafletProvider } from 'react-leaflet';
 
 // Mock Leaflet to avoid DOM issues in tests
 vi.mock('leaflet', () => ({
@@ -169,7 +167,7 @@ describe('LocationPayload type', () => {
   });
 
   it('should accept is_recovered as undefined', () => {
-    const payload = {
+    const payload: { latitude: number; longitude: number; timestamp: string; is_recovered?: boolean } = {
       latitude: 41.3851,
       longitude: 2.1734,
       timestamp: '2026-05-07T10:00:00Z',

@@ -6,6 +6,7 @@ export interface TransportPoint {
   timestamp: string;
   walk_id?: number;
   client_id: string; // The UUID
+  is_recovered?: boolean;
 }
 
 export interface BatchPayload {
