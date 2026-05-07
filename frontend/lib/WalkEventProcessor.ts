@@ -6,11 +6,17 @@ export interface WalkState {
   isActive: boolean;
 }
 
-export type WalkAction = 
+export interface BatchLocationUpdatePayload {
+  locations: LocationPayload[];
+  walk_id: number;
+}
+
+export type WalkAction =
   | { type: 'SNAPSHOT'; payload: any }
   | { type: 'WALK_STARTED'; timestamp: number }
   | { type: 'WALK_STOPPED' }
   | { type: 'LOCATION_UPDATE'; payload: LocationPayload }
+  | { type: 'BATCH_LOCATION_UPDATE'; payload: BatchLocationUpdatePayload }
   | { type: 'RESET' };
 
 /**
@@ -153,6 +159,38 @@ export class WalkEventProcessor {
           isActive: true,
           routeHistory: nextHistory,
           currentLocation: nextCurrentLocation
+        };
+      }
+
+      case 'BATCH_LOCATION_UPDATE': {
+        const { locations, walk_id } = action.payload;
+        if (!locations || locations.length === 0) return state;
+
+        const validLocations = locations
+          .map((loc) => ({
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            timestamp: loc.timestamp,
+            walk_id: loc.walk_id ?? walk_id,
+          }))
+          .sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+
+        let mergedHistory = [...state.routeHistory];
+        for (const loc of validLocations) {
+          mergedHistory = appendLocation(mergedHistory, loc);
+        }
+
+        const latestLoc = mergedHistory[mergedHistory.length - 1];
+        const latestTs = new Date(latestLoc.timestamp).getTime();
+        if (latestTs > this.latestTimestamp) {
+          this.latestTimestamp = latestTs;
+        }
+
+        return {
+          ...state,
+          isActive: true,
+          routeHistory: mergedHistory,
+          currentLocation: latestLoc
         };
       }
 
