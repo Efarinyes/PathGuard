@@ -3,42 +3,15 @@ from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.core.config.settings import settings
+from app.core.security.jwt import verify_token
 from app.db.session import database as db_session
+from app.api import deps
 from app.api.users.models import User
 from app.db.models.patient import Patient
-from app.core.security.jwt import verify_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
-def get_current_caregiver(
-    db: Session = Depends(db_session.get_db), 
-    token: str = Depends(oauth2_scheme)
-) -> User:
-    """
-    Dependency to validate the JWT and ensure the user is an active caregiver.
-    """
-    user_id = verify_token(token)
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-        
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="User not found"
-        )
-        
-    if not user.is_caregiver or not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="The user does not have enough privileges or is inactive",
-        )
-        
-    return user
+get_current_caregiver = deps.get_current_caregiver
 
 def get_patient_from_device_token(
     x_patient_token: str = Header(..., alias="X-Patient-Token"),
