@@ -39,7 +39,7 @@ Effort: 15 min.
     - Prevents simulator code from executing in production builds
     - Ensures safety if a dev accidentally deploys from this branch
 
-0.3 Guard DELETE /walks/{id} endpoint behind environment check
+    0.3 Guard DELETE /walks/{id} endpoint behind environment check
     File: backend/app/api/routers/walks.py:262
     Add guard: reject request if not in development environment
     - Prevents accidental data loss if backend runs in production mode
@@ -128,7 +128,7 @@ EXCLUDED FROM PORT (do NOT bring into develop):
   - duration_seconds removal from /stop response
 
 PHASE B: REDUCE TECHNICAL DEBT ON develop
-==========================================
+===========================================
 Priority: P1 | Effort: 12 hours | Risk: Low (isolated changes)
 Goal: Address SOLID violations and clean code issues in develop.
 
@@ -245,20 +245,20 @@ Goal: Address structural SOLID violations.
 [DONE] C.1 Extract service layer from backend routers
     New directory: backend/app/services/
 
-    TESTS STATUS (as of 2026-05-07):
-    ────────────────────────────────
+    ════════════════════════════════════════════════════════════════════════════
+    TESTS STATUS (as of 2026-05-07)
+    ════════════════════════════════════════════════════════════════════════════
     Frontend (vitest): 108 passed, 6 skipped
       - Skipped: useLivePatientLocation tests (A1, A2, B1, B5, C4, D4)
       - Issue: WalkEventProcessor refactoring changed payload structure
-      - Fix needed: Update test assertions to match new ActiveWalkSnapshot format
+      - Fix needed: Update test mocks to match new SnapshotPayload format
 
-    Backend (pytest): 149 passed
-      - All tests passing ✓
+    Backend (pytest): 149 passed ✓
 
     To fix skipped tests:
     - File: frontend/hooks/__tests__/useLivePatientLocation.test.ts
-    - Tests: A1, A2, B1, B5, C4, D4 (lines 140, 157, 231, 289, 360, 447)
-    - Fix: Adjust makeActiveWalkResponse() mock to match new SnapshotPayload structure
+    - Tests: A1, A2, B1, B5, C4, D4
+    - Fix: Adjust makeActiveWalkResponse() mock to match new format
 
     location_service.py:
     - Move business logic from locations.py router
