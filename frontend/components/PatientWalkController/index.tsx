@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useAppState } from '../../hooks/useAppState';
-import { useLocationTracking } from '../../hooks/useLocationTracking';
-import { useWebSocket } from '../../hooks/useWebSocket';
-import { locationService } from '../../services/locationService';
+import { useAppState } from '@/hooks/useAppState';
+import { useLocationTracking } from '@/hooks/useLocationTracking';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import { locationService } from '@/services/locationService';
 import NotificationBanner from '../NotificationBanner';
 import { API_BASE_URL } from '@/lib/config';
 

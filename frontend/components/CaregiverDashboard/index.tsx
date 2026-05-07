@@ -4,10 +4,10 @@ import React, { useEffect, useState } from 'react';
 import CaregiverMap from '../CaregiverMap';
 import NotificationBanner from '../NotificationBanner';
 import WalkHistoryList, { WalkHistoryItem } from '../WalkHistoryList';
-import { useLivePatientLocation } from '../../hooks/useLivePatientLocation';
-import { useAppState } from '../../hooks/useAppState';
-import { walkService } from '../../services/walkService';
-import { useCaregiverAnalytics } from '../../hooks/useCaregiverAnalytics';
+import { useLivePatientLocation } from '@/hooks/useLivePatientLocation';
+import { useAppState } from '@/hooks/useAppState';
+import { walkService } from '@/services/walkService';
+import { useCaregiverAnalytics } from '@/hooks/useCaregiverAnalytics';
 import { useRouter } from 'next/navigation';
 
 /**
