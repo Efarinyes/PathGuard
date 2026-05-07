@@ -12,6 +12,7 @@ export interface LocationPayload {
   longitude: number;
   timestamp: string;
   walk_id?: number;
+  is_recovered?: boolean;
 }
 
 // In-memory buffer for adaptive batching
