@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import timedelta
 from typing import Any
@@ -13,6 +14,8 @@ from app.core.security.password import hash_password
 from app.db.models.patient import Patient
 from app.api.users.models import User
 from app.db.models.group import Group
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -80,13 +83,11 @@ def register(
         }
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Registration failed: {e}")
         db.rollback()
-        # In production, we would log the full exception 'e' here
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Registration failed: {str(e)}"
+            detail="Registration failed"
         )
 
 @router.post("/login", response_model=auth_schemas.Token)
