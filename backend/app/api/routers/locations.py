@@ -106,7 +106,7 @@ async def save_location_batch(
             await manager.broadcast_to_group(active_patient.group_id, event)
 
     return {
-        "status": "success",
+        "status": "synced",
         "inserted": inserted_count,
         "batch_id": batch.batch_id
     }
@@ -134,13 +134,13 @@ async def save_location(
                 
             return {
                 "type": "location",
+                "status": "already_synced",
                 "id": existing.id,
                 "walk_id": existing.walk_id,
                 "latitude": existing.latitude,
                 "longitude": existing.longitude,
                 "timestamp": ex_ts_str,
-                "is_recovered": existing.is_recovered,
-                "status": "already_synced"
+                "is_recovered": existing.is_recovered
             }
 
     # Verify walk
@@ -172,6 +172,7 @@ async def save_location(
 
     location_data = {
         "type": "location",
+        "status": "synced",
         "id": new_location.id,
         "walk_id": new_location.walk_id,
         "latitude": new_location.latitude,
