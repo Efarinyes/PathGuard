@@ -49,25 +49,35 @@ export default function RootLayout({
       className={`${inter.variable} h-full antialiased`}
     >
       <head>
-        {/* Early PWA install event capture - MUST be in head */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                window.deferredPrompt = e;
-                window.dispatchEvent(new CustomEvent('pwa-installable'));
-              });
-
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/pathguard-sw.js').then(function(registration) {
-                    console.log('SW registered:', registration.scope);
-                  }, function(err) {
-                    console.log('SW registration failed:', err);
-                  });
+              (function() {
+                window.addEventListener('beforeinstallprompt', function(e) {
+                  e.preventDefault();
+                  window.deferredPrompt = e;
+                  window.dispatchEvent(new CustomEvent('pwa-installable'));
                 });
-              }
+
+                if ('serviceWorker' in navigator) {
+                  var shouldRegister = true;
+                  if (typeof window !== 'undefined') {
+                    var hostname = window.location.hostname;
+                    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                      shouldRegister = ${process.env.NEXT_PUBLIC_ENABLE_SW_ON_LOCALHOST === 'true' ? 'true' : 'false'};
+                    }
+                  }
+                  if (shouldRegister) {
+                    window.addEventListener('load', function() {
+                      navigator.serviceWorker.register('/pathguard-sw.js').then(function(registration) {
+                        console.log('SW registered:', registration.scope);
+                      }, function(err) {
+                        console.log('SW registration failed:', err);
+                      });
+                    });
+                  }
+                }
+              })();
             `,
           }}
         />
