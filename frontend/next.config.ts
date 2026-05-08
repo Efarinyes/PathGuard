@@ -19,7 +19,6 @@ const withPWA = withPWAInit({
       /\/api\/v1\/.*/,
     ],
     navigateFallbackDenylist: [/\/api\/v1\/.*/],
-    navigateFallback: "/offline.html",
     runtimeCaching: [
       {
         urlPattern: /\/api\/v1\/.*/i,

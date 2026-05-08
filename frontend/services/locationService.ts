@@ -148,7 +148,8 @@ export const locationService = {
         latitude: point.latitude,
         longitude: point.longitude,
         timestamp: point.timestamp,
-        walk_id: point.walk_id
+        walk_id: point.walk_id,
+        is_recovered: true // Mark as recovered when syncing from offline
       }, deviceToken);
 
       if (success) {
