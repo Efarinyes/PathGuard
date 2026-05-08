@@ -317,13 +317,112 @@ Goal: Address structural SOLID violations.
     ✓ Beta release is planned
     ✓ Team grows beyond 1 developer
 
-    IMPLEMENTATION STEPS (when triggered):
-    1. Install Alembic: pip install alembic
-    2. Initialize: alembic init alembic
-    3. Configure alembic.ini with DATABASE_URL
-    4. Create initial migration: alembic revision --autogenerate -m "initial"
-    5. Update main.py lifespan to remove Base.metadata.create_all()
-    6. Document migration commands in README
+    ===========================================================================
+    ALEMBIC IMPLEMENTATION PLAN (Detailed)
+    ===========================================================================
+    Trigger: PostgreSQL is provisioned and DATABASE_URL updated
+
+    STEP 1: Initialize Alembic
+    --------------------------
+    cd backend
+    pip install alembic
+    alembic init alembic
+
+    STEP 2: Configure alembic.ini
+    -----------------------------
+    File: backend/alembic.ini
+    - sqlalchemy.url = postgresql://user:pass@host:5432/pathguard
+    - Or reference env var: sqlalchemy.url = ${DATABASE_URL}
+
+    File: backend/alembic/env.py (modify imports):
+    ---------------------------------------------------------------------------
+    # Import your models' Base
+    from app.db.base.base_class import Base
+
+    # Import all models so Alembic can detect them
+    import app.db.models.walk
+    import app.db.models.location
+    import app.db.models.patient
+    import app.db.models.group
+    import app.db.models.user  # if exists
+
+    target_metadata = Base.metadata
+    ---------------------------------------------------------------------------
+
+    STEP 3: Create Initial Migration
+    ---------------------------------
+    alembic revision --autogenerate -m "initial_schema"
+
+    Review generated file in alembic/versions/ before applying!
+
+    STEP 4: Apply Initial Migration
+    --------------------------------
+    alembic upgrade head
+
+    STEP 5: Update main.py (Remove auto-create)
+    --------------------------------------------
+    File: backend/app/main.py
+
+    REMOVE from lifespan():
+        from app.db.session.database import engine
+        import app.db.models.base  # noqa
+        from app.db.base.base_class import Base
+        Base.metadata.create_all(bind=engine)
+
+    RATIONALE: Alembic now manages schema. create_all() conflicts with migrations.
+
+    STEP 6: Update .gitignore
+    -------------------------
+    Add:
+        alembic.ini  (if local override)
+
+    STEP 7: Add Makefile/pytest Commands
+    -------------------------------------
+    backend/Makefile:
+        migrate:
+            alembic upgrade head
+        rollback:
+            alembic downgrade -1
+        fresh:
+            alembic downgrade base && alembic upgrade head
+
+    STEP 8: Add conftest.py Hook (optional)
+    ----------------------------------------
+    For tests to run on a separate test database:
+    File: backend/tests/conftest.py
+    - Use separate test database for pytest
+    - Example: DATABASE_URL="postgresql://user:pass@host:5432/pathguard_test"
+
+    ===========================================================================
+    WORKFLOW AFTER IMPLEMENTATION
+    ===========================================================================
+
+    Making Schema Changes (e.g., add new column):
+    1. Edit model file (e.g., app/db/models/walk.py)
+    2. Generate migration: alembic revision --autogenerate -m "add_new_column"
+    3. Review: cat alembic/versions/xxx_add_new_column.py
+    4. Apply: alembic upgrade head
+    5. Deploy: Run alembic upgrade on production server
+
+    Rolling Back (if needed):
+    1. alembic downgrade -1  (revert last migration)
+    2. alembic history       (see full history)
+
+    Development Workflow:
+    1. On new machine: pip install -r requirements.txt
+    2. DATABASE_URL=postgresql://... alembic upgrade head
+    3. Start app
+
+    ===========================================================================
+    CURRENT MODELS (as of 2026-05-08)
+    ===========================================================================
+    - Walk (id, patient_id, start_time, end_time, active, distance_meters)
+    - Location (id, walk_id, latitude, longitude, timestamp, client_id, is_recovered)
+    - Patient (id, name, device_token, group_id)
+    - Group (id, name, created_at)
+    - User (caregivers - check app/api/users/)
+
+    First migration will include all of the above.
 
 PHASE D: PWA HARDENING (develop)
 ==================================
