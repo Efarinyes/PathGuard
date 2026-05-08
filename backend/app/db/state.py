@@ -5,6 +5,15 @@ class WalkStateCache:
     """
     In-memory cache to store the latest state of active walks.
     Enables fast recovery for caregivers without repeated heavy DB queries.
+
+    LIMITATIONS (for production awareness):
+        - State is lost on server restart
+        - State is NOT shared across gunicorn workers (each process has its own copy)
+        - NOT suitable for horizontally scaled deployments
+
+    UPGRADE PATH:
+        Replace with Redis-based cache when horizontal scaling is required.
+        See Phase C.2 of ACTION_PLAN.txt for details.
     """
     def __init__(self):
         # key: walk_id, value: { "latest": dict, "history": list[dict] }
