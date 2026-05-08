@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Offline | PathGuard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(to bottom, #eff6ff, #ffffff);
+      padding: 1.5rem;
+    }
+    .container { text-align: center; max-width: 28rem; }
+    .icon {
+      width: 6rem;
+      height: 6rem;
+      margin: 0 auto 1.5rem;
+      color: #2563eb;
+    }
+    h1 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 1rem;
+    }
+    p {
+      font-size: 1.125rem;
+      color: #4b5563;
+      margin-bottom: 2rem;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: #2563eb;
+      color: white;
+      font-weight: 500;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #1d4ed8; }
+    .note {
+      margin-top: 2rem;
+      font-size: 0.875rem;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+    </svg>
+    <h1>Estàs fora de línia</h1>
+    <p>No tens connexió a internet en aquest moment. Comprova la teva connexió i torna-ho a intentar.</p>
+    <a href="/" class="btn">Tornar a l'inici</a>
+    <p class="note">Les dades de localització s sincronitzaran automàticament.</p>
+  </div>
+</body>
+</html>

@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Phase D: PWA Hardening** (all tasks completed)
   - D.1: Service worker registration conflict fix with configurable localhost via `.env`
-  - D.2: Offline fallback page (`/offline`)
+  - D.2: Offline fallback page (`/offline`) - now with static offline.html
   - D.3: Sync status API endpoint (`GET /api/v1/locations/sync/status`)
   - D.4: Cache-Control headers middleware
   - D.5: PWA ErrorBoundary component for graceful error handling
@@ -28,6 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Backend**: Consolidated duplicate security code (jwt, auth, password)
 - **Backend**: Added Cache-Control middleware for all routes
 - **Backend**: Improved exception handling in auth endpoints
+- **Frontend**: Added CacheFirst runtime caching for offline page
+- **Frontend**: Fixed generateBuildId for consistent PWA builds
+
+### Fixed
+- **PWA**: Static offline.html for Workbox navigateFallback precache
+- Dead code files (`backend/app/api/ws.py`, `auth/auth_router.py`)
 
 ### Fixed
 - **Phase B: Technical Debt** (12 tasks completed)
@@ -36,7 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Standardized frontend import paths
   - Centralized frontend configuration
 
-### Removed
+### Fixed
+- **PWA**: Static offline.html for Workbox navigateFallback
 - Dead code files (`backend/app/api/ws.py`, `auth/auth_router.py`)
 
 ### Dependencies
