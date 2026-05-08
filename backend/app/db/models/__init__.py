@@ -2,5 +2,6 @@ from app.db.models.walk import Walk
 from app.db.models.location import Location
 from app.db.models.patient import Patient
 from app.db.models.group import Group
+from app.db.models.invitation import InvitationCode
 
-__all__ = ['Walk', 'Location', 'Patient', 'Group']
+__all__ = ['Walk', 'Location', 'Patient', 'Group', 'InvitationCode']
