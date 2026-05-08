@@ -68,8 +68,8 @@
 
 | Task | Description | Priority | Status |
 |------|-------------|----------|--------|
-| D.1 | SW registration conflict fix | High | ⬜ |
-| D.2 | Offline fallback page | High | ⬜ |
+| D.1 | SW registration conflict fix | High | ✅ |
+| D.2 | Offline fallback page | High | ✅ |
 | D.3 | Sync status API endpoint | Medium | ⬜ |
 | D.4 | Cache-Control headers | Low | ⬜ |
 | D.5 | PWA error boundary | Medium | ⬜ |

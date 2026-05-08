@@ -11,8 +11,6 @@ const withPWA = withPWAInit({
   workboxOptions: {
     skipWaiting: true,
     disableDevLogs: true,
-    // EXCLUSION FIX:
-    // Prevents precaching internal Next.js error/fallback chunks that cause 500 errors
     exclude: [
       /\/_next\/static\/chunks\/app\/_global-error\/page.*\.js$/,
       /\/_next\/static\/chunks\/app\/_not-found\/page.*\.js$/,
@@ -21,6 +19,7 @@ const withPWA = withPWAInit({
       /\/api\/v1\/.*/,
     ],
     navigateFallbackDenylist: [/\/api\/v1\/.*/],
+    navigateFallback: "/offline",
     runtimeCaching: [
       {
         urlPattern: /\/api\/v1\/.*/i,
