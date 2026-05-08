@@ -4,6 +4,7 @@ import os
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "PathGuard"
+    VERSION: str = "2.0.0-beta.1"
     API_V1_STR: str = "/api/v1"
     
     # Security - MUST be set via environment variable in production
