@@ -1,6 +1,7 @@
 import { AppStateProvider } from "@/hooks/useAppState";
 import { RoleGuard } from "@/components/RoleGuard";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { PWAErrorBoundary } from "@/components/PWAErrorBoundary";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -83,12 +84,14 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col font-sans">
-        <AppStateProvider>
-          <RoleGuard>
-            {children}
-            <PWAInstallPrompt />
-          </RoleGuard>
-        </AppStateProvider>
+        <PWAErrorBoundary>
+          <AppStateProvider>
+            <RoleGuard>
+              {children}
+              <PWAInstallPrompt />
+            </RoleGuard>
+          </AppStateProvider>
+        </PWAErrorBoundary>
       </body>
     </html>
   );

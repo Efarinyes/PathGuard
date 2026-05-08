@@ -72,7 +72,7 @@
 | D.2 | Offline fallback page | High | ✅ |
 | D.3 | Sync status API endpoint | Medium | ✅ |
 | D.4 | Cache-Control headers | Low | ✅ |
-| D.5 | PWA error boundary | Medium | ⬜ |
+| D.5 | PWA error boundary | Medium | ✅ |
 
 ### Phase D Details
 
@@ -131,7 +131,7 @@ When to implement (see `ACTION_PLAN.txt` section C.3):
 Phase A (Port Features):     [██████████████] 100% ✅
 Phase B (Technical Debt):     [██████████████] 100% ✅
 Phase C (Architecture):      [██████████████] 100% ✅
-Phase D (PWA Hardening):      [░░░░░░░░░░░░░░]   0% ⬜
+Phase D (PWA Hardening):      [██████████████] 100% ✅
 ```
 
 ---
