@@ -19,22 +19,11 @@ const withPWA = withPWAInit({
       /\/api\/v1\/.*/,
     ],
     navigateFallbackDenylist: [/\/api\/v1\/.*/],
-    navigateFallback: "/offline",
+    navigateFallback: "/offline.html",
     runtimeCaching: [
       {
         urlPattern: /\/api\/v1\/.*/i,
         handler: "NetworkOnly",
-      },
-      {
-        urlPattern: /\/offline/i,
-        handler: "CacheFirst",
-        options: {
-          cacheName: "offline-page",
-          expiration: {
-            maxEntries: 1,
-            maxAgeSeconds: 60 * 60 * 24 * 30,
-          },
-        },
       },
     ],
   },
