@@ -3,10 +3,12 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.db.session import database as db_session
 
 from app.api.users.models import User
 from app.db.models.patient import Patient
+from app.db.models.location import Location
 from app.api.dependencies.auth import get_optional_patient, get_optional_caregiver, resolve_patient
 from app.services.location_service import location_service
 
@@ -96,3 +98,30 @@ def read_locations(
     active_patient = resolve_patient(patient, user)
     
     return {"message": "Locations list (Implemented)"}
+
+@router.get("/sync/status")
+def get_sync_status(
+    db: Session = Depends(db_session.get_db),
+    patient: Patient | None = Depends(get_optional_patient),
+    user: User | None = Depends(get_optional_caregiver)
+):
+    """
+    Returns sync status for the authenticated patient.
+    Used by client to show sync progress indicator.
+    """
+    active_patient = resolve_patient(patient, user)
+    
+    if active_patient is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    result = db.query(
+        func.max(Location.timestamp).label("last_sync")
+    ).filter(
+        Location.walk_id.in_(
+            db.query(Location.walk_id).join(Patient).filter(Patient.id == active_patient.id)
+        )
+    ).scalar()
+    
+    return {
+        "last_sync": result.isoformat() if result else None
+    }
