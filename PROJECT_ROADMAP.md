@@ -1,158 +1,158 @@
 # PathGuard Project Roadmap
 
-**Darrera actualització:** 2026-05-08
-**Branca actual:** `develop`
+**Last updated:** 2026-05-08
+**Current branch:** `develop`
 
 ---
 
-## Estat General
+## Overview
 
-| Fase | Estat | Prioritat | Esforç |
-|------|-------|-----------|--------|
-| Phase A: Port Features | ✅ Completada | P0 | 6h |
-| Phase B: Technical Debt | ✅ Completada | P1 | 12h |
-| Phase C: Architecture | ✅ Completada | P2 | 10h |
-| **Phase D: PWA Hardening** | ⏳ **Pendent** | P3 | 6h |
+| Phase | Status | Priority | Effort |
+|-------|--------|----------|--------|
+| Phase A: Port Features | ✅ Completed | P0 | 6h |
+| Phase B: Technical Debt | ✅ Completed | P1 | 12h |
+| Phase C: Architecture | ✅ Completed | P2 | 10h |
+| **Phase D: PWA Hardening** | ⏳ **Pending** | P3 | 6h |
 
 ---
 
-## Fases Completades
+## Completed Phases
 
 ### Phase A: Port Features ✅
-*Totes les funcionalitats del simulador portades a develop*
+*All simulator features ported to develop*
 
-| Tasca | Descripció | Estat |
-|-------|-------------|-------|
-| A.1 | Port `is_recovered` column a backend | ✅ |
-| A.2 | Port `is_recovered` a schemas i endpoints | ✅ |
-| A.3 | Port `BATCH_LOCATION_UPDATE` a WalkEventProcessor | ✅ |
+| Task | Description | Status |
+|------|-------------|--------|
+| A.1 | Port `is_recovered` column to backend | ✅ |
+| A.2 | Port `is_recovered` to schemas and endpoints | ✅ |
+| A.3 | Port `BATCH_LOCATION_UPDATE` to WalkEventProcessor | ✅ |
 | A.4 | Port segment-based rendering (dashed amber lines) | ✅ |
-| A.5 | Port `is_recovered` a frontend transport types | ✅ |
+| A.5 | Port `is_recovered` to frontend transport types | ✅ |
 | A.6 | Port Skeleton loading component | ✅ |
 | A.7 | Port PWA assets and manifest | ✅ |
 | A.8 | Port WebSocket debounce optimization | ✅ |
 | A.9 | Port offlineSyncService improvements | ✅ |
 
 ### Phase B: Technical Debt ✅
-*Deute tècnic eliminat a develop*
+*Technical debt eliminated from develop*
 
-| Tasca | Descripció | Estat |
-|-------|-------------|-------|
-| B.1 | Consolidar codi de seguretat duplicat | ✅ |
-| B.2 | Eliminar fitxers dead code | ✅ |
-| B.3 | Centralitzar configuració frontend | ✅ |
-| B.4 | Substituir `datetime.utcnow()` deprecada | ✅ |
-| B.5 | Afegir `__init__.py` faltants | ✅ |
-| B.6 | Eliminar tipus `any` al frontend (72 instàncies) | ✅ |
-| B.7 | Estandaritzar paths d'importació | ✅ |
-| B.8 | Eliminar `get_db()` duplicat | ✅ |
-| B.9 | Eliminar endpoint `/login` duplicat | ✅ |
-| B.10 | Corregir response shapes inconsistents | ✅ |
-| B.11 | Millorar exception handling | ✅ |
+| Task | Description | Status |
+|------|-------------|--------|
+| B.1 | Consolidate duplicate security code | ✅ |
+| B.2 | Delete dead code files | ✅ |
+| B.3 | Centralize frontend configuration | ✅ |
+| B.4 | Replace deprecated `datetime.utcnow()` | ✅ |
+| B.5 | Add missing `__init__.py` files | ✅ |
+| B.6 | Eliminate `any` types in frontend (72 instances) | ✅ |
+| B.7 | Standardize import paths | ✅ |
+| B.8 | Remove duplicate `get_db()` | ✅ |
+| B.9 | Remove duplicate `/login` endpoint | ✅ |
+| B.10 | Fix inconsistent response shapes | ✅ |
+| B.11 | Improve exception handling | ✅ |
 | B.12 | Harden SECRET_KEY configuration | ✅ |
 
 ### Phase C: Architecture ✅
-*Millores estructurals*
+*Structural improvements*
 
-| Tasca | Descripció | Estat |
-|-------|-------------|-------|
+| Task | Description | Status |
+|------|-------------|--------|
 | C.1 | Extract service layer from routers | ✅ |
-| C.2 | Documentar limitacions WalkStateCache | ✅ |
-| C.3 | Database migrations (Alembic) | ⏸️ **Ajornat** |
+| C.2 | Document WalkStateCache limitations | ✅ |
+| C.3 | Database migrations (Alembic) | ⏸️ **Deferred** |
 
 ---
 
-## Fases Pendents
+## Pending Phases
 
 ### Phase D: PWA Hardening ⏳
 
-| Tasca | Descripció | Prioritat | Estat |
-|-------|-------------|-----------|-------|
-| D.1 | SW registration conflict fix | Alta | ⬜ |
-| D.2 | Offline fallback page | Alta | ⬜ |
-| D.3 | Sync status API endpoint | Mitjana | ⬜ |
-| D.4 | Cache-Control headers | Baixa | ⬜ |
-| D.5 | Error boundary per PWA | Mitjana | ⬜ |
+| Task | Description | Priority | Status |
+|------|-------------|----------|--------|
+| D.1 | SW registration conflict fix | High | ⬜ |
+| D.2 | Offline fallback page | High | ⬜ |
+| D.3 | Sync status API endpoint | Medium | ⬜ |
+| D.4 | Cache-Control headers | Low | ⬜ |
+| D.5 | PWA error boundary | Medium | ⬜ |
 
-### Phase D Detalls
+### Phase D Details
 
 #### D.1: SW Registration Conflict Fix
-**Arxiu:** `frontend/app/layout.tsx:52-73`
-**Problema:** Dues mètodes de registre del Service Worker en conflicte
-**Solució:** Mantenir script inline, fer localhost configurable via `.env`
+**File:** `frontend/app/layout.tsx:52-73`
+**Problem:** Two service worker registration methods conflict
+**Solution:** Keep inline script, make localhost configurable via `.env`
 
 #### D.2: Offline Fallback Page
-**Nou arxiu:** `frontend/app/offline/page.tsx`
-**Contingut:** "You are offline. Check your connection."
-**Afegir a:** SW precache list a `next.config.ts`
+**New file:** `frontend/app/offline/page.tsx`
+**Content:** "You are offline. Check your connection."
+**Add to:** SW precache list in `next.config.ts`
 
 #### D.3: Sync Status API Endpoint
 **Endpoint:** `GET /api/v1/sync/status`
-**Resposta:** `{ pending_count: number, last_sync: string | null }`
-**Ús:** Indicador de progrés de sincronització al client
+**Response:** `{ pending_count: number, last_sync: string | null }`
+**Use:** Sync progress indicator on client
 
 #### D.4: Cache-Control Headers
 - Icons/screenshots: `Cache-Control: public, max-age=31536000, immutable`
-- API responses: `Cache-Control: no-cache` o `no-store`
-- SW file: `Cache-Control: no-cache` (sempre buscar actualitzacions)
+- API responses: `Cache-Control: no-cache` or `no-store`
+- SW file: `Cache-Control: no-cache` (always check for updates)
 
-#### D.5: Error Boundary per PWA
-- React ErrorBoundary per a errors de renderització offline
-- Graceful degradation quan IndexedDB no està disponible
-- Missatge d'error quan característiques PWA crítiques fallen
+#### D.5: PWA Error Boundary
+- React ErrorBoundary for offline rendering errors
+- Graceful degradation when IndexedDB is unavailable
+- User-facing error when critical PWA features fail
 
 ---
 
-## Tasques Post-Producció
+## Post-Production Tasks
 
-Aquestes tasques es implementaran quan es compliqui algun trigger:
+These tasks will be implemented when certain triggers are met:
 
 ### Alembic Migrations (PostgreSQL Required)
-**Trigger:** PostgreSQL provesit + Beta release planificat
+**Trigger:** PostgreSQL provisioned + Beta release planned
 
-Quan implementar (veure `ACTION_PLAN.txt` secció C.3):
-1. PostgreSQL configurat i `DATABASE_URL` actualitzat
+When to implement (see `ACTION_PLAN.txt` section C.3):
+1. PostgreSQL configured and `DATABASE_URL` updated
 2. `pip install alembic && alembic init alembic`
-3. Crear migració inicial: `alembic revision --autogenerate -m "initial"`
-4. Aplicar: `alembic upgrade head`
-5. Treure `Base.metadata.create_all()` de `main.py`
+3. Create initial migration: `alembic revision --autogenerate -m "initial"`
+4. Apply: `alembic upgrade head`
+5. Remove `Base.metadata.create_all()` from `main.py`
 
 ### Redis Cache (Horizontal Scaling)
-**Trigger:** Desplegament amb múltiples gunicorn workers
+**Trigger:** Deployment with multiple gunicorn workers
 
-**Problema actual:** `WalkStateCache` és in-memory, no compartit entre processos
-**Solució:** Substituir per Redis per a estat compartit
+**Current problem:** `WalkStateCache` is in-memory, not shared between processes
+**Solution:** Replace with Redis for shared state
 
 ---
 
-## Progrés Visual
+## Visual Progress
 
 ```
 Phase A (Port Features):     [██████████████] 100% ✅
-Phase B (Technical Debt):    [██████████████] 100% ✅
+Phase B (Technical Debt):     [██████████████] 100% ✅
 Phase C (Architecture):      [██████████████] 100% ✅
-Phase D (PWA Hardening):     [░░░░░░░░░░░░░░]   0% ⬜
+Phase D (PWA Hardening):      [░░░░░░░░░░░░░░]   0% ⬜
 ```
 
 ---
 
 ## Tests Status
 
-| Suite | Resultat |
-|-------|----------|
+| Suite | Result |
+|-------|--------|
 | Backend (pytest) | ✅ 149 passed |
 | Frontend (vitest) | ✅ 108 passed / 6 skipped |
 
-**Skipped tests (cal fixar):** Tests de `useLivePatientLocation` (A1, A2, B1, B5, C4, D4)
-- **Causa:** Refactoring de WalkEventProcessor canvià l'estructura del payload
-- **Solució:** Actualitzar mocks de `makeActiveWalkResponse()` a `useLivePatientLocation.test.ts`
+**Skipped tests (need fix):** `useLivePatientLocation` tests (A1, A2, B1, B5, C4, D4)
+- **Cause:** WalkEventProcessor refactoring changed payload structure
+- **Fix:** Update `makeActiveWalkResponse()` mocks in `useLivePatientLocation.test.ts`
 
 ---
 
-## Document de Referència
+## Reference Document
 
-Per a detalls d'implementació, veure: **`ACTION_PLAN.txt`**
+For implementation details, see: **`ACTION_PLAN.txt`**
 
 ---
 
-*Generat automàticament basant-se en ACTION_PLAN.txt - 2026-05-08*
+*Auto-generated based on ACTION_PLAN.txt - 2026-05-08*
