@@ -1,12 +1,32 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from app.api.auth import routers as auth_routers
 from app.api.routers import locations as locations_router
 from app.api.routers import walks as walks_router
 from app.api.routers import analytics as analytics_router
 from app.api import ws_manager as websockets_router
 from app.core.config.settings import settings
+
+
+class CacheControlMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+
+        path = request.url.path
+
+        if path.startswith("/api/v1/"):
+            response.headers["Cache-Control"] = "no-store"
+        elif path.endswith(".js") or path.endswith(".js/"):
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        elif any(ext in path for ext in [".png", ".ico", ".jpg", ".svg", ".webp"]):
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        elif "pathguard-sw" in path:
+            response.headers["Cache-Control"] = "no-cache"
+
+        return response
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -40,6 +60,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(CacheControlMiddleware)
 
 # Include Routers
 app.include_router(auth_routers.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
