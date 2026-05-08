@@ -25,12 +25,23 @@ const withPWA = withPWAInit({
         urlPattern: /\/api\/v1\/.*/i,
         handler: "NetworkOnly",
       },
+      {
+        urlPattern: /\/offline/i,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "offline-page",
+          expiration: {
+            maxEntries: 1,
+            maxAgeSeconds: 60 * 60 * 24 * 30,
+          },
+        },
+      },
     ],
   },
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  generateBuildId: () => "pathguard-build",
 };
 
 export default withPWA(nextConfig);
