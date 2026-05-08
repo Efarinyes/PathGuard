@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **PWA**: Static offline.html for Workbox navigateFallback precache
+  - **PWA**: Fixed navigateFallback to point to /offline.html (static)
 - Dead code files (`backend/app/api/ws.py`, `auth/auth_router.py`)
 
 ### Fixed
