@@ -12,9 +12,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
     # Database
-    # Defaulting to a local PostgreSQL instance. 
-    # Change via environment variable: DATABASE_URL=postgresql://user:pass@localhost/db
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/pathguard"
+    # Development: sqlite:///./pathguard.db (default, no server needed)
+    # Production: postgresql://user:pass@host:5432/db
+    # Override via environment variable: DATABASE_URL=...
+    DATABASE_URL: str = "sqlite:///./pathguard.db"
 
     class Config:
         case_sensitive = True

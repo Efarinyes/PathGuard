@@ -1,15 +1,19 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from typing import Generator
+from app.core.config.settings import settings
 
-# SQLite for development
-SQLALCHEMY_DATABASE_URL = "sqlite:///./pathguard.db"
+SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
-# connect_args={"check_same_thread": False} is required only for SQLite
+connect_args = {}
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL, connect_args=connect_args
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 def get_db() -> Generator:
     """

@@ -291,12 +291,39 @@ C.2 Replace in-memory WalkStateCache for production readiness
     Recommendation: Option A for now. Document the limitation.
       Upgrade to Option B when production scaling is needed.
 
-C.3 Add database migrations
+C.3 Add database migrations (DEFERRED)
     Current: Tables auto-created on every startup via main.py lifespan
     Problem: Anti-pattern for production — no migration tracking
-    Solution: Introduce Alembic for schema migrations
-    Effort: 4 hours
-    Priority: Medium — critical before first production deployment
+    Solution: Alembic
+
+    IMPLEMENTATION TIMING: Implement AFTER the initial PostgreSQL migration.
+    Do NOT implement Alembic with SQLite. SQLite + Alembic adds complexity
+    with no benefit since SQLite is already embedded and versioned via the
+    single .db file.
+
+    DEFERRED UNTIL:
+    1. PostgreSQL database is provisioned and configured
+    2. First production deployment is planned
+    3. Multiple developers need to sync schema changes
+
+    POSTPONEMENT RATIONALE:
+    - SQLite migrations are trivial: delete .db, restart app (recreates tables)
+    - Current dev workflow is fast and low-risk
+    - Alembic adds migration file management overhead
+    - Better to introduce Alembic when schema is stable and production-ready
+
+    WHEN TO IMPLEMENT (triggers):
+    ✓ PostgreSQL is configured and DATABASE_URL points to it
+    ✓ Beta release is planned
+    ✓ Team grows beyond 1 developer
+
+    IMPLEMENTATION STEPS (when triggered):
+    1. Install Alembic: pip install alembic
+    2. Initialize: alembic init alembic
+    3. Configure alembic.ini with DATABASE_URL
+    4. Create initial migration: alembic revision --autogenerate -m "initial"
+    5. Update main.py lifespan to remove Base.metadata.create_all()
+    6. Document migration commands in README
 
 PHASE D: PWA HARDENING (develop)
 ==================================
