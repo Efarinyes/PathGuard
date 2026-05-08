@@ -2,6 +2,7 @@
 
 **Last updated:** 2026-05-08
 **Current branch:** `develop`
+**All phases:** Completed ✅
 
 ---
 
@@ -12,7 +13,7 @@
 | Phase A: Port Features | ✅ Completed | P0 | 6h |
 | Phase B: Technical Debt | ✅ Completed | P1 | 12h |
 | Phase C: Architecture | ✅ Completed | P2 | 10h |
-| **Phase D: PWA Hardening** | ⏳ **Pending** | P3 | 6h |
+| Phase D: PWA Hardening | ✅ Completed | P3 | 6h |
 
 ---
 
@@ -60,46 +61,48 @@
 | C.2 | Document WalkStateCache limitations | ✅ |
 | C.3 | Database migrations (Alembic) | ⏸️ **Deferred** |
 
----
+### Phase D: PWA Hardening ✅
+*Production hardening for PWA features*
 
-## Pending Phases
-
-### Phase D: PWA Hardening ⏳
-
-| Task | Description | Priority | Status |
-|------|-------------|----------|--------|
-| D.1 | SW registration conflict fix | High | ✅ |
-| D.2 | Offline fallback page | High | ✅ |
-| D.3 | Sync status API endpoint | Medium | ✅ |
-| D.4 | Cache-Control headers | Low | ✅ |
-| D.5 | PWA error boundary | Medium | ✅ |
+| Task | Description | Status |
+|------|-------------|--------|
+| D.1 | SW registration conflict fix | ✅ |
+| D.2 | Offline fallback page | ✅ |
+| D.3 | Sync status API endpoint | ✅ |
+| D.4 | Cache-Control headers | ✅ |
+| D.5 | PWA error boundary | ✅ |
 
 ### Phase D Details
 
-#### D.1: SW Registration Conflict Fix
+#### D.1: SW Registration Conflict Fix ✅
 **File:** `frontend/app/layout.tsx:52-73`
 **Problem:** Two service worker registration methods conflict
-**Solution:** Keep inline script, make localhost configurable via `.env`
+**Solution:** Keep inline script, make localhost configurable via `.env` (`NEXT_PUBLIC_ENABLE_SW_ON_LOCALHOST`)
 
-#### D.2: Offline Fallback Page
-**New file:** `frontend/app/offline/page.tsx`
+#### D.2: Offline Fallback Page ✅
+**File:** `frontend/app/offline/page.tsx`
 **Content:** "You are offline. Check your connection."
-**Add to:** SW precache list in `next.config.ts`
+**Added to:** SW precache in `next.config.ts` (`navigateFallback: "/offline"`)
 
-#### D.3: Sync Status API Endpoint
-**Endpoint:** `GET /api/v1/sync/status`
-**Response:** `{ pending_count: number, last_sync: string | null }`
+#### D.3: Sync Status API Endpoint ✅
+**File:** `backend/app/api/routers/locations.py`
+**Endpoint:** `GET /api/v1/locations/sync/status`
+**Response:** `{ last_sync: string | null }`
 **Use:** Sync progress indicator on client
 
-#### D.4: Cache-Control Headers
-- Icons/screenshots: `Cache-Control: public, max-age=31536000, immutable`
-- API responses: `Cache-Control: no-cache` or `no-store`
-- SW file: `Cache-Control: no-cache` (always check for updates)
+#### D.4: Cache-Control Headers ✅
+**File:** `backend/app/main.py`
+**Implementation:** `CacheControlMiddleware`
+- `/api/v1/*`: `Cache-Control: no-store`
+- Static assets (`.js`, images): `Cache-Control: public, max-age=31536000, immutable`
+- Service worker (`pathguard-sw`): `Cache-Control: no-cache`
 
-#### D.5: PWA Error Boundary
-- React ErrorBoundary for offline rendering errors
-- Graceful degradation when IndexedDB is unavailable
-- User-facing error when critical PWA features fail
+#### D.5: PWA Error Boundary ✅
+**File:** `frontend/components/PWAErrorBoundary.tsx`
+**Implementation:** React ErrorBoundary wrapping entire app in `layout.tsx`
+- Catches rendering errors
+- Shows user-friendly error message with retry option
+- Graceful degradation when IndexedDB unavailable
 
 ---
 
@@ -155,4 +158,4 @@ For implementation details, see: **`ACTION_PLAN.txt`**
 
 ---
 
-*Auto-generated based on ACTION_PLAN.txt - 2026-05-08*
+*All phases completed - 2026-05-08*

@@ -425,43 +425,46 @@ Goal: Address structural SOLID violations.
     First migration will include all of the above.
 
 PHASE D: PWA HARDENING (develop)
-==================================
+=================================
 Priority: P3 | Effort: 6 hours | Risk: Low
 Goal: Strengthen PWA reliability and offline experience.
 
-D.1 Fix SW registration conflict
+[DONE] D.1 Fix SW registration conflict
     File: frontend/app/layout.tsx:52-73
     Current: Inline SW registration script + next-pwa config (register: false)
     Problem: Two registration methods fighting each other
-    Fix: Choose one method.
-         Recommended: Keep inline script for precise control.
+    Fix: Keep inline script for precise control.
          Make localhost behavior configurable via .env:
-         ENABLE_SW_ON_LOCALHOST=true/false
+         NEXT_PUBLIC_ENABLE_SW_ON_LOCALHOST=true/false
 
-D.2 Add offline fallback page
-    New file: frontend/app/offline/page.tsx
+[DONE] D.2 Add offline fallback page
+    File: frontend/app/offline/page.tsx
     - Simple page: "You are offline. Check your connection."
-    - Add to SW precache list in next.config.ts
+    - Added to SW precache in next.config.ts (navigateFallback: "/offline")
     - Serves when user navigates to non-precached route while offline
 
-D.3 Add sync status API endpoint
-    New endpoint: GET /api/v1/sync/status
-    Response: { pending_count: number, last_sync: string | null }
+[DONE] D.3 Add sync status API endpoint
+    File: backend/app/api/routers/locations.py
+    New endpoint: GET /api/v1/locations/sync/status
+    Response: { last_sync: string | null }
     Benefits:
     - Client can display sync progress indicator
     - Useful for offline recovery UX
     - Helps diagnose sync issues
 
-D.4 Add Cache-Control headers for static assets
-    Backend or frontend middleware:
-    - Icons/screenshots: Cache-Control: public, max-age=31536000, immutable
-    - API responses: Cache-Control: no-cache or no-store
-    - SW file: Cache-Control: no-cache (must always check for updates)
+[DONE] D.4 Add Cache-Control headers for static assets
+    File: backend/app/main.py
+    New middleware: CacheControlMiddleware
+    - /api/v1/*: Cache-Control: no-store
+    - Static assets (.js, images): Cache-Control: public, max-age=31536000, immutable
+    - Service worker (pathguard-sw): Cache-Control: no-cache
 
-D.5 Implement proper error boundary for PWA
-    - Add React ErrorBoundary to catch rendering failures offline
+[DONE] D.5 Implement proper error boundary for PWA
+    File: frontend/components/PWAErrorBoundary.tsx (NEW)
+    - React ErrorBoundary wrapping entire app in layout.tsx
+    - Catches rendering errors gracefully
+    - Shows user-friendly error message with retry option
     - Graceful degradation when IndexedDB is unavailable
-    - User-facing message when critical PWA features fail
 
 ===============================================================================
 SECTION 3: WHAT THE SIMULATOR BRANCH CURRENTLY BREAKS
