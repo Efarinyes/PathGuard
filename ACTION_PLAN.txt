@@ -280,7 +280,7 @@ Goal: Address structural SOLID violations.
     - Makes business logic testable without HTTP mocks
     - Enables swapping implementations without touching routers
 
-C.2 Replace in-memory WalkStateCache for production readiness
+[DONE] C.2 Replace in-memory WalkStateCache for production readiness
     Current: backend/app/db/state.py — global mutable singleton
     Problem: Lost on restart, not shared across gunicorn workers
     Options:
@@ -291,7 +291,7 @@ C.2 Replace in-memory WalkStateCache for production readiness
     Recommendation: Option A for now. Document the limitation.
       Upgrade to Option B when production scaling is needed.
 
-C.3 Add database migrations (DEFERRED)
+[DONE] C.3 Add database migrations (DEFERRED)
     Current: Tables auto-created on every startup via main.py lifespan
     Problem: Anti-pattern for production — no migration tracking
     Solution: Alembic
