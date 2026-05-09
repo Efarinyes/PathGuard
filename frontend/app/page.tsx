@@ -39,7 +39,7 @@ export default function Home() {
           </div>
 
           <p className="text-slate-400 text-sm mt-8">
-            Si ja formes part d&apos;un grup, ask the owner for un codi d&apos;invitació
+            Si ja formes part d&apos;un grup, demanar al propietari un codi d&apos;invitació
           </p>
         </div>
       </div>

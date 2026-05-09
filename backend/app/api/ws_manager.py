@@ -21,16 +21,26 @@ class ConnectionManager:
     Connections are registered into rooms scoped by group_id.
     """
     def __init__(self):
-        # group_id -> list of active websockets
         self.group_rooms: Dict[int, List[WebSocket]] = {}
         self.patient_connections: Dict[int, Set[WebSocket]] = {}
         self.patient_status: Dict[int, str] = {}
+        self.caregivers: Dict[int, Set[int]] = {}  # group_id -> set of user_ids
+        self.websocket_to_user: Dict[WebSocket, int] = {}  # websocket -> user_id
+        self.websocket_to_group: Dict[WebSocket, int] = {}  # websocket -> group_id
 
-    async def connect(self, websocket: WebSocket, group_id: int, role: str):
+    async def connect(self, websocket: WebSocket, group_id: int, role: str, user_id: Optional[int] = None):
         await websocket.accept()
         if group_id not in self.group_rooms:
             self.group_rooms[group_id] = []
         self.group_rooms[group_id].append(websocket)
+        
+        self.websocket_to_group[websocket] = group_id
+        
+        if role == "caregiver" and user_id:
+            self.websocket_to_user[websocket] = user_id
+            if group_id not in self.caregivers:
+                self.caregivers[group_id] = set()
+            self.caregivers[group_id].add(user_id)
         
         # Send connection confirmation
         await websocket.send_json({
@@ -45,13 +55,32 @@ class ConnectionManager:
             self.patient_connections[group_id].add(websocket)
 
     def disconnect(self, websocket: WebSocket, group_id: int, role: str):
+        user_id = self.websocket_to_user.pop(websocket, None)
+        self.websocket_to_group.pop(websocket, None)
+        
         if group_id in self.group_rooms:
             if websocket in self.group_rooms[group_id]:
                 self.group_rooms[group_id].remove(websocket)
             if not self.group_rooms[group_id]:
                 del self.group_rooms[group_id]
+        
         if role == "patient" and group_id in self.patient_connections:
             self.patient_connections[group_id].discard(websocket)
+        
+        if role == "caregiver" and user_id and group_id in self.caregivers:
+            self.caregivers[group_id].discard(user_id)
+
+    def get_watchers_count(self, group_id: int) -> int:
+        """Return number of caregivers watching this group."""
+        return len(self.caregivers.get(group_id, set()))
+
+    async def broadcast_watchers_update(self, group_id: int):
+        """Broadcast watcher count to all clients in group."""
+        count = self.get_watchers_count(group_id)
+        await self.broadcast_to_group(group_id, {
+            "type": "watchers_update",
+            "count": count
+        })
 
     async def broadcast_to_group(self, group_id: int, message: dict):
         """
@@ -78,28 +107,28 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-def authenticate_ws(db: Session, token: Optional[str], patient_token: Optional[str]) -> Tuple[Optional[int], Optional[str]]:
+def authenticate_ws(db: Session, token: Optional[str], patient_token: Optional[str]) -> Tuple[Optional[int], Optional[str], Optional[int]]:
     """
     Helper to authenticate WS connection via JWT (caregiver) or device_token (patient).
-    Returns (group_id, role)
+    Returns (group_id, role, user_id)
     """
     if token:
         user_id = verify_token(token)
         if user_id:
             user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
             if user:
-                return user.group_id, "caregiver"
+                return user.group_id, "caregiver", user_id
     
     if patient_token:
         try:
             token_uuid = uuid.UUID(patient_token)
             patient = db.query(Patient).filter(Patient.device_token == token_uuid).first()
             if patient:
-                return patient.group_id, "patient"
+                return patient.group_id, "patient", None
         except ValueError:
             pass
             
-    return None, None
+    return None, None, None
 
 @router.websocket("/")
 async def websocket_endpoint(
@@ -111,13 +140,17 @@ async def websocket_endpoint(
     """
     Main WebSocket entry point. Handles authentication, group scoping, and rehydration.
     """
-    group_id, role = authenticate_ws(db, token, patient_token)
+    group_id, role, user_id = authenticate_ws(db, token, patient_token)
     
     if group_id is None:
         await websocket.close(code=4003) # Forbidden
         return
 
-    await manager.connect(websocket, group_id, role)
+    await manager.connect(websocket, group_id, role, user_id)
+    
+    # Broadcast watchers count after new caregiver connects
+    if role == "caregiver":
+        await manager.broadcast_watchers_update(group_id)
     
     # ⚡ LATE JOIN CONSISTENCY: Send atomic snapshot as first message
     if role == "caregiver":
@@ -187,6 +220,11 @@ async def websocket_endpoint(
                 await websocket.receive_text()
     except (WebSocketDisconnect, Exception):
         manager.disconnect(websocket, group_id, role)
+        
+        # Broadcast watchers count after caregiver disconnects
+        if role == "caregiver":
+            await manager.broadcast_watchers_update(group_id)
+            
         if role == "patient":
             if not manager.patient_connections.get(group_id):
                 if manager.patient_status.get(group_id) == "online":

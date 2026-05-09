@@ -18,7 +18,10 @@ def test_websocket_connect(client: TestClient, auth_headers: dict) -> None:
     with client.websocket_connect(f"/api/v1/ws/?token={jwt}") as websocket:
         assert len(manager.group_rooms) == initial_count + 1
         websocket.receive_json()  # connection_established
-        websocket.receive_json()  # snapshot
+        # Now we receive watchers_update before snapshot
+        msg = websocket.receive_json()
+        if "watchers" in msg.get("type", ""):
+            websocket.receive_json()  # snapshot
         assert websocket is not None
 
 
@@ -31,7 +34,10 @@ def test_websocket_disconnect(client: TestClient, auth_headers: dict) -> None:
     with client.websocket_connect(f"/api/v1/ws/?token={jwt}") as websocket:
         assert len(manager.group_rooms) == initial_count + 1
         websocket.receive_json()  # connection_established
-        websocket.receive_json()  # snapshot
+        # Now we receive watchers_update before snapshot
+        msg = websocket.receive_json()
+        if "watchers" in msg.get("type", ""):
+            websocket.receive_json()  # snapshot
         websocket.close()
 
     assert len(manager.group_rooms) == initial_count
@@ -71,7 +77,10 @@ def test_websocket_receive_updates(
 
     with client.websocket_connect(f"/api/v1/ws/?token={jwt}") as websocket:
         websocket.receive_json()  # connection_established
-        websocket.receive_json()  # snapshot
+        # Now we receive watchers_update before snapshot
+        msg = websocket.receive_json()
+        if "watchers" in msg.get("type", ""):
+            websocket.receive_json()  # snapshot
 
         payload = {
             "latitude": 42.123,
