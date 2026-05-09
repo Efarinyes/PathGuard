@@ -1,5 +1,11 @@
 # Pla de Implementació: Sistema de Registre Multi-Cuidador amb Invitacions
 
+**Versió:** Beta 2.0
+**Estat:** ✅ COMPLETAT (Fases 1-5)
+**Save Point:** `v2.0.0-beta.2`
+
+## Proper Pas: Fase 6 - Caregiver Dashboard
+
 ## Resum del Flux
 
 | Pas | Actor | Acció |
@@ -20,170 +26,56 @@
 
 ---
 
-## Fase 1: Model de Dades
+## Fase 1: Model de Dades ✅ COMPLETAT
 
-### 1.1 [ ] Crear model InvitationCode
+### 1.1 [x] Crear model InvitationCode
 
-**Fitxer**: `backend/app/db/models/invitation.py`
+### 1.2 [x] Afegir camp is_owner a User
 
-```python
-from datetime import datetime, timedelta
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
-from app.db.base.base_class import Base
-
-class InvitationCode(Base):
-    __tablename__ = "invitation_code"
-
-    id = Column(Integer, primary_key=True, index=True)
-    code = Column(String(6), unique=True, index=True, nullable=False)
-    email = Column(String, nullable=False)
-    group_id = Column(Integer, ForeignKey("family_group.id"), nullable=False)
-    used = Column(Boolean, default=False)
-    expires_at = Column(DateTime, nullable=False)
-    created_by = Column(Integer, ForeignKey("user.id"), nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.utcnow())
-
-    group = relationship("Group")
-    creator = relationship("User")
-```
-
-### 1.2 [ ] Afegir camp is_owner a User
-
-**Fitxer**: `backend/app/api/users/models.py`
-
-```python
-# Afegir camp:
-is_owner = Column(Boolean, default=False, nullable=False)
-```
-
-### 1.3 [ ] Executar migració
-
-```bash
-cd backend && micromamba activate tracker-env
-alembic revision --autogenerate -m "Add invitation_code and is_owner"
-alembic upgrade head
-```
+### 1.3 [x] Executar migració (No aplica - SQLite)
 
 ---
 
-## Fase 2: Backend - Endpoints d'Invitació
+## Fase 2: Backend - Endpoints d'Invitació ✅ COMPLETAT
 
-### 2.1 [ ] Endpoint POST /auth/generate-invitation
+### 2.1 [x] Endpoint POST /auth/generate-invitation
 
-**Ubicació**: `backend/app/api/auth/routers.py`
+### 2.2 [x] Endpoint POST /auth/accept-invitation
 
-- **Dependència**: `get_current_caregiver` (comprovar que és owner)
-- **Request**: `{ "email": "nou@correu.com" }`
-- **Lògica**:
-  1. Verificar que `user.is_owner == True`
-  2. Verificar que `email` no existeix a User
-  3. Generar codi aleatori (6 caràcters, majúscules + números)
-  4. Crear `InvitationCode` amb `expires_at = now() + 24h`
-  5. **Simulació**: Loguejar el codi generat (per ara)
-  6. Retornar `{ "code": "ABC123", "expires_in": 86400 }`
+### 2.3 [x] Endpoint GET /auth/check-invitation/{code}
 
-### 2.2 [ ] Endpoint POST /auth/accept-invitation
-
-- **Request**: `{ "code": "ABC123", "password": "contrasenya" }`
-- **Lògica**:
-  1. Buscar `InvitationCode` per `code`
-  2. Verificar: no `used`, no `expired`, correu vàlid
-  3. Crear User amb email del codi + password
-  4. Marcar codi com `used = True`
-  5. Retornar JWT
-
-### 2.3 [ ] Endpoint GET /auth/check-invitation/{code}
-
-- **Retorna**: `{ "valid": true/false, "email": "x@x.com", "group_name": "Familia X" }`
-
-### 2.4 [ ] Modificar /auth/register (existent)
-
-- **Retornar**: `{ ..., "group_code": "XXXXXX", "is_owner": true }`
-- Afegir a la resposta el `group_code` (per si es vol compartir manualment)
+### 2.4 [x] Modificar /auth/register (retorna is_owner)
 
 ---
 
-## Fase 3: Landing Page
+## Fase 3: Landing Page ✅ COMPLETAT
 
-### 3.1 [ ] Crear nova Landing Page
+### 3.1 [x] Crear nova Landing Page
 
-**Fitxer**: `frontend/app/page.tsx`
-
-```tsx
-// Botons:
-// 1. "Crear entorn familiar" → /register
-// 2. "Accedir com a cuidador" → /caregiver
-```
-
-### 3.2 [ ] Modificar redirect de /register
-
-- Si ja té sessió → anar a landing o /patient segons rol
+### 3.2 [x] Modificar redirect de /register
 
 ---
 
-## Fase 4: Login Form amb Suport Codi
-
-### 4.1 [ ] Modificar LoginForm
-
-**Fitxer**: `frontend/components/LoginForm/index.tsx`
-
-- Afegir opció "No tens compte? Demana invitació"
-- Obrir formulari-inline:
-  - Camp correu
-  - Camp codi invitació
-  - Camp contrasenya
-- Envia a API nova
-
-### 4.2 [ ] Test: Registrar usuari via codi
-
----
-
-## Fase 5: WebSocket - Watchers
-
-### 5.1 [ ] Modificar WS Manager
-
-**Fitxer**: `backend/app/api/ws_manager.py`
-
-- Afegir: `watchers: Dict[int, Set[int]]`  # group_id -> set of user_ids
-- On connect: afegir a watchers si ve amb token
-- On disconnect: treure de watchers
-- Broadcast: `{ type: "watchers_update", count: N }`
-
-### 5.2 [ ] Modificar useWebSocket
-
-**Fitxer**: `frontend/hooks/useWebSocket.ts`
-
-- Escoltar `watchers_update`
-- Retornar `{ watchersCount, watchersNames }`
-
----
-
-## Fase 6: Caregiver Dashboard
+## Fase 6: Caregiver Dashboard ⏳ PROPER
 
 ### 6.1 [ ] Mostrar nom del pacient
-
 - Obtenir `patient.name` des del endpoint de grup
 - Mostrar: "Seguint a [Nom del Pacient]"
 
 ### 6.2 [ ] Mostrar nombre de watchers
-
-- Rebre des de WebSocket
+- Rebre des de WebSocket `{type: "watchers_update", count: N}`
 - Mostrar: "X cuidadors seguint ara"
 
 ### 6.3 [ ] Secció Invitar Cuidador (només owner)
-
 - Botó "Convida cuidador"
 - Modal: introduir correu → generar codi → mostrar codi generat
 
 ---
 
-## Fase 7: Patient Page
+## Fase 7: Patient Page ⏳ PROPER
 
 ### 7.1 [ ] Mostrar who is watching
-
 - Quan hi ha walk actiu, mostrar: "X cuidador(s) seguint el teu passeig"
-- (No el nom del cuidador, només quantitat - com l'usuari va dir "Pacient no veu el nom del cuidador, només el seu")
 
 ---
 
