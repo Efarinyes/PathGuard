@@ -105,3 +105,39 @@ def generate_invitation(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate invitation"
         )
+
+@router.post("/accept-invitation", response_model=auth_schemas.AcceptInvitationResponse)
+def accept_invitation(
+    data: auth_schemas.AcceptInvitationRequest,
+    db: Session = Depends(deps.get_db)
+) -> Any:
+    """
+    Accept an invitation code and create a new caregiver account.
+    No authentication required - uses the invitation code.
+    """
+    try:
+        return invitation_service.accept_invitation(
+            db=db,
+            code=data.code,
+            password=data.password
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        logger.error(f"Invitation acceptance failed: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to accept invitation"
+        )
+
+@router.get("/check-invitation/{code}", response_model=auth_schemas.CheckInvitationResponse)
+def check_invitation(
+    code: str,
+    db: Session = Depends(deps.get_db)
+) -> Any:
+    """
+    Check if an invitation code is valid.
+    Returns: { valid: bool, email: str | None, group_name: str | None }
+    """
+    return invitation_service.check_invitation(db=db, code=code)

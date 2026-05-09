@@ -70,7 +70,8 @@ class RegistrationService:
         return {
             "device_token": str(new_patient.device_token),
             "patient_id": new_patient.id,
-            "caregiver_jwt": caregiver_jwt
+            "caregiver_jwt": caregiver_jwt,
+            "is_owner": True
         }
 
 

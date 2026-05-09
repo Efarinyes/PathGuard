@@ -28,3 +28,16 @@ class GenerateInvitationResponse(BaseModel):
     code: str
     expires_in: int
     email: str
+
+class AcceptInvitationRequest(BaseModel):
+    code: str
+    password: str
+
+class AcceptInvitationResponse(BaseModel):
+    access_token: str
+    token_type: str
+
+class CheckInvitationResponse(BaseModel):
+    valid: bool
+    email: str | None = None
+    group_name: str | None = None
