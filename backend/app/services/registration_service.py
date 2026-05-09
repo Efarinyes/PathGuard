@@ -49,6 +49,7 @@ class RegistrationService:
             hashed_password=hash_password(password),
             is_caregiver=True,
             is_active=True,
+            is_owner=True,
             group_id=new_group.id
         )
         db.add(new_user)

@@ -12,6 +12,7 @@ class RegisterResponse(BaseModel):
     device_token: UUID
     patient_id: int
     caregiver_jwt: str
+    is_owner: bool = True
 
 class Token(BaseModel):
     access_token: str
@@ -19,3 +20,11 @@ class Token(BaseModel):
 
 class TokenPayload(BaseModel):
     sub: Optional[int] = None
+
+class GenerateInvitationRequest(BaseModel):
+    email: EmailStr
+
+class GenerateInvitationResponse(BaseModel):
+    code: str
+    expires_in: int
+    email: str

@@ -14,8 +14,8 @@ class InvitationCode(Base):
     group_id = Column(Integer, ForeignKey("family_group.id"), nullable=False)
     used = Column(Boolean, default=False, nullable=False)
     expires_at = Column(DateTime, nullable=False)
-    created_by = Column(Integer, ForeignKey("user.id"), nullable=False)
+    created_by = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     group = relationship("Group", foreign_keys=[group_id])
-    creator = relationship("User", foreign_keys=[created_by])
+    # creator = relationship("User", foreign_keys=[created_by])  # Removed - no FK due to SQLite circular dep

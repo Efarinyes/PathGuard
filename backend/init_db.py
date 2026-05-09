@@ -5,7 +5,7 @@ Run once before starting the server:
     python init_db.py
 """
 from app.db.session.database import engine
-import app.db.models  # noqa: F401 — registers all models on Base.metadata
+import app.db.models  # noqa: F401 — registers all models including User
 
 from app.db.base.base_class import Base
 

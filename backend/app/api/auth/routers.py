@@ -7,9 +7,11 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.api.auth import services as auth_services
 from app.api.auth import schemas as auth_schemas
+from app.api.users.models import User
 from app.core.config.settings import settings
 from app.core.security.auth import create_access_token
 from app.services.registration_service import registration_service
+from app.services.invitation_service import invitation_service
 
 logger = logging.getLogger(__name__)
 
@@ -70,3 +72,36 @@ def login_access_token(
         ),
         "token_type": "bearer",
     }
+
+@router.post("/generate-invitation", response_model=auth_schemas.GenerateInvitationResponse)
+def generate_invitation(
+    data: auth_schemas.GenerateInvitationRequest,
+    current_user: User = Depends(deps.get_current_caregiver),
+    db: Session = Depends(deps.get_db)
+) -> Any:
+    """
+    Generate an invitation code for a new caregiver.
+    Only the group owner can generate invitations.
+    """
+    if not current_user.is_owner:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the group owner can generate invitations"
+        )
+
+    try:
+        return invitation_service.generate_invitation(
+            db=db,
+            email=data.email,
+            created_by_user_id=current_user.id,
+            group_id=current_user.group_id
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        logger.error(f"Invitation generation failed: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate invitation"
+        )
