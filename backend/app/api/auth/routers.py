@@ -141,3 +141,22 @@ def check_invitation(
     Returns: { valid: bool, email: str | None, group_name: str | None }
     """
     return invitation_service.check_invitation(db=db, code=code)
+
+@router.get("/me", response_model=auth_schemas.UserGroupInfo)
+def get_current_user_info(
+    current_user: User = Depends(deps.get_current_caregiver),
+    db: Session = Depends(deps.get_db)
+) -> Any:
+    """
+    Returns the current user's group information including patient name.
+    Used by Caregiver Dashboard to display patient name and ownership status.
+    """
+    from app.db.models.patient import Patient
+    
+    patient = db.query(Patient).filter(Patient.group_id == current_user.group_id).first()
+    
+    return {
+        "patient_name": patient.name if patient else "Pacient",
+        "group_name": current_user.group.name if current_user.group else "Grup",
+        "is_owner": current_user.is_owner
+    }

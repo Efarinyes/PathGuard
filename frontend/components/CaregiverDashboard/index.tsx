@@ -22,9 +22,26 @@ export default function CaregiverDashboard() {
   const [isExtraInfoOpen, setIsExtraInfoOpen] = useState(false);
   const [isMonitoringPaused, setIsMonitoringPaused] = useState(false);
   const [notification, setNotification] = useState<{ message: string, type: 'info' | 'warning' } | null>(null);
+  const [patientName, setPatientName] = useState<string>('');
+  const [isOwner, setIsOwner] = useState<boolean>(false);
 
   // Consume extracted data fetching logic
   const { walks, analytics } = useCaregiverAnalytics(userToken, isActive);
+
+  // Fetch patient name and owner status on mount
+  useEffect(() => {
+    if (!userToken) return;
+
+    walkService.getUserGroupInfo(userToken)
+      .then(data => {
+        setPatientName(data.patient_name);
+        setIsOwner(data.is_owner);
+      })
+      .catch(err => {
+        console.error('Error fetching group info:', err);
+        setPatientName('Pacient');
+      });
+  }, [userToken]);
 
   // Effect to calculate "Last seen X ago" string based strictly on location payload
   useEffect(() => {
@@ -105,6 +122,11 @@ export default function CaregiverDashboard() {
           <div className="flex justify-between items-start">
             <div className="flex-1">
               <h2 className="text-[#0F172A] font-bold text-xl mb-1">Estat del passeig</h2>
+              {patientName && (
+                <p className="text-sm text-slate-500 font-medium mb-2">
+                  Seguint a <span className="text-[#1E3A8A] font-semibold">{patientName}</span>
+                </p>
+              )}
               <div className="flex items-center gap-2">
                 <span className="relative flex h-3 w-3">
                   <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${(isConnected && isActive && !isMonitoringPaused) ? (isPatientConnected ? 'bg-[#22C55E]' : 'bg-[#F59E0B]') : 'bg-slate-400'}`}></span>

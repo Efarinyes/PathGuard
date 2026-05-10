@@ -41,3 +41,8 @@ class CheckInvitationResponse(BaseModel):
     valid: bool
     email: str | None = None
     group_name: str | None = None
+
+class UserGroupInfo(BaseModel):
+    patient_name: str
+    group_name: str
+    is_owner: bool

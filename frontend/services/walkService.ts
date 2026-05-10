@@ -99,5 +99,27 @@ export const walkService = {
     }
 
     return response.json();
+  },
+
+  /**
+   * Fetches the current user's group info including patient name and ownership status.
+   */
+  async getUserGroupInfo(token: string): Promise<{
+    patient_name: string;
+    group_name: string;
+    is_owner: boolean;
+  }> {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('No s\'ha pogut carregar la informació del grup');
+    }
+    
+    return response.json();
   }
 };
