@@ -1,11 +1,15 @@
-import { useState, useEffect, useRef, useReducer } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useWebSocket } from './useWebSocket';
 import { useAppState } from './useAppState';
 import { LocationPayload } from '../services/locationService';
 import { walkService } from '../services/walkService';
-import { WalkEventProcessor, WalkState, WalkAction } from '../lib/WalkEventProcessor';
+import { WalkEventProcessor } from '../lib/WalkEventProcessor';
+import { CaregiverConnectionManager, ConnectionEventCallbacks } from '../lib/CaregiverConnectionManager';
 
-export interface UseLivePatientLocationReturn extends WalkState {
+export interface UseLivePatientLocationReturn {
+  currentLocation: LocationPayload | null;
+  routeHistory: LocationPayload[];
+  isActive: boolean;
   isConnected: boolean;
   isPatientConnected: boolean;
   isLoading: boolean;
@@ -19,20 +23,80 @@ export function useLivePatientLocation(
 
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Initialize the event processor
-  const processor = useRef(new WalkEventProcessor());
-
-  // Core state managed by reducer
-  const [walkState, dispatch] = useReducer(
-    (state: WalkState, action: WalkAction) => processor.current.reduceState(state, action),
-    { currentLocation: null, routeHistory: initialHistory, isActive: false }
-  );
-
   const [isPatientConnected, setIsPatientConnected] = useState(true);
   const [watchersCount, setWatchersCount] = useState(0);
 
-  // 1. Snapshot Recovery: Fetch active walk state (REST Initial Load)
+  const connectionManagerRef = useRef<CaregiverConnectionManager | null>(null);
+  const stateRef = useRef<{
+    currentLocation: LocationPayload | null;
+    routeHistory: LocationPayload[];
+    isActive: boolean;
+  }>({
+    currentLocation: null,
+    routeHistory: initialHistory,
+    isActive: false,
+  });
+
+  const [, forceUpdate] = useState({});
+
+  const dispatchState = useCallback((newState: typeof stateRef.current) => {
+    stateRef.current = newState;
+    forceUpdate({});
+  }, []);
+
+  const handleSnapshot = useCallback((payload: unknown) => {
+    console.log('[useLivePatientLocation] Snapshot received');
+  }, []);
+
+  const handleWalkStarted = useCallback((timestamp: number) => {
+    console.log('[useLivePatientLocation] Walk started');
+  }, []);
+
+  const handleWalkStopped = useCallback(() => {
+    console.log('[useLivePatientLocation] Walk stopped');
+  }, []);
+
+  const handleLocationUpdate = useCallback((location: LocationPayload) => {
+    console.log('[useLivePatientLocation] Location update');
+  }, []);
+
+  const handlePatientOnline = useCallback(() => {
+    setIsPatientConnected(true);
+  }, []);
+
+  const handlePatientOffline = useCallback(() => {
+    setIsPatientConnected(false);
+  }, []);
+
+  const handleWatchersUpdate = useCallback((count: number) => {
+    setWatchersCount(count);
+  }, []);
+
+  const handleConnectionChange = useCallback((connected: boolean) => {
+    console.log('[useLivePatientLocation] Connection changed:', connected);
+  }, []);
+
+  const callbacks: ConnectionEventCallbacks = {
+    onSnapshot: handleSnapshot,
+    onWalkStarted: handleWalkStarted,
+    onWalkStopped: handleWalkStopped,
+    onLocationUpdate: handleLocationUpdate,
+    onPatientOnline: handlePatientOnline,
+    onPatientOffline: handlePatientOffline,
+    onWatchersUpdate: handleWatchersUpdate,
+    onConnectionChange: handleConnectionChange,
+  };
+
+  useEffect(() => {
+    const processor = new WalkEventProcessor();
+
+    connectionManagerRef.current = new CaregiverConnectionManager(
+      processor,
+      callbacks,
+      dispatchState
+    );
+  }, [callbacks, dispatchState]);
+
   async function rehydrateState(isReconnect = false) {
     if (isLoading && isReconnect) return;
 
@@ -46,25 +110,20 @@ export function useLivePatientLocation(
       if (!isReconnect) setIsLoading(true);
 
       const snapshot = await walkService.getActiveWalk(userToken, deviceToken);
-      if (snapshot) {
-        dispatch({
-          type: 'SNAPSHOT',
-          payload: {
-            active_walk: {
-              id: snapshot.id,
-              active_walk_id: snapshot.id,
-              history: (snapshot.locations || []).map(loc => ({
-                latitude: loc.latitude,
-                longitude: loc.longitude,
-                timestamp: loc.timestamp,
-                walk_id: snapshot.id,
-              })),
-            },
+      if (snapshot && connectionManagerRef.current) {
+        const payload = {
+          type: 'snapshot',
+          active_walk: {
+            id: snapshot.id,
+            history: (snapshot.locations || []).map((loc: { latitude: number; longitude: number; timestamp: string }) => ({
+              latitude: loc.latitude,
+              longitude: loc.longitude,
+              timestamp: loc.timestamp,
+            })),
           },
-        });
+        };
+        connectionManagerRef.current.handleMessage(payload);
       }
-      // On rehydration, we assume patient might be connected if walk is active, 
-      // but the WS events will provide the definitive state.
     } catch (error) {
       console.error('[useLivePatientLocation] Recovery failed:', error);
     } finally {
@@ -79,71 +138,40 @@ export function useLivePatientLocation(
     }
   }, [userToken, deviceToken, appIsHydrated]);
 
-  // Handle app foregrounding for the caregiver (recovery after inactivity)
   useEffect(() => {
     const handleVisibility = () => {
-      if (document.visibilityState === "visible" && appIsHydrated && (userToken || deviceToken)) {
-        console.log("[useLivePatientLocation] App returned to foreground, re-syncing state...");
+      if (document.visibilityState === 'visible' && appIsHydrated && (userToken || deviceToken)) {
+        console.log('[useLivePatientLocation] App returned to foreground, re-syncing state...');
+        connectionManagerRef.current?.resetProcessor();
         rehydrateState(true);
       }
     };
 
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [appIsHydrated, userToken, deviceToken]);
 
-  // 2. Real-time Updates: Connect WS only after we have the REST snapshot
   const wsUrlParams = userToken ? `?token=${userToken}` : deviceToken ? `?patient_token=${deviceToken}` : '';
   const { lastMessage, isConnected } = useWebSocket<any>(isReady, wsUrlParams);
 
-  // ⚡ Re-fetch on reconnect
   useEffect(() => {
-    if (isConnected && isReady) {
+    if (isConnected && connectionManagerRef.current) {
+      connectionManagerRef.current.resetProcessor();
       rehydrateState(true);
     }
   }, [isConnected]);
 
-  // 3. Seamless Integration: Handle new messages via Processor
   useEffect(() => {
-    if (!processor.current.shouldProcessMessage(lastMessage)) {
-      return;
-    }
-
-    const eventTime = lastMessage.timestamp ? new Date(lastMessage.timestamp).getTime() : 0;
-
-    if (lastMessage.type === 'snapshot') {
-      dispatch({ type: 'SNAPSHOT', payload: lastMessage });
-    } else if (lastMessage.type === 'walk_started') {
-      dispatch({ type: 'WALK_STARTED', timestamp: eventTime });
-    } else if (lastMessage.type === 'walk_stopped') {
-      dispatch({ type: 'WALK_STOPPED' });
-    } else if (lastMessage.type === 'patient_online') {
-      setIsPatientConnected(true);
-    } else if (lastMessage.type === 'patient_offline') {
-      setIsPatientConnected(false);
-    } else if (lastMessage.type === 'watchers_update') {
-      setWatchersCount(lastMessage.count || 0);
-    } else {
-      const isLocation = lastMessage.type === 'location' || 
-                         (!lastMessage.type && lastMessage.latitude != null && lastMessage.longitude != null);
-
-      if (isLocation && typeof lastMessage.latitude === 'number' && typeof lastMessage.longitude === 'number') {
-        const normalized: LocationPayload = {
-          latitude: lastMessage.latitude,
-          longitude: lastMessage.longitude,
-          timestamp: lastMessage.timestamp,
-          ...(lastMessage.walk_id !== undefined ? { walk_id: lastMessage.walk_id } : {}),
-        };
-        dispatch({ type: 'LOCATION_UPDATE', payload: normalized });
-      }
+    if (lastMessage && connectionManagerRef.current) {
+      connectionManagerRef.current.handleMessage(lastMessage);
     }
   }, [lastMessage]);
 
   return {
-    ...walkState,
+    ...stateRef.current,
     isConnected,
     isPatientConnected,
     isLoading,
-    watchersCount
+    watchersCount,
   };
 }
