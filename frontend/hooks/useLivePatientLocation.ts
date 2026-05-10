@@ -9,6 +9,7 @@ export interface UseLivePatientLocationReturn extends WalkState {
   isConnected: boolean;
   isPatientConnected: boolean;
   isLoading: boolean;
+  watchersCount: number;
 }
 
 export function useLivePatientLocation(
@@ -29,6 +30,7 @@ export function useLivePatientLocation(
   );
 
   const [isPatientConnected, setIsPatientConnected] = useState(true);
+  const [watchersCount, setWatchersCount] = useState(0);
 
   // 1. Snapshot Recovery: Fetch active walk state (REST Initial Load)
   async function rehydrateState(isReconnect = false) {
@@ -119,6 +121,8 @@ export function useLivePatientLocation(
       setIsPatientConnected(true);
     } else if (lastMessage.type === 'patient_offline') {
       setIsPatientConnected(false);
+    } else if (lastMessage.type === 'watchers_update') {
+      setWatchersCount(lastMessage.count || 0);
     } else {
       const isLocation = lastMessage.type === 'location' || 
                          (!lastMessage.type && lastMessage.latitude != null && lastMessage.longitude != null);
@@ -139,6 +143,7 @@ export function useLivePatientLocation(
     ...walkState,
     isConnected,
     isPatientConnected,
-    isLoading
+    isLoading,
+    watchersCount
   };
 }

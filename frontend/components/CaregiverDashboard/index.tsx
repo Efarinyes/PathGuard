@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation';
 export default function CaregiverDashboard() {
   const { userToken, clearUserSession } = useAppState();
   const router = useRouter();
-  const { currentLocation, routeHistory, isConnected, isPatientConnected, isLoading, isActive } = useLivePatientLocation();
+  const { currentLocation, routeHistory, isConnected, isPatientConnected, isLoading, isActive, watchersCount } = useLivePatientLocation();
   const [timeAgo, setTimeAgo] = useState<string>('Esperant dades...');
   const [isExtraInfoOpen, setIsExtraInfoOpen] = useState(false);
   const [isMonitoringPaused, setIsMonitoringPaused] = useState(false);
@@ -123,8 +123,19 @@ export default function CaregiverDashboard() {
             <div className="flex-1">
               <h2 className="text-[#0F172A] font-bold text-xl mb-1">Estat del passeig</h2>
               {patientName && (
-                <p className="text-sm text-slate-500 font-medium mb-2">
+                <p className="text-sm text-slate-500 font-medium mb-1">
                   Seguint a <span className="text-[#1E3A8A] font-semibold">{patientName}</span>
+                </p>
+              )}
+              {watchersCount > 0 && (
+                <p className="text-xs text-slate-400 font-medium mb-2 flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                  {watchersCount} cuidador{watchersCount > 1 ? 's' : ''} seguint ara
                 </p>
               )}
               <div className="flex items-center gap-2">
