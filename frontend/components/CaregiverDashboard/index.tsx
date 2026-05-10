@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import CaregiverMap from '../CaregiverMap';
 import NotificationBanner from '../NotificationBanner';
 import WalkHistoryList, { WalkHistoryItem } from '../WalkHistoryList';
+import InviteCaregiverModal from '../InviteCaregiverModal';
 import { useLivePatientLocation } from '@/hooks/useLivePatientLocation';
 import { useAppState } from '@/hooks/useAppState';
 import { walkService } from '@/services/walkService';
@@ -24,6 +25,8 @@ export default function CaregiverDashboard() {
   const [notification, setNotification] = useState<{ message: string, type: 'info' | 'warning' } | null>(null);
   const [patientName, setPatientName] = useState<string>('');
   const [isOwner, setIsOwner] = useState<boolean>(false);
+  const [groupName, setGroupName] = useState<string>('');
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   // Consume extracted data fetching logic
   const { walks, analytics } = useCaregiverAnalytics(userToken, isActive);
@@ -36,6 +39,7 @@ export default function CaregiverDashboard() {
       .then(data => {
         setPatientName(data.patient_name);
         setIsOwner(data.is_owner);
+        setGroupName(data.group_name);
       })
       .catch(err => {
         console.error('Error fetching group info:', err);
@@ -207,6 +211,22 @@ export default function CaregiverDashboard() {
 
           <div className="h-px bg-slate-100 w-full mt-2" />
 
+          {/* Action: Invite Caregiver (Owner only) */}
+          {isOwner && (
+            <button
+              onClick={() => setIsInviteModalOpen(true)}
+              className="w-full py-3 px-4 bg-[#1E3A8A]/10 hover:bg-[#1E3A8A]/20 text-[#1E3A8A] font-bold text-sm rounded-lg transition-all flex items-center justify-center gap-2 border border-[#1E3A8A]/20"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="8.5" cy="7" r="4"/>
+                <line x1="20" y1="8" x2="20" y2="14"/>
+                <line x1="23" y1="11" x2="17" y2="11"/>
+              </svg>
+              Convida cuidador
+            </button>
+          )}
+
           {/* Action 2: Full Logout */}
           <button
             onClick={() => clearUserSession()}
@@ -287,6 +307,13 @@ export default function CaregiverDashboard() {
           </div>
         </div>
       </div>
+      
+      {/* Invite Caregiver Modal */}
+      <InviteCaregiverModal 
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        groupName={groupName}
+      />
       
     </div>
   );
