@@ -68,7 +68,10 @@ class ConnectionManager:
             self.patient_connections[group_id].discard(websocket)
         
         if role == "caregiver" and user_id and group_id in self.caregivers:
-            self.caregivers[group_id].discard(user_id)
+            # Only remove user from watchers if they have no other active connections
+            is_still_connected = any(uid == user_id for uid in self.websocket_to_user.values())
+            if not is_still_connected:
+                self.caregivers[group_id].discard(user_id)
 
     def get_watchers_count(self, group_id: int) -> int:
         """Return number of caregivers watching this group."""
@@ -113,11 +116,15 @@ def authenticate_ws(db: Session, token: Optional[str], patient_token: Optional[s
     Returns (group_id, role, user_id)
     """
     if token:
-        user_id = verify_token(token)
-        if user_id:
-            user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
-            if user:
-                return user.group_id, "caregiver", user_id
+        user_id_raw = verify_token(token)
+        if user_id_raw:
+            try:
+                user_id = int(user_id_raw)
+                user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+                if user:
+                    return user.group_id, "caregiver", user_id
+            except (ValueError, TypeError):
+                pass
     
     if patient_token:
         try:
@@ -150,6 +157,7 @@ async def websocket_endpoint(
     
     # Broadcast watchers count after new caregiver connects
     if role == "caregiver":
+        print(f"[WS] Caregiver {user_id} connected to group {group_id}")
         await manager.broadcast_watchers_update(group_id)
     
     # ⚡ LATE JOIN CONSISTENCY: Send atomic snapshot as first message
@@ -165,6 +173,7 @@ async def websocket_endpoint(
             snapshot_payload = {
                 "type": "snapshot",
                 "group_id": group_id,
+                "watchers_count": manager.get_watchers_count(group_id),
                 "server_timestamp": f"{datetime.now(timezone.utc).isoformat()}Z",
                 "active_walk": {
                     "id": active_walk.id,
@@ -193,6 +202,7 @@ async def websocket_endpoint(
             await websocket.send_json({
                 "type": "snapshot",
                 "group_id": group_id,
+                "watchers_count": manager.get_watchers_count(group_id),
                 "active_walk": None,
                 "server_timestamp": f"{datetime.now(timezone.utc).isoformat()}Z"
             })
@@ -218,7 +228,8 @@ async def websocket_endpoint(
             else:
                 # Caregiver
                 await websocket.receive_text()
-    except (WebSocketDisconnect, Exception):
+    except (WebSocketDisconnect, Exception) as e:
+        print(f"[WS] Disconnect/Error for {role} in group {group_id}: {str(e)}")
         manager.disconnect(websocket, group_id, role)
         
         # Broadcast watchers count after caregiver disconnects

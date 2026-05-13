@@ -1,5 +1,6 @@
 import logging
 import secrets
+import hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from sqlalchemy.orm import Session
@@ -24,6 +25,11 @@ class InvitationService:
         return "".join(secrets.choice(chars) for _ in range(INVITATION_CODE_LENGTH))
 
     @staticmethod
+    def _hash_code(code: str) -> str:
+        """Deterministically hash the code using SHA-256."""
+        return hashlib.sha256(code.encode()).hexdigest()
+
+    @staticmethod
     def generate_invitation(
         db: Session,
         email: str,
@@ -35,10 +41,11 @@ class InvitationService:
             raise ValueError("User with this email already exists")
 
         code = InvitationService.generate_code()
+        hashed_code = InvitationService._hash_code(code)
         expires_at = datetime.now(timezone.utc) + timedelta(hours=INVITATION_EXPIRY_HOURS)
 
         invitation = InvitationCode(
-            code=code,
+            code=hashed_code,
             email=email,
             group_id=group_id,
             created_by=created_by_user_id,
@@ -58,8 +65,9 @@ class InvitationService:
 
     @staticmethod
     def validate_code(db: Session, code: str) -> InvitationCode | None:
+        hashed_code = InvitationService._hash_code(code)
         invitation = db.query(InvitationCode).filter(
-            InvitationCode.code == code
+            InvitationCode.code == hashed_code
         ).first()
 
         if not invitation:

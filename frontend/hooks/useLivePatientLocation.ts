@@ -9,6 +9,7 @@ export interface UseLivePatientLocationReturn extends WalkState {
   isConnected: boolean;
   isPatientConnected: boolean;
   isLoading: boolean;
+  watchersCount: number;
 }
 
 export function useLivePatientLocation(
@@ -29,6 +30,7 @@ export function useLivePatientLocation(
   );
 
   const [isPatientConnected, setIsPatientConnected] = useState(true);
+  const [watchersCount, setWatchersCount] = useState(0);
 
   // 1. Snapshot Recovery: Fetch active walk state (REST Initial Load)
   async function rehydrateState(isReconnect = false) {
@@ -49,14 +51,8 @@ export function useLivePatientLocation(
           type: 'SNAPSHOT',
           payload: {
             active_walk: {
-              id: snapshot.id,
-              active_walk_id: snapshot.id,
-              history: (snapshot.locations || []).map(loc => ({
-                latitude: loc.latitude,
-                longitude: loc.longitude,
-                timestamp: loc.timestamp,
-                walk_id: snapshot.id,
-              })),
+              ...snapshot,
+              latest_location: snapshot.latest_location || undefined,
             },
           },
         });
@@ -94,12 +90,7 @@ export function useLivePatientLocation(
   const wsUrlParams = userToken ? `?token=${userToken}` : deviceToken ? `?patient_token=${deviceToken}` : '';
   const { lastMessage, isConnected } = useWebSocket<any>(isReady, wsUrlParams);
 
-  // ⚡ Re-fetch on reconnect
-  useEffect(() => {
-    if (isConnected && isReady) {
-      rehydrateState(true);
-    }
-  }, [isConnected]);
+
 
   // 3. Seamless Integration: Handle new messages via Processor
   useEffect(() => {
@@ -111,6 +102,10 @@ export function useLivePatientLocation(
 
     if (lastMessage.type === 'snapshot') {
       dispatch({ type: 'SNAPSHOT', payload: lastMessage });
+      if (typeof lastMessage.watchers_count === 'number') {
+        console.debug(`[WS] Watchers from snapshot: ${lastMessage.watchers_count}`);
+        setWatchersCount(lastMessage.watchers_count);
+      }
     } else if (lastMessage.type === 'walk_started') {
       dispatch({ type: 'WALK_STARTED', timestamp: eventTime });
     } else if (lastMessage.type === 'walk_stopped') {
@@ -119,6 +114,9 @@ export function useLivePatientLocation(
       setIsPatientConnected(true);
     } else if (lastMessage.type === 'patient_offline') {
       setIsPatientConnected(false);
+    } else if (lastMessage.type === 'watchers_update') {
+      console.debug(`[WS] Watchers update: ${lastMessage.count}`);
+      setWatchersCount(lastMessage.count || 0);
     } else {
       const isLocation = lastMessage.type === 'location' || 
                          (!lastMessage.type && lastMessage.latitude != null && lastMessage.longitude != null);
@@ -139,6 +137,7 @@ export function useLivePatientLocation(
     ...walkState,
     isConnected,
     isPatientConnected,
-    isLoading
+    isLoading,
+    watchersCount
   };
 }

@@ -120,13 +120,17 @@ export class WalkEventProcessor {
       }
     }
 
-    // B. Chronological Ordering (Strict Timestamp check)
-    const eventTime = message.timestamp ? new Date(message.timestamp).getTime() : 0;
-    if (eventTime > 0 && eventTime < this.latestTimestamp) {
-      console.debug('[WalkEventProcessor] Ignoring out-of-order event:', message);
-      return false;
+    // B. Chronological Ordering (Strict Timestamp check) - Only for locations
+    const isLocationMsg = message.type === 'location' || (!message.type && (message as any).latitude != null);
+    
+    if (isLocationMsg) {
+      const eventTime = message.timestamp ? new Date(message.timestamp).getTime() : 0;
+      if (eventTime > 0 && eventTime < this.latestTimestamp) {
+        console.debug('[WalkEventProcessor] Ignoring out-of-order location event:', message);
+        return false;
+      }
+      if (eventTime > 0) this.latestTimestamp = eventTime;
     }
-    if (eventTime > 0) this.latestTimestamp = eventTime;
 
     return true;
   }

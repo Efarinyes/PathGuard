@@ -13,20 +13,18 @@ export interface WalkHistoryItem {
 
 export interface ActiveWalkSnapshot {
   id: number;
-  active: boolean;
-  start_time: string;
-  end_time?: string | null;
   patient_id: number;
-  initiated_by_type: string;
-  initiated_by_id?: number;
-  stopped_by_type?: string;
-  stopped_by_id?: number;
-  locations?: Array<{
-    id: number;
+  start_time: string;
+  status: string;
+  latest_location?: {
     latitude: number;
     longitude: number;
     timestamp: string;
-    is_recovered?: boolean;
+  } | null;
+  history: Array<{
+    latitude: number;
+    longitude: number;
+    timestamp: string;
   }>;
 }
 
@@ -96,6 +94,29 @@ export const walkService = {
 
     if (!response.ok) {
       throw new Error(`Failed to fetch active walk: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.active_walk || null;
+  },
+
+  /**
+   * Fetches the current user's group info including patient name and ownership status.
+   */
+  async getUserGroupInfo(token: string): Promise<{
+    patient_name: string;
+    group_name: string;
+    is_owner: boolean;
+  }> {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch user group info');
     }
 
     return response.json();
