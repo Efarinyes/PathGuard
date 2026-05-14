@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
+    # Environment config
+    FRONTEND_URL: str = "http://localhost:3000"
+    
     # Database
     # Development: sqlite:///./pathguard.db (default, no server needed)
     # Production: postgresql://user:pass@host:5432/db

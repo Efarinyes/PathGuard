@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import CaregiverMap from '../CaregiverMap';
 import NotificationBanner from '../NotificationBanner';
 import WalkHistoryList, { WalkHistoryItem } from '../WalkHistoryList';
+import { ErrorBoundary } from '../WalkHistoryList/ErrorBoundary';
 import { useLivePatientLocation } from '@/hooks/useLivePatientLocation';
 import { useAppState } from '@/hooks/useAppState';
 import { walkService } from '@/services/walkService';
@@ -287,10 +288,12 @@ export default function CaregiverDashboard() {
               <h3 className="text-[#0F172A] font-bold text-base">Historial detallat</h3>
             </div>
             <div className="p-2">
-              <WalkHistoryList 
-                walks={walks} 
-                onWalkClick={(id) => console.log('View walk map:', id)} 
-              />
+              <ErrorBoundary>
+                <WalkHistoryList 
+                  walks={walks} 
+                  onWalkClick={(id) => console.log('View walk map:', id)} 
+                />
+              </ErrorBoundary>
             </div>
           </div>
         </div>
