@@ -13,3 +13,6 @@ frontend/.env
 frontend/.env.local
 .DS_Store
 *.pyc
+
+# Audit Archive
+.audit_archive/
