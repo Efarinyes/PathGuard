@@ -4,13 +4,16 @@ import os
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "PathGuard"
-    VERSION: str = "2.0.0-beta.1"
+    VERSION: str = "2.5.0-beta.1"
     API_V1_STR: str = "/api/v1"
     
     # Security - MUST be set via environment variable in production
     SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    
+    # Environment config
+    FRONTEND_URL: str = "http://localhost:3000"
     
     # Database
     # Development: sqlite:///./pathguard.db (default, no server needed)

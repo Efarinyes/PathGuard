@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { LocationPayload } from '../../services/locationService';
+import { MapErrorBoundary } from './MapErrorBoundary';
 
 // Dynamically import the heavy map rendering component.
 // This entirely disables Server-Side Rendering (SSR) for the leaflet logic,
@@ -27,5 +28,9 @@ export interface CaregiverMapProps {
 }
 
 export default function CaregiverMap({ locations, isPatientOffline }: CaregiverMapProps) {
-  return <DynamicMapRenderer locations={locations} isPatientOffline={isPatientOffline} />;
+  return (
+    <MapErrorBoundary>
+      <DynamicMapRenderer locations={locations} isPatientOffline={isPatientOffline} />
+    </MapErrorBoundary>
+  );
 }

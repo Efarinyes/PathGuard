@@ -88,6 +88,14 @@ PathGuard is built as a First-Class Progressive Web App:
 2. **Dual-Auth**: Supports both JWT (Caregivers) and Device Tokens (Patients).
 3. **Data Integrity**: GPS points are timestamped in UTC and strictly validated for sequence consistency.
 
+## 💡 Technical Notices
+
+### Battery Monitoring Compatibility
+PathGuard utilizes the **Battery Status API** for real-time device health updates. Due to privacy restrictions implemented by browser vendors:
+- ✅ **Fully Supported**: Android (Chrome, Edge, Samsung Internet), Desktop (Chrome, Edge, Brave).
+- ⚠️ **Unsupported (Browser Limitation)**: iOS/iPadOS (All browsers including Safari PWA), Desktop (Safari, Firefox).
+*When monitoring from an unsupported device, the dashboard will display a "Functionality not available on this device" message.*
+
 ## 🏷️ Status
 
 Current Status: **Beta Ready (Alpha Final)**

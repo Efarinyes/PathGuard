@@ -47,10 +47,10 @@ app = FastAPI(
 # Browsers reject credentialed requests to wildcard origins per the CORS spec.
 # Specify the frontend origin explicitly instead.
 ALLOWED_ORIGINS = [
-    "http://localhost:3000",   # Next.js dev server
+    settings.FRONTEND_URL,
+    "http://localhost:3000",   # Next.js dev server fallback
     "http://127.0.0.1:3000",
     "http://localhost:3001",
-    # Add production URL here when deploying, e.g. "https://pathguard.app"
 ]
 
 app.add_middleware(
