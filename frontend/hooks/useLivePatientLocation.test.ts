@@ -18,7 +18,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 
-import type { LocationPayload } from '../../services/locationService';
+import type { LocationPayload } from '../services/locationService';
 
 // ─── 1. Module-level mocks ────────────────────────────────────────────────────
 
