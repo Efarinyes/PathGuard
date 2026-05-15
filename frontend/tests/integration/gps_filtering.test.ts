@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useLocationTracking } from '../hooks/useLocationTracking';
-import { locationService } from '../services/locationService';
+import { useLocationTracking } from '../../hooks/useLocationTracking';
+import { locationService } from '../../services/locationService';
 
 // Mock Dependencies
-vi.mock('../services/locationService', () => ({
+vi.mock('../../services/locationService', () => ({
   locationService: {
     saveLocation: vi.fn(),
   },

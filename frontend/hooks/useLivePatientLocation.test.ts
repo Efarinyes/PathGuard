@@ -35,7 +35,7 @@ const wsController = {
   },
 };
 
-vi.mock('../useWebSocket', () => ({
+vi.mock('./useWebSocket', () => ({
   useWebSocket: vi.fn(() => {
     // Each renderHook call re-executes the factory.
     // We wire the controller to the *current* Vitest state setters via
@@ -62,7 +62,7 @@ vi.mock('../useWebSocket', () => ({
   }),
 }));
 
-vi.mock('../useAppState', () => ({
+vi.mock('./useAppState', () => ({
   useAppState: vi.fn(() => ({
     userToken: 'mock-jwt-token',
     deviceToken: null,
@@ -125,7 +125,7 @@ function mockFetchNotOk() {
 // Dynamic import is NOT needed here because vi.mock is hoisted by Vitest's
 // transform step, so module-level mocks are always applied before imports.
 
-import { useLivePatientLocation } from '../useLivePatientLocation';
+import { useLivePatientLocation } from './useLivePatientLocation';
 
 // ─── 4. Suite ─────────────────────────────────────────────────────────────────
 
