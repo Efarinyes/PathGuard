@@ -26,7 +26,7 @@ export function useLivePatientLocation(
   // Core state managed by reducer
   const [walkState, dispatch] = useReducer(
     (state: WalkState, action: WalkAction) => processor.current.reduceState(state, action),
-    { currentLocation: null, routeHistory: initialHistory, isActive: false }
+    { currentLocation: null, routeHistory: initialHistory, isActive: false, deviceStatus: null }
   );
 
   const [isPatientConnected, setIsPatientConnected] = useState(true);
@@ -114,6 +114,9 @@ export function useLivePatientLocation(
       setIsPatientConnected(true);
     } else if (lastMessage.type === 'patient_offline') {
       setIsPatientConnected(false);
+    } else if (lastMessage.type === 'device_status_update') {
+      console.debug('[WS] Device status update:', lastMessage.status);
+      dispatch({ type: 'DEVICE_STATUS_UPDATE', payload: lastMessage.status });
     } else if (lastMessage.type === 'watchers_update') {
       console.debug(`[WS] Watchers update: ${lastMessage.count}`);
       setWatchersCount(lastMessage.count || 0);

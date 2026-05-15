@@ -1,9 +1,16 @@
 import { LocationPayload } from '../services/locationService';
 
+export interface DeviceStatus {
+  battery_level: number;
+  is_charging: boolean;
+  timestamp: string;
+}
+
 export interface WalkState {
   currentLocation: LocationPayload | null;
   routeHistory: LocationPayload[];
   isActive: boolean;
+  deviceStatus: DeviceStatus | null;
 }
 
 export interface BatchLocationUpdatePayload {
@@ -51,7 +58,15 @@ export interface WalkEventMessage {
   [key: string]: unknown;
 }
 
-export type WalkMessage = WalkSnapshotMessage | WalkLocationMessage | WalkEventMessage;
+export interface DeviceStatusMessage {
+  type: 'device_status_update';
+  status: DeviceStatus;
+  event_id?: string;
+  timestamp?: string;
+  [key: string]: unknown;
+}
+
+export type WalkMessage = WalkSnapshotMessage | WalkLocationMessage | WalkEventMessage | DeviceStatusMessage;
 
 interface SnapshotPayload {
   active_walk?: ActiveWalkData;
@@ -81,6 +96,7 @@ export type WalkAction =
   | { type: 'WALK_STOPPED' }
   | { type: 'LOCATION_UPDATE'; payload: LocationPayload }
   | { type: 'BATCH_LOCATION_UPDATE'; payload: BatchLocationUpdatePayload }
+  | { type: 'DEVICE_STATUS_UPDATE'; payload: DeviceStatus }
   | { type: 'RESET' };
 
 /**
@@ -150,12 +166,13 @@ export class WalkEventProcessor {
     switch (action.type) {
       case 'SNAPSHOT': {
         const rawPayload = action.payload as Record<string, unknown>;
+        const deviceStatus = rawPayload.device_status as DeviceStatus | undefined;
         const activeWalk = rawPayload.active_walk as ActiveWalkData | undefined;
         const walkData = activeWalk || rawPayload as unknown as ActiveWalkData | undefined;
         
         if (!walkData || !walkData.id) {
           this.reset();
-          return { isActive: false, currentLocation: null, routeHistory: [] };
+          return { isActive: false, currentLocation: null, routeHistory: [], deviceStatus: null };
         }
 
         const walkId = walkData.id;
@@ -185,7 +202,8 @@ export class WalkEventProcessor {
         return {
           isActive: true,
           routeHistory: history,
-          currentLocation: latestLoc
+          currentLocation: latestLoc,
+          deviceStatus: deviceStatus || null
         };
       }
 
@@ -195,7 +213,8 @@ export class WalkEventProcessor {
         return {
           isActive: true,
           currentLocation: null,
-          routeHistory: []
+          routeHistory: [],
+          deviceStatus: state.deviceStatus
         };
       }
 
@@ -261,9 +280,16 @@ export class WalkEventProcessor {
         };
       }
 
+      case 'DEVICE_STATUS_UPDATE': {
+        return {
+          ...state,
+          deviceStatus: action.payload
+        };
+      }
+
       case 'RESET': {
         this.reset();
-        return { isActive: false, currentLocation: null, routeHistory: [] };
+        return { isActive: false, currentLocation: null, routeHistory: [], deviceStatus: null };
       }
 
       default:

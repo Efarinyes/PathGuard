@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAppState } from '@/hooks/useAppState';
 import { useLocationTracking } from '@/hooks/useLocationTracking';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { useBatteryMonitoring } from '@/hooks/useBatteryMonitoring';
 import { locationService } from '@/services/locationService';
 import NotificationBanner from '../NotificationBanner';
 import { API_BASE_URL } from '@/lib/config';
@@ -41,6 +42,18 @@ export default function PatientWalkController() {
     
     return () => clearInterval(interval);
   }, [isConnected, sendMessage]);
+
+  // Battery Monitoring
+  useBatteryMonitoring((level, isCharging) => {
+    if (isConnected) {
+      console.log(`[Battery] Reporting status: ${level}% (charging: ${isCharging})`);
+      sendMessage({
+        type: 'device_status_update',
+        battery_level: level,
+        is_charging: isCharging
+      });
+    }
+  }, isConnected);
 
   const showNotification = (message: string, type: Notification['type']) => {
     notifCounter.current += 1;
