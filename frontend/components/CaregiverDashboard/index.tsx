@@ -19,8 +19,9 @@ import InviteCaregiverModal from '../InviteCaregiverModal';
 export default function CaregiverDashboard() {
   const { userToken, clearUserSession } = useAppState();
   const router = useRouter();
-  const { currentLocation, routeHistory, isConnected, isPatientConnected, isLoading, isActive, watchersCount } = useLivePatientLocation();
+  const { currentLocation, routeHistory, isConnected, isPatientConnected, isLoading, isActive, watchersCount, deviceStatus } = useLivePatientLocation();
   const [timeAgo, setTimeAgo] = useState<string>('Esperant dades...');
+  const [batteryTimeAgo, setBatteryTimeAgo] = useState<string>('');
   const [isExtraInfoOpen, setIsExtraInfoOpen] = useState(false);
   const [isMonitoringPaused, setIsMonitoringPaused] = useState(false);
   const [notification, setNotification] = useState<{ message: string, type: 'info' | 'warning' } | null>(null);
@@ -73,6 +74,35 @@ export default function CaregiverDashboard() {
 
     return () => clearInterval(updateTimer);
   }, [currentLocation]);
+
+  // Battery time ago calculation
+  useEffect(() => {
+    if (!deviceStatus?.timestamp) return;
+
+    const calculateBatteryTime = () => {
+      const now = new Date();
+      const statusTime = new Date(deviceStatus.timestamp);
+      const secondsDiff = Math.floor((now.getTime() - statusTime.getTime()) / 1000);
+      
+      if (isNaN(secondsDiff)) {
+        setBatteryTimeAgo('calculant...');
+        return;
+      }
+
+      if (secondsDiff < 15) {
+        setBatteryTimeAgo('ara mateix');
+      } else if (secondsDiff < 60) {
+        setBatteryTimeAgo(`fa ${secondsDiff}s`);
+      } else {
+        const minutes = Math.floor(secondsDiff / 60);
+        setBatteryTimeAgo(`fa ${minutes} min`);
+      }
+    };
+
+    calculateBatteryTime();
+    const timer = setInterval(calculateBatteryTime, 30000);
+    return () => clearInterval(timer);
+  }, [deviceStatus]);
 
   // Handle patient connectivity notifications
   useEffect(() => {
@@ -175,6 +205,29 @@ export default function CaregiverDashboard() {
             <div>
               <p className="text-sm text-slate-500 font-medium mb-1">Punts de ruta</p>
               <p className="text-[#0F172A] font-semibold">{routeHistory.length}</p>
+            </div>
+          )}
+
+          {isActive && (
+            <div>
+              <p className="text-sm text-slate-500 font-medium mb-1">Estat de la bateria</p>
+              {deviceStatus ? (
+                deviceStatus.battery_level === -1 ? (
+                  <p className="text-slate-400 text-sm italic">No disponible en el dispositiu del pacient</p>
+                ) : (
+                  <p className="text-[#0F172A] font-semibold flex items-center gap-1.5">
+                    <span role="img" aria-label="battery">
+                      {deviceStatus.is_charging ? '⚡🔋' : deviceStatus.battery_level > 20 ? '🔋' : '🪫'}
+                    </span>
+                    {deviceStatus.battery_level}%
+                    <span className="text-xs text-slate-400 font-normal ml-1">
+                      ({batteryTimeAgo})
+                    </span>
+                  </p>
+                )
+              ) : (
+                <p className="text-slate-400 text-sm italic">Pendent de rebre dades...</p>
+              )}
             </div>
           )}
 

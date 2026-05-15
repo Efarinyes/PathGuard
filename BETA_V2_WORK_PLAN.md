@@ -39,8 +39,19 @@ Aquest document unifica totes les auditories i plans previs per portar PathGuard
     *   Persistir el `walk_id` actiu a `localStorage`.
     *   En cas de reinici del mòbil del pacient, l'app ha de detectar la caminada interrompuda i oferir continuar/sincronitzar punts pendents.
 3.  **Monitoratge de Bateria i Estat**:
-    *   Reportar el nivell de bateria del pacient en cada actualització GPS.
-    *   Mostrar icona d'estat de bateria al dashboard del cuidador.
+    *   [x] Reportar el nivell de bateria del pacient en cada actualització GPS.
+    *   [x] Mostrar icona d'estat de bateria al dashboard del cuidador.
+    3.1 * Ho implentem així:
+        3.1.1 Monitoratge de Bateria (Desacoblat)
+            Tal com vam comentar, això ho farem modular:
+
+            En lloc d'enviar-ho amb cada coordenada GPS, ho enviarem mitjançant un event WebSocket independent (device_status_update).
+            Només s'enviarà si la bateria baixa un % significatiu o passen 5 minuts.
+            El dashboard del cuidador mostrarà la icona i el text (ex: 🔋 45% (fa 5 min)).
+            
+            *Nota de Compatibilitat:*
+            - ✅ **Compatible**: Android (Chrome/Edge), Desktop (Chrome/Edge/Brave).
+            - ⚠️ **No disponible**: iOS (tots els navegadors), Desktop (Safari/Firefox). En aquests casos l'app mostrarà un missatge indicant que la funció no està disponible en aquell dispositiu.
 
 ---
 

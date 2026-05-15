@@ -24,6 +24,7 @@ class ConnectionManager:
         self.group_rooms: Dict[int, List[WebSocket]] = {}
         self.patient_connections: Dict[int, Set[WebSocket]] = {}
         self.patient_status: Dict[int, str] = {}
+        self.patient_device_status: Dict[int, dict] = {}
         self.caregivers: Dict[int, Set[int]] = {}  # group_id -> set of user_ids
         self.websocket_to_user: Dict[WebSocket, int] = {}  # websocket -> user_id
         self.websocket_to_group: Dict[WebSocket, int] = {}  # websocket -> group_id
@@ -180,7 +181,8 @@ async def websocket_endpoint(
                     "patient_id": active_walk.patient_id,
                     "start_time": f"{active_walk.start_time.isoformat()}Z",
                     "status": "active"
-                }
+                },
+                "device_status": manager.patient_device_status.get(group_id)
             }
             
             if cached:
@@ -204,7 +206,8 @@ async def websocket_endpoint(
                 "group_id": group_id,
                 "watchers_count": manager.get_watchers_count(group_id),
                 "active_walk": None,
-                "server_timestamp": f"{datetime.now(timezone.utc).isoformat()}Z"
+                "device_status": manager.patient_device_status.get(group_id),
+                "server_timestamp": datetime.now(timezone.utc).isoformat()
             })
 
     try:
@@ -221,6 +224,17 @@ async def websocket_endpoint(
                         if manager.patient_status.get(group_id) != "online":
                             manager.patient_status[group_id] = "online"
                             await manager.broadcast_to_group(group_id, {"type": "patient_online"})
+                    elif data.get("type") == "device_status_update":
+                        # Store and broadcast device status (battery, etc)
+                        manager.patient_device_status[group_id] = {
+                            "battery_level": data.get("battery_level"),
+                            "is_charging": data.get("is_charging"),
+                            "timestamp": datetime.now(timezone.utc).isoformat()
+                        }
+                        await manager.broadcast_to_group(group_id, {
+                            "type": "device_status_update",
+                            "status": manager.patient_device_status[group_id]
+                        })
                 except asyncio.TimeoutError:
                     if manager.patient_status.get(group_id) == "online":
                         manager.patient_status[group_id] = "offline"
