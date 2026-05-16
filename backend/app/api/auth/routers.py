@@ -8,6 +8,7 @@ from app.api import deps
 from app.api.auth import services as auth_services
 from app.api.auth import schemas as auth_schemas
 from app.api.users.models import User
+from app.db.models.patient import Patient
 from app.core.config.settings import settings
 from app.core.security.auth import create_access_token
 from app.services.registration_service import registration_service
@@ -82,8 +83,6 @@ def get_current_user_info(
     Returns the current user's group information including patient name.
     Used by Caregiver Dashboard to display patient name and ownership status.
     """
-    from app.db.models.patient import Patient
-    
     patient = db.query(Patient).filter(Patient.group_id == current_user.group_id).first()
     
     return {

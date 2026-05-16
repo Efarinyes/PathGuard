@@ -9,6 +9,9 @@ from app.api.routers import walks as walks_router
 from app.api.routers import analytics as analytics_router
 from app.api import ws_manager as websockets_router
 from app.core.config.settings import settings
+from app.core.constants import CACHE_MAX_AGE_SECONDS
+
+STATIC_EXTENSIONS = {".png", ".ico", ".jpg", ".svg", ".webp"}
 
 
 class CacheControlMiddleware(BaseHTTPMiddleware):
@@ -17,12 +20,12 @@ class CacheControlMiddleware(BaseHTTPMiddleware):
 
         path = request.url.path
 
-        if path.startswith("/api/v1/"):
+        if path.startswith(settings.API_V1_STR):
             response.headers["Cache-Control"] = "no-store"
         elif path.endswith(".js") or path.endswith(".js/"):
-            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
-        elif any(ext in path for ext in [".png", ".ico", ".jpg", ".svg", ".webp"]):
-            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+            response.headers["Cache-Control"] = f"public, max-age={CACHE_MAX_AGE_SECONDS}, immutable"
+        elif any(ext in path for ext in STATIC_EXTENSIONS):
+            response.headers["Cache-Control"] = f"public, max-age={CACHE_MAX_AGE_SECONDS}, immutable"
         elif "pathguard-sw" in path:
             response.headers["Cache-Control"] = "no-cache"
 

@@ -6,6 +6,8 @@ from app.db.models.location import Location
 from app.db.models.patient import Patient
 from app.db.state import walk_state_cache
 from app.api.ws_manager import manager
+from app.core.constants import MAX_LOCATION_HISTORY
+from app.core.utils import format_timestamp_utc
 
 
 class WalkService:
@@ -55,7 +57,7 @@ class WalkService:
             "type": "walk_started",
             "walk_id": walk.id,
             "patient_id": patient.id,
-            "start_time": f"{walk.start_time.isoformat()}Z"
+            "start_time": format_timestamp_utc(walk.start_time)
         })
         
         return walk_id
@@ -183,7 +185,7 @@ class WalkService:
                 "active_walk": {
                     "id": active_walk.id,
                     "patient_id": patient.id,
-                    "start_time": f"{active_walk.start_time.isoformat()}Z",
+"start_time": format_timestamp_utc(active_walk.start_time),
                     "status": "active",
                     "latest_location": cached_data["latest"],
                     "history": cached_data["history"]
@@ -194,7 +196,7 @@ class WalkService:
         history = db.query(Location)\
             .filter(Location.walk_id == active_walk.id)\
             .order_by(Location.timestamp.desc())\
-            .limit(50)\
+            .limit(MAX_LOCATION_HISTORY)\
             .all()
         
         history.reverse()
@@ -202,7 +204,7 @@ class WalkService:
             {
                 "latitude": loc.latitude, 
                 "longitude": loc.longitude, 
-                "timestamp": f"{loc.timestamp.isoformat()}Z"
+                "timestamp": format_timestamp_utc(loc.timestamp)
             } for loc in history
         ]
         
@@ -216,7 +218,7 @@ class WalkService:
             "active_walk": {
                 "id": active_walk.id,
                 "patient_id": patient.id,
-                "start_time": f"{active_walk.start_time.isoformat()}Z",
+                "start_time": format_timestamp_utc(active_walk.start_time),
                 "status": "active",
                 "latest_location": latest_dict,
                 "history": history_dicts
@@ -237,7 +239,7 @@ class WalkService:
             {
                 "id": walk.id,
                 "start_time": walk.start_time,
-                "end_time": walk.end_time,
+                "end_time": walk.end_time.isoformat() if walk.end_time else None,
                 "active": walk.active,
                 "duration_seconds": int((walk.end_time - walk.start_time).total_seconds()) if (walk.end_time and walk.start_time) else 0
             }

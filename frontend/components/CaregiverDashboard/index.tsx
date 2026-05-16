@@ -11,6 +11,7 @@ import { walkService } from '@/services/walkService';
 import { useCaregiverAnalytics } from '@/hooks/useCaregiverAnalytics';
 import { useRouter } from 'next/navigation';
 import InviteCaregiverModal from '../InviteCaregiverModal';
+import { formatTimeAgo, formatBatteryTime } from '@/lib/formatTimeAgo';
 
 /**
  * Clean, minimalistic dashboard serving as the primary interface for caregivers.
@@ -52,25 +53,12 @@ export default function CaregiverDashboard() {
   useEffect(() => {
     if (!currentLocation?.timestamp) return;
 
-    const calculateTimeAgo = () => {
-      const now = new Date();
-      const payloadTime = new Date(currentLocation.timestamp);
-      const secondsDiff = Math.floor((now.getTime() - payloadTime.getTime()) / 1000);
-      
-      if (secondsDiff < 15) {
-        setTimeAgo('Ara mateix');
-      } else if (secondsDiff < 60) {
-        setTimeAgo(`Fa ${secondsDiff} segons`);
-      } else {
-        const minutes = Math.floor(secondsDiff / 60);
-        setTimeAgo(`Fa ${minutes} minut${minutes > 1 ? 's' : ''}`);
-      }
+    const update = () => {
+      setTimeAgo(formatTimeAgo(currentLocation.timestamp));
     };
 
-    // Calculate immediately
-    calculateTimeAgo();
-
-    const updateTimer = setInterval(calculateTimeAgo, 1000);
+    update();
+    const updateTimer = setInterval(update, 1000);
 
     return () => clearInterval(updateTimer);
   }, [currentLocation]);
@@ -79,28 +67,12 @@ export default function CaregiverDashboard() {
   useEffect(() => {
     if (!deviceStatus?.timestamp) return;
 
-    const calculateBatteryTime = () => {
-      const now = new Date();
-      const statusTime = new Date(deviceStatus.timestamp);
-      const secondsDiff = Math.floor((now.getTime() - statusTime.getTime()) / 1000);
-      
-      if (isNaN(secondsDiff)) {
-        setBatteryTimeAgo('calculant...');
-        return;
-      }
-
-      if (secondsDiff < 15) {
-        setBatteryTimeAgo('ara mateix');
-      } else if (secondsDiff < 60) {
-        setBatteryTimeAgo(`fa ${secondsDiff}s`);
-      } else {
-        const minutes = Math.floor(secondsDiff / 60);
-        setBatteryTimeAgo(`fa ${minutes} min`);
-      }
+    const update = () => {
+      setBatteryTimeAgo(formatBatteryTime(deviceStatus.timestamp));
     };
 
-    calculateBatteryTime();
-    const timer = setInterval(calculateBatteryTime, 30000);
+    update();
+    const timer = setInterval(update, 30000);
     return () => clearInterval(timer);
   }, [deviceStatus]);
 

@@ -64,8 +64,7 @@ def get_optional_patient(
     if not x_patient_token:
         return None
     try:
-        from uuid import UUID
-        token_uuid = UUID(x_patient_token)
+        token_uuid = uuid.UUID(x_patient_token)
         return db.query(Patient).filter(Patient.device_token == token_uuid).first()
     except ValueError:
         return None
@@ -85,12 +84,4 @@ def resolve_patient(patient: Patient | None, user: User | None) -> Patient:
         detail="Not authorized to access this patient environment"
     )
 
-def require_group_access(target_group_id: int, user: User):
-    """
-    Explicit helper to ensure a caregiver is not crossing group boundaries.
-    """
-    if user.group_id != target_group_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied: Resource belongs to another family group"
-        )
+

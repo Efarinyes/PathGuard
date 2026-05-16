@@ -81,7 +81,44 @@ Aquest document unifica totes les auditories i plans previs per portar PathGuard
 ---
 
 ## 📂 Estat de les Tasques
-- [ ] Fase 1: Estabilitat (WebSocket, Boundaries, CORS, SW)
-- [ ] Fase 2: SOS, Recovery, Battery
-- [ ] Fase 3: Validation, Analytics, Multi-Caregiver UI
-- [ ] Fase 4: Export, Alembic, Integrated Tests
+
+> Darrera actualització: 2026-05-16
+
+| Fase | Tasca | Estat | FASE Execució | Ref. SOLID |
+|------|-------|-------|---------------|------------|
+| 1.1 | WebSockets cleanup | ✅ Completat | A9 | — |
+| 1.2 | Error Boundaries quirúrgics | ✅ Completat | A1 | Pas 3.1 |
+| 1.3 | Configuració CORS/API | ✅ Completat | A2 | Pas 2.1-2.3 |
+| 1.4 | Consolidació Service Worker | ✅ Completat | A10 | Pas 4.1 |
+| 2.1 | Sistema SOS (Emergència) | ⬜ Pendent | FASE C | — |
+| 2.2 | Walk Recovery | ⬜ Pendent | FASE C | — |
+| 2.3 | Battery monitoring | ✅ Completat | — | — |
+| 3.1 | Validació coordenades (Pydantic) | ⬜ Pendent | FASE D | — |
+| 3.2 | Analytics N+1 | ⬜ Pendent | FASE D | Pas 4.5 |
+| 3.3 | Multi-Cuidador UI | ⬜ Pendent | FASE D | — |
+| 4.1 | Exportació dades (CSV/JSON) | ⬜ Pendent | FASE D | — |
+| 4.2 | Alembic (migracions) | ⬜ Pendent | FASE D | — |
+| 4.3 | Tests integració caminada completa | ⬜ Pendent | FASE D | Pas 5.1-5.2 |
+
+Llegenda: ✅ Completat | 🔄 En procés | ⬜ Pendent
+
+### Resum per fase
+
+| Fase | Total | Completades | En procés | Pendents |
+|------|-------|-------------|-----------|----------|
+| Fase 1 | 4 | 4 | 0 | 0 |
+| Fase 2 | 3 | 1 | 0 | 2 |
+| Fase 3 | 3 | 0 | 0 | 3 |
+| Fase 4 | 3 | 0 | 0 | 3 |
+
+### Dependències entre fases
+
+```
+FASE A (estabilitat + neteja SOLID)
+  ↓
+FASE B (refactor arquitectural: ws_manager, CaregiverDashboard, broadcast)
+  ↓
+FASE C (noves funcionalitats: SOS, Walk Recovery)
+  ↓
+FASE D (qualitat: validació, analytics, tests, Alembic, export)
+```

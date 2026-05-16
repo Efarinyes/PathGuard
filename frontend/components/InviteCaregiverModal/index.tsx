@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { API_BASE_URL } from '@/lib/config';
+import { API_BASE_URL, STORAGE_KEYS } from '@/lib/config';
 
 interface InviteCaregiverModalProps {
   isOpen: boolean;
@@ -23,7 +23,7 @@ export default function InviteCaregiverModal({ isOpen, onClose, groupName }: Inv
     setError(null);
 
     try {
-      const token = localStorage.getItem('pg_user_token');
+      const token = localStorage.getItem(STORAGE_KEYS.USER_TOKEN);
       const response = await fetch(`${API_BASE_URL}/auth/generate-invitation`, {
         method: 'POST',
         headers: {

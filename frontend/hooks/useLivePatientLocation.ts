@@ -77,7 +77,7 @@ export function useLivePatientLocation(
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "visible" && appIsHydrated && (userToken || deviceToken)) {
-        console.log("[useLivePatientLocation] App returned to foreground, re-syncing state...");
+        console.debug("[useLivePatientLocation] App returned to foreground, re-syncing state...");
         rehydrateState(true);
       }
     };
@@ -88,13 +88,14 @@ export function useLivePatientLocation(
 
   // 2. Real-time Updates: Connect WS only after we have the REST snapshot
   const wsUrlParams = userToken ? `?token=${userToken}` : deviceToken ? `?patient_token=${deviceToken}` : '';
-  const { lastMessage, isConnected } = useWebSocket<any>(isReady, wsUrlParams);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+const { lastMessage, isConnected } = useWebSocket<any>(isReady, wsUrlParams);
 
 
 
   // 3. Seamless Integration: Handle new messages via Processor
   useEffect(() => {
-    if (!processor.current.shouldProcessMessage(lastMessage)) {
+    if (!lastMessage || !processor.current.shouldProcessMessage(lastMessage)) {
       return;
     }
 

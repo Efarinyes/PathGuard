@@ -1,7 +1,4 @@
-from datetime import datetime
-from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.db.session import database as db_session
@@ -10,22 +7,10 @@ from app.api.users.models import User
 from app.db.models.patient import Patient
 from app.db.models.location import Location
 from app.api.dependencies.auth import get_optional_patient, get_optional_caregiver, resolve_patient
+from app.api.schemas.location import LocationCreate, LocationBatch
 from app.services.location_service import location_service
 
 router = APIRouter()
-
-class LocationCreate(BaseModel):
-    latitude: float
-    longitude: float
-    timestamp: datetime
-    walk_id: int
-    client_id: Optional[str] = None
-    is_recovered: Optional[bool] = False
-
-class LocationBatch(BaseModel):
-    walk_id: int
-    batch_id: str
-    points: list[LocationCreate]
 
 @router.post("/batch", response_model=dict)
 async def save_location_batch(
@@ -88,17 +73,6 @@ async def save_location(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("")
-def read_locations(
-    db: Session = Depends(db_session.get_db),
-    patient: Patient | None = Depends(get_optional_patient),
-    user: User | None = Depends(get_optional_caregiver)
-):
-    # Authorize
-    active_patient = resolve_patient(patient, user)
-    
-    return {"message": "Locations list (Implemented)"}
-
 @router.get("/sync/status")
 def get_sync_status(
     db: Session = Depends(db_session.get_db),
@@ -112,7 +86,7 @@ def get_sync_status(
     active_patient = resolve_patient(patient, user)
     
     if active_patient is None:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     
     result = db.query(
         func.max(Location.timestamp).label("last_sync")

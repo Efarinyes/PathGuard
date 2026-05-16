@@ -1,5 +1,6 @@
 import uuid
 import asyncio
+import logging
 from datetime import datetime, timezone
 from typing import List, Dict, Optional, Tuple, Set
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends
@@ -7,11 +8,15 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.db.session.database import SessionLocal
 from app.core.security.jwt import verify_token
+from app.core.utils import format_timestamp_utc
 from app.api.users.models import User
 from app.db.models.patient import Patient
 from app.db.models.walk import Walk
 from app.db.models.location import Location
 from app.db.state import walk_state_cache
+from app.core.constants import HEARTBEAT_TIMEOUT_SECONDS, MAX_LOCATION_HISTORY, WS_CLOSE_CODE_UNAUTHORIZED
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -47,7 +52,7 @@ class ConnectionManager:
         await websocket.send_json({
             "type": "connection_established",
             "group_id": group_id,
-            "timestamp": f"{datetime.now(timezone.utc).isoformat()}Z"
+            "timestamp": format_timestamp_utc(datetime.now(timezone.utc))
         })
         
         if role == "patient":
@@ -100,7 +105,7 @@ class ConnectionManager:
             message["event_id"] = str(uuid.uuid4())
             
         if "timestamp" not in message:
-            message["timestamp"] = f"{datetime.utcnow().isoformat()}Z"
+            message["timestamp"] = format_timestamp_utc(datetime.now(timezone.utc))
 
         for connection in self.group_rooms[group_id]:
             try:
@@ -151,14 +156,14 @@ async def websocket_endpoint(
     group_id, role, user_id = authenticate_ws(db, token, patient_token)
     
     if group_id is None:
-        await websocket.close(code=4003) # Forbidden
+        await websocket.close(code=WS_CLOSE_CODE_UNAUTHORIZED)
         return
 
     await manager.connect(websocket, group_id, role, user_id)
     
     # Broadcast watchers count after new caregiver connects
     if role == "caregiver":
-        print(f"[WS] Caregiver {user_id} connected to group {group_id}")
+        logger.info("Caregiver %s connected to group %s", user_id, group_id)
         await manager.broadcast_watchers_update(group_id)
     
     # ⚡ LATE JOIN CONSISTENCY: Send atomic snapshot as first message
@@ -175,11 +180,11 @@ async def websocket_endpoint(
                 "type": "snapshot",
                 "group_id": group_id,
                 "watchers_count": manager.get_watchers_count(group_id),
-                "server_timestamp": f"{datetime.now(timezone.utc).isoformat()}Z",
+                "server_timestamp": format_timestamp_utc(datetime.now(timezone.utc)),
                 "active_walk": {
                     "id": active_walk.id,
                     "patient_id": active_walk.patient_id,
-                    "start_time": f"{active_walk.start_time.isoformat()}Z",
+                    "start_time": format_timestamp_utc(active_walk.start_time),
                     "status": "active"
                 },
                 "device_status": manager.patient_device_status.get(group_id)
@@ -193,9 +198,9 @@ async def websocket_endpoint(
                 history = db.query(Location)\
                     .filter(Location.walk_id == active_walk.id)\
                     .order_by(Location.timestamp.desc())\
-                    .limit(50).all()
+                    .limit(MAX_LOCATION_HISTORY).all()
                 history.reverse()
-                history_dicts = [{"latitude": loc.latitude, "longitude": loc.longitude, "timestamp": f"{loc.timestamp.isoformat()}Z"} for loc in history]
+                history_dicts = [{"latitude": loc.latitude, "longitude": loc.longitude, "timestamp": format_timestamp_utc(loc.timestamp)} for loc in history]
                 snapshot_payload["active_walk"]["latest_location"] = history_dicts[-1] if history_dicts else None
                 snapshot_payload["active_walk"]["history"] = history_dicts
             
@@ -219,7 +224,7 @@ async def websocket_endpoint(
         while True:
             if role == "patient":
                 try:
-                    data = await asyncio.wait_for(websocket.receive_json(), timeout=12.0)
+                    data = await asyncio.wait_for(websocket.receive_json(), timeout=HEARTBEAT_TIMEOUT_SECONDS)
                     if data.get("type") == "heartbeat":
                         if manager.patient_status.get(group_id) != "online":
                             manager.patient_status[group_id] = "online"
@@ -243,7 +248,7 @@ async def websocket_endpoint(
                 # Caregiver
                 await websocket.receive_text()
     except (WebSocketDisconnect, Exception) as e:
-        print(f"[WS] Disconnect/Error for {role} in group {group_id}: {str(e)}")
+        logger.warning("Disconnect/Error for %s in group %s: %s", role, group_id, str(e))
         manager.disconnect(websocket, group_id, role)
         
         # Broadcast watchers count after caregiver disconnects

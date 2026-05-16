@@ -7,7 +7,7 @@ import { useWebSocket } from '@/hooks/useWebSocket';
 import { useBatteryMonitoring } from '@/hooks/useBatteryMonitoring';
 import { locationService } from '@/services/locationService';
 import NotificationBanner from '../NotificationBanner';
-import { API_BASE_URL } from '@/lib/config';
+import { API_BASE_URL, WS_HEARTBEAT_INTERVAL_MS } from '@/lib/config';
 
 interface Notification {
   message: string;
@@ -38,7 +38,7 @@ export default function PatientWalkController() {
     sendMessage({ type: 'heartbeat' });
     const interval = setInterval(() => {
       sendMessage({ type: 'heartbeat' });
-    }, 5000);
+    }, WS_HEARTBEAT_INTERVAL_MS);
     
     return () => clearInterval(interval);
   }, [isConnected, sendMessage]);

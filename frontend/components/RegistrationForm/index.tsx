@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+import { API_BASE_URL } from '@/lib/config';
 
 
 
@@ -23,7 +22,7 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
   const [activateAsPatient, setActivateAsPatient] = useState(true);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [errorError, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,9 +77,9 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
-        {errorError && (
+        {error && (
           <div className="w-full p-4 bg-red-50 border border-red-100 rounded-xl text-[#EF4444] text-sm text-center font-medium">
-            {errorError}
+            {error}
           </div>
         )}
 
