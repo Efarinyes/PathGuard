@@ -82,7 +82,7 @@ Aquest document unifica totes les auditories i plans previs per portar PathGuard
 
 ## 📂 Estat de les Tasques
 
-> Darrera actualització: 2026-05-16
+> Darrera actualització: 2026-05-16 — FASE A completada i fusionada a develop
 
 | Fase | Tasca | Estat | FASE Execució | Ref. SOLID |
 |------|-------|-------|---------------|------------|
@@ -122,3 +122,22 @@ FASE C (noves funcionalitats: SOS, Walk Recovery)
   ↓
 FASE D (qualitat: validació, analytics, tests, Alembic, export)
 ```
+
+---
+
+## Registre de canvis
+
+### FASE A — Commit b4180e1 (2026-05-16) — MERGED to develop
+
+**BETA_V2 Fase 1 completada:**
+- 1.1 WebSockets cleanup: console.log a console.debug, null checks
+- 1.2 Error Boundaries: creat AppErrorBoundary compartit, refactorats MapErrorBoundary i WalkHistoryList/ErrorBoundary
+- 1.3 CORS/API: centralitzat config.ts amb STORAGE_KEYS complet, WS_BASE_URL, GPS constants; eliminades URLs hardcoded
+- 1.4 Service Worker: extret inline script a swRegistration.tsx
+
+**SOLID passos completats:** 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 3.4, 4.1, 4.2, 4.3, 4.5, 4.6
+
+**Bug fixes post-merge:**
+- Corregit WS_BASE_URL sense path /api/v1/ws/
+- Corregit doble sufixe +00:00Z en timestamps WS (6 ocurr ncies)
+- Corregit deque no JSON-serializable a WalkStateCache.get()
