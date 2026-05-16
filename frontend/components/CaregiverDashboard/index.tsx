@@ -3,23 +3,21 @@
 import React, { useEffect, useState } from 'react';
 import CaregiverMap from '../CaregiverMap';
 import NotificationBanner from '../NotificationBanner';
-import WalkHistoryList, { WalkHistoryItem } from '../WalkHistoryList';
-import { ErrorBoundary } from '../WalkHistoryList/ErrorBoundary';
+import InviteCaregiverModal from '../InviteCaregiverModal';
 import { useLivePatientLocation } from '@/hooks/useLivePatientLocation';
 import { useAppState } from '@/hooks/useAppState';
 import { walkService } from '@/services/walkService';
 import { useCaregiverAnalytics } from '@/hooks/useCaregiverAnalytics';
-import { useRouter } from 'next/navigation';
-import InviteCaregiverModal from '../InviteCaregiverModal';
 import { formatTimeAgo, formatBatteryTime } from '@/lib/formatTimeAgo';
 
-/**
- * Clean, minimalistic dashboard serving as the primary interface for caregivers.
- * Split view: Map on top/left, critical status overview card on bottom/right.
- */
+import CaregiverHeader from './CaregiverHeader';
+import PatientStatusCard from './PatientStatusCard';
+import CaregiverAnalytics from './CaregiverAnalytics';
+import CaregiverWalkHistory from './CaregiverWalkHistory';
+import CaregiverDashboardLayout from './CaregiverDashboardLayout';
+
 export default function CaregiverDashboard() {
-  const { userToken, clearUserSession } = useAppState();
-  const router = useRouter();
+  const { userToken } = useAppState();
   const { currentLocation, routeHistory, isConnected, isPatientConnected, isLoading, isActive, watchersCount, deviceStatus } = useLivePatientLocation();
   const [timeAgo, setTimeAgo] = useState<string>('Esperant dades...');
   const [batteryTimeAgo, setBatteryTimeAgo] = useState<string>('');
@@ -32,7 +30,6 @@ export default function CaregiverDashboard() {
   const [groupName, setGroupName] = useState<string>('');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
-  // Consume extracted data fetching logic
   const { walks, analytics } = useCaregiverAnalytics(userToken, isActive);
 
   useEffect(() => {
@@ -49,7 +46,6 @@ export default function CaregiverDashboard() {
       });
   }, [userToken]);
 
-  // Effect to calculate "Last seen X ago" string based strictly on location payload
   useEffect(() => {
     if (!currentLocation?.timestamp) return;
 
@@ -63,7 +59,6 @@ export default function CaregiverDashboard() {
     return () => clearInterval(updateTimer);
   }, [currentLocation]);
 
-  // Battery time ago calculation
   useEffect(() => {
     if (!deviceStatus?.timestamp) return;
 
@@ -76,7 +71,6 @@ export default function CaregiverDashboard() {
     return () => clearInterval(timer);
   }, [deviceStatus]);
 
-  // Handle patient connectivity notifications
   useEffect(() => {
     if (isLoading || !isActive) return;
 
@@ -87,249 +81,71 @@ export default function CaregiverDashboard() {
     }
   }, [isPatientConnected, isActive, isLoading]);
 
+  const renderMapSection = () => {
+    if (routeHistory.length > 0 && !isMonitoringPaused) {
+      return <CaregiverMap locations={routeHistory} isPatientOffline={!isPatientConnected} />;
+    }
+    return (
+      <div className="w-full h-full min-h-[400px] border border-slate-200 rounded-xl bg-slate-100 flex flex-col items-center justify-center gap-4">
+        <span className="text-slate-500 font-medium tracking-wide">
+          {isMonitoringPaused ? 'Seguiment en temps real pausat' : 'Pendent de la primera connexió...'}
+        </span>
+      </div>
+    );
+  };
 
   return (
-    <div className="w-full flex flex-col md:flex-row gap-6 p-4 md:p-6 bg-[#F8FAFC] min-h-screen">
-      
-      {notification && (
-        <NotificationBanner 
-          message={notification.message} 
-          type={notification.type} 
-          onDismiss={() => setNotification(null)}
+    <CaregiverDashboardLayout
+      mapSection={
+        <>
+          {notification && (
+            <NotificationBanner
+              message={notification.message}
+              type={notification.type}
+              onDismiss={() => setNotification(null)}
+            />
+          )}
+          {renderMapSection()}
+        </>
+      }
+      statusCard={
+        <PatientStatusCard
+          patientName={patientName}
+          isConnected={isConnected}
+          isActive={isActive}
+          isPatientConnected={isPatientConnected}
+          isMonitoringPaused={isMonitoringPaused}
+          currentLocation={currentLocation}
+          routeHistory={routeHistory}
+          deviceStatus={deviceStatus}
+          timeAgo={timeAgo}
+          batteryTimeAgo={batteryTimeAgo}
+          watchersCount={watchersCount}
+          onPauseMonitoring={() => { setIsMonitoringPaused(true); setIsExtraInfoOpen(true); }}
+          onResumeMonitoring={() => setIsMonitoringPaused(false)}
         />
-      )}
-
-      {/* Primary Area: The Map */}
-      <div className="flex-grow order-1 md:order-1 h-[60vh] md:h-auto">
-        {(routeHistory.length > 0 && !isMonitoringPaused) ? (
-          <CaregiverMap locations={routeHistory} isPatientOffline={!isPatientConnected} />
-        ) : (
-          <div className="w-full h-full min-h-[400px] border border-slate-200 rounded-xl bg-slate-100 flex flex-col items-center justify-center gap-4">
-            <span className="text-slate-500 font-medium tracking-wide">
-              {isMonitoringPaused ? 'Seguiment en temps real pausat' : 'Pendent de la primera connexió...'}
-            </span>
-            {isMonitoringPaused && (
-              <button 
-                onClick={() => setIsMonitoringPaused(false)}
-                className="px-4 py-2 bg-[#1E3A8A] text-white rounded-lg font-bold text-sm shadow-md hover:bg-[#1E3A8A]/90 transition-all"
-              >
-                Reprendre seguiment
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-
-      {/* Secondary Area: Status Card */}
-      <div className="w-full md:w-[350px] shrink-0 order-2 md:order-2">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col gap-4 sticky top-6">
-          
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <h2 className="text-[#0F172A] font-bold text-xl mb-1">Estat del passeig</h2>
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-3 w-3">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${(isConnected && isActive && !isMonitoringPaused) ? (isPatientConnected ? 'bg-[#22C55E]' : 'bg-[#F59E0B]') : 'bg-slate-400'}`}></span>
-                  <span className={`relative inline-flex rounded-full h-3 w-3 ${(isConnected && isActive && !isMonitoringPaused) ? (isPatientConnected ? 'bg-[#22C55E]' : 'bg-[#F59E0B]') : 'bg-slate-400'}`}></span>
-                </span>
-                <p className="text-slate-600 text-sm font-medium">
-                  {isMonitoringPaused ? 'Mode Tauler - Seguiment pausat' : (isConnected && isActive) ? (isPatientConnected ? 'Passeig actiu - En línia' : 'Passeig actiu - Sense cobertura') : isActive ? 'Passeig actiu - Connectant...' : 'Passeig finalitzat'}
-                </p>
-              </div>
-              {watchersCount > 1 && (
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 flex items-center gap-1.5 ml-5">
-                  <span className="flex h-1.5 w-1.5 rounded-full bg-blue-400"></span>
-                  {watchersCount - 1 === 1 ? '1 altre cuidador connectat ara' : `${watchersCount - 1} altres cuidadors connectats ara`}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Action 1: Stop Following Patient (Dashboard Transition) */}
-          {isActive && !isMonitoringPaused && (
-            <button
-              onClick={() => {
-                setIsMonitoringPaused(true);
-                setIsExtraInfoOpen(true);
-              }}
-              className="w-full py-3 px-4 bg-slate-50 hover:bg-slate-100 text-[#1E3A8A] font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-2 border border-slate-200 mt-2 group shadow-sm"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:scale-110 transition-transform"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              Aturar seguiment en directe
-            </button>
-          )}
-
-
-
-
-          <div className="h-px bg-slate-100 w-full" />
-
-          {/* Minimal info area */}
-          <div>
-            <p className="text-sm text-slate-500 font-medium mb-1">Última actualització</p>
-            <p className="text-[#0F172A] font-semibold">
-              {currentLocation ? timeAgo : '---'}
-            </p>
-          </div>
-
-          {currentLocation && (
-            <div>
-              <p className="text-sm text-slate-500 font-medium mb-1">Punts de ruta</p>
-              <p className="text-[#0F172A] font-semibold">{routeHistory.length}</p>
-            </div>
-          )}
-
-          {isActive && (
-            <div>
-              <p className="text-sm text-slate-500 font-medium mb-1">Estat de la bateria</p>
-              {deviceStatus ? (
-                deviceStatus.battery_level === -1 ? (
-                  <p className="text-slate-400 text-sm italic">No disponible en el dispositiu del pacient</p>
-                ) : (
-                  <p className="text-[#0F172A] font-semibold flex items-center gap-1.5">
-                    <span role="img" aria-label="battery">
-                      {deviceStatus.is_charging ? '⚡🔋' : deviceStatus.battery_level > 20 ? '🔋' : '🪫'}
-                    </span>
-                    {deviceStatus.battery_level}%
-                    <span className="text-xs text-slate-400 font-normal ml-1">
-                      ({batteryTimeAgo})
-                    </span>
-                  </p>
-                )
-              ) : (
-                <p className="text-slate-400 text-sm italic">Pendent de rebre dades...</p>
-              )}
-            </div>
-          )}
-
-          {/* CTA to toggle history/analytics */}
-          <button 
-            onClick={() => setIsExtraInfoOpen(!isExtraInfoOpen)}
-            className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 rounded-lg border border-slate-100 text-slate-600 font-bold text-sm transition-all hover:bg-slate-100 group"
-          >
-            <div className="flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 group-hover:text-blue-600 transition-colors">
-                <path d="M12 20v-6M9 20v-10M15 20v-2M3 20h18"/>
-              </svg>
-              <span>{isExtraInfoOpen ? 'Amagar historial' : 'Veure historial de passejos'}</span>
-            </div>
-            <svg 
-              className={`w-4 h-4 transition-transform duration-300 ${isExtraInfoOpen ? 'rotate-180' : ''}`} 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          {isOwner && (
-            <button
-              onClick={() => setIsInviteModalOpen(true)}
-              className="w-full py-3 px-4 bg-[#1E3A8A]/10 hover:bg-[#1E3A8A]/20 text-[#1E3A8A] font-bold text-sm rounded-lg transition-all flex items-center justify-center gap-2 border border-[#1E3A8A]/20 mt-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="8.5" cy="7" r="4"/>
-                <line x1="20" y1="8" x2="20" y2="14"/>
-                <line x1="23" y1="11" x2="17" y2="11"/>
-              </svg>
-              Afegir nou cuidador
-            </button>
-          )}
-
-          <div className="h-px bg-slate-100 w-full mt-2" />
-
-          {/* Action 2: Full Logout */}
-          <button
-            onClick={() => clearUserSession()}
-            className="w-full py-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors flex items-center justify-center gap-2 group"
-            id="logout-btn"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="opacity-50 group-hover:opacity-100 transition-opacity">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-            Tancar sessió de cuidador
-          </button>
+      }
+      analyticsSection={
+        <CaregiverAnalytics
+          analytics={analytics}
+          walks={walks}
+          isExtraInfoOpen={isExtraInfoOpen}
+          onToggleInfo={() => setIsExtraInfoOpen(!isExtraInfoOpen)}
+          onWalkClick={(id) => console.log('View walk map:', id)}
+        />
+      }
+      walkHistory={
+        <div className={`${isExtraInfoOpen ? 'block' : 'hidden'} transition-all duration-300 mt-6`}>
+          <CaregiverWalkHistory walks={walks} onWalkClick={(id) => console.log('View walk map:', id)} />
         </div>
-
-        {/* Collapsible Section for Analytics and History */}
-        <div className={`${isExtraInfoOpen ? 'block' : 'hidden'} transition-all duration-300`}>
-          {/* Analytics Section */}
-          {analytics && (
-            <div className="mt-6">
-              <h3 className="text-[#0F172A] font-bold text-lg mb-4 ml-1">Resum d'activitat</h3>
-              <div className="grid grid-cols-1 gap-4">
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
-                  <div>
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Durada mitjana</p>
-                    <p className="text-xl font-black text-[#0F172A]">{analytics.avg_duration_minutes} min</p>
-                  </div>
-                  <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  </div>
-                </div>
-                
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                  <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-2">Hores més freqüents</p>
-                  <div className="flex gap-2">
-                    {analytics.common_start_hours.length > 0 ? (
-                      analytics.common_start_hours.map((h, i) => (
-                        <span key={i} className="bg-slate-100 px-3 py-1 rounded-full text-xs font-bold text-slate-700">
-                          {h.hour}:00h
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-slate-400 text-xs italic">Sense prou dades</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                  <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-3">Freqüència (7 dies)</p>
-                  <div className="flex items-end gap-1.5 h-16 px-1">
-                    {analytics.walk_frequency.map((f, i) => {
-                      const maxCount = Math.max(...analytics.walk_frequency.map(d => d.count), 1);
-                      const height = (f.count / maxCount) * 100;
-                      return (
-                        <div 
-                          key={i} 
-                          className={`w-full rounded-t-sm transition-all duration-500 ${f.count > 0 ? 'bg-blue-500' : 'bg-slate-100'}`}
-                          style={{ height: `${f.count > 0 ? height : 15}%` }}
-                          title={`${f.date}: ${f.count} passejos`}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Walk History Section */}
-          <div className="mt-6 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-              <h3 className="text-[#0F172A] font-bold text-base">Historial detallat</h3>
-            </div>
-            <div className="p-2">
-              <ErrorBoundary>
-                <WalkHistoryList 
-                  walks={walks} 
-                  onWalkClick={(id) => console.log('View walk map:', id)} 
-                />
-              </ErrorBoundary>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <InviteCaregiverModal 
-        isOpen={isInviteModalOpen}
-        onClose={() => setIsInviteModalOpen(false)}
-        groupName={groupName}
-      />
-      
-    </div>
+      }
+      inviteModal={
+        <InviteCaregiverModal
+          isOpen={isInviteModalOpen}
+          onClose={() => setIsInviteModalOpen(false)}
+          groupName={groupName}
+        />
+      }
+    />
   );
 }
