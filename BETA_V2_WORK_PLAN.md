@@ -82,7 +82,7 @@ Aquest document unifica totes les auditories i plans previs per portar PathGuard
 
 ## 📂 Estat de les Tasques
 
-> Darrera actualització: 2026-05-16 — FASE A completada i fusionada a develop
+> Darrera actualització: 2026-05-16 — FASE B completada (commits 78dc515, e9bdac3)
 
 | Fase | Tasca | Estat | FASE Execució | Ref. SOLID |
 |------|-------|-------|---------------|------------|
@@ -111,12 +111,21 @@ Llegenda: ✅ Completat | 🔄 En procés | ⬜ Pendent
 | Fase 3 | 3 | 0 | 0 | 3 |
 | Fase 4 | 3 | 0 | 0 | 3 |
 
+### Resum global
+
+| Fase | Estat |
+|------|-------|
+| Fase 1 | ✅ Completada |
+| Fase 2 | 🔄 En curs (1/3 completada - Battery) |
+| Fase 3 | ⬜ Pendent |
+| Fase 4 | ⬜ Pendent |
+
 ### Dependències entre fases
 
 ```
-FASE A (estabilitat + neteja SOLID)
+FASE A (estabilitat + neteja SOLID) ✅
   ↓
-FASE B (refactor arquitectural: ws_manager, CaregiverDashboard, broadcast)
+FASE B (refactor arquitectural: ws_manager, CaregiverDashboard, broadcast) ✅
   ↓
 FASE C (noves funcionalitats: SOS, Walk Recovery)
   ↓
@@ -141,3 +150,27 @@ FASE D (qualitat: validació, analytics, tests, Alembic, export)
 - Corregit WS_BASE_URL sense path /api/v1/ws/
 - Corregit doble sufixe +00:00Z en timestamps WS (6 ocurr ncies)
 - Corregit deque no JSON-serializable a WalkStateCache.get()
+
+### FASE B — Commits 78dc515 + e9bdac3 (2026-05-16) — MERGED to develop
+
+**SOLID Pas 1.1 — ws_manager.py descompost:**
+- Creat `app/api/websocket/connection_manager.py`: connexions, rooms, broadcast
+- Creat `app/api/websocket/presence_tracker.py`: estat online/offline pacient
+- Creat `app/api/websocket/snapshot_service.py`: late-join snapshot construction
+- Creat `app/api/websocket/ws_auth.py`: JWT + device token authentication
+- Creat `app/api/websocket/event_publisher.py`: pub/sub event bus
+- Creat `app/api/websocket/broadcast_handlers.py`: subscriptors d'events
+- `walk_service.py` i `location_service.py` ara usen `event_publisher` (broadcast separat - Pas 1.3)
+
+**SOLID Pas 1.2 — CaregiverDashboard descompost:**
+- Creat `CaregiverHeader.tsx`: logout, group name, invite button
+- Creat `PatientStatusCard.tsx`: connectivity, time-ago, battery status
+- Creat `CaregiverAnalytics.tsx`: analytics barres, freqÜència, hores
+- Creat `CaregiverWalkHistory.tsx`: historial + ErrorBoundary wrapper
+- Creat `CaregiverDashboardLayout.tsx`: orquestrador que composa els anteriors
+
+**SOLID Pas 1.3 — Broadcast separat (inclòs en 78dc515):**
+- EventPublisher implementat i usat per walk_service i location_service
+- Desacoblament total entre serveis i WebSocket manager
+
+**Nota:** FASE B inclou els passos 1.1, 1.2 i 1.3 del pla SOLID (descomposició SRP)
