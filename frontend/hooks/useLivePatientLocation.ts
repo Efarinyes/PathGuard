@@ -10,10 +10,12 @@ export interface UseLivePatientLocationReturn extends WalkState {
   isPatientConnected: boolean;
   isLoading: boolean;
   watchersCount: number;
+  latestSosData: { patient_id: number; walk_id: number | null; sos_count: number; timestamp: string } | null;
 }
 
 export function useLivePatientLocation(
-  initialHistory: LocationPayload[] = []
+  initialHistory: LocationPayload[] = [],
+  onSOSAlert?: (data: { patient_id: number; walk_id: number | null; sos_count: number; timestamp: string }) => void
 ): UseLivePatientLocationReturn {
   const { userToken, deviceToken, isHydrated: appIsHydrated } = useAppState();
 
@@ -31,6 +33,7 @@ export function useLivePatientLocation(
 
   const [isPatientConnected, setIsPatientConnected] = useState(true);
   const [watchersCount, setWatchersCount] = useState(0);
+  const [latestSosData, setLatestSosData] = useState<{ patient_id: number; walk_id: number | null; sos_count: number; timestamp: string } | null>(null);
 
   // 1. Snapshot Recovery: Fetch active walk state (REST Initial Load)
   async function rehydrateState(isReconnect = false) {
@@ -121,6 +124,14 @@ const { lastMessage, isConnected } = useWebSocket<any>(isReady, wsUrlParams);
     } else if (lastMessage.type === 'watchers_update') {
       console.debug(`[WS] Watchers update: ${lastMessage.count}`);
       setWatchersCount(lastMessage.count || 0);
+    } else if (lastMessage.type === 'sos_alert') {
+      console.warn('[WS] SOS ALERT RECEIVED:', lastMessage);
+      setLatestSosData({
+        patient_id: lastMessage.patient_id,
+        walk_id: lastMessage.walk_id,
+        sos_count: lastMessage.sos_count,
+        timestamp: lastMessage.timestamp,
+      });
     } else {
       const isLocation = lastMessage.type === 'location' || 
                          (!lastMessage.type && lastMessage.latitude != null && lastMessage.longitude != null);
@@ -142,6 +153,7 @@ const { lastMessage, isConnected } = useWebSocket<any>(isReady, wsUrlParams);
     isConnected,
     isPatientConnected,
     isLoading,
-    watchersCount
+    watchersCount,
+    latestSosData,
   };
 }

@@ -1,4 +1,5 @@
 import { AppStateProvider } from "@/hooks/useAppState";
+import { SOSAlertProvider } from "@/hooks/useSOSAlert";
 import { RoleGuard } from "@/components/RoleGuard";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { PWAErrorBoundary } from "@/components/PWAErrorBoundary";
@@ -54,12 +55,14 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col font-sans">
         <PWAErrorBoundary>
-          <AppStateProvider>
-            <RoleGuard>
-              {children}
-              <PWAInstallPrompt />
-            </RoleGuard>
-          </AppStateProvider>
+          <SOSAlertProvider>
+            <AppStateProvider>
+              <RoleGuard>
+                {children}
+                <PWAInstallPrompt />
+              </RoleGuard>
+            </AppStateProvider>
+          </SOSAlertProvider>
         </PWAErrorBoundary>
       </body>
     </html>

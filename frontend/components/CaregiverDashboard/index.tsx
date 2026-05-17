@@ -4,7 +4,9 @@ import React, { useEffect, useState } from 'react';
 import CaregiverMap from '../CaregiverMap';
 import NotificationBanner from '../NotificationBanner';
 import InviteCaregiverModal from '../InviteCaregiverModal';
+import SOSAlertModal from '../SOSAlertModal';
 import { useLivePatientLocation } from '@/hooks/useLivePatientLocation';
+import { useSOSAlert } from '@/hooks/useSOSAlert';
 import { useAppState } from '@/hooks/useAppState';
 import { walkService } from '@/services/walkService';
 import { useCaregiverAnalytics } from '@/hooks/useCaregiverAnalytics';
@@ -18,7 +20,9 @@ import CaregiverDashboardLayout from './CaregiverDashboardLayout';
 
 export default function CaregiverDashboard() {
   const { userToken } = useAppState();
-  const { currentLocation, routeHistory, isConnected, isPatientConnected, isLoading, isActive, watchersCount, deviceStatus } = useLivePatientLocation();
+  const locationHook = useLivePatientLocation();
+  const { currentLocation, routeHistory, isConnected, isPatientConnected, isLoading, isActive, watchersCount, deviceStatus, latestSosData } = locationHook;
+  const { showAlert } = useSOSAlert();
   const [timeAgo, setTimeAgo] = useState<string>('Esperant dades...');
   const [batteryTimeAgo, setBatteryTimeAgo] = useState<string>('');
   const [isExtraInfoOpen, setIsExtraInfoOpen] = useState(false);
@@ -31,6 +35,12 @@ export default function CaregiverDashboard() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   const { walks, analytics } = useCaregiverAnalytics(userToken, isActive);
+
+  useEffect(() => {
+    if (latestSosData) {
+      showAlert(latestSosData);
+    }
+  }, [latestSosData, showAlert]);
 
   useEffect(() => {
     if (!userToken) return;
@@ -95,65 +105,68 @@ export default function CaregiverDashboard() {
   };
 
   return (
-    <CaregiverDashboardLayout
-      headerSection={
-        <CaregiverHeader
-          patientName={patientName}
-          isOwner={isOwner}
-          groupName={groupName}
-          onInviteClick={() => setIsInviteModalOpen(true)}
-        />
-      }
-      mapSection={
-        <>
-          {notification && (
-            <NotificationBanner
-              message={notification.message}
-              type={notification.type}
-              onDismiss={() => setNotification(null)}
-            />
-          )}
-          {renderMapSection()}
-        </>
-      }
-      statusCard={
-        <PatientStatusCard
-          patientName={patientName}
-          isConnected={isConnected}
-          isActive={isActive}
-          isPatientConnected={isPatientConnected}
-          isMonitoringPaused={isMonitoringPaused}
-          currentLocation={currentLocation}
-          routeHistory={routeHistory}
-          deviceStatus={deviceStatus}
-          timeAgo={timeAgo}
-          batteryTimeAgo={batteryTimeAgo}
-          watchersCount={watchersCount}
-          onPauseMonitoring={() => { setIsMonitoringPaused(true); setIsExtraInfoOpen(true); }}
-          onResumeMonitoring={() => setIsMonitoringPaused(false)}
-        />
-      }
-      analyticsSection={
-        <CaregiverAnalytics
-          analytics={analytics}
-          walks={walks}
-          isExtraInfoOpen={isExtraInfoOpen}
-          onToggleInfo={() => setIsExtraInfoOpen(!isExtraInfoOpen)}
-          onWalkClick={(id) => console.log('View walk map:', id)}
-        />
-      }
-      walkHistory={
-        <div className={`${isExtraInfoOpen ? 'block' : 'hidden'} transition-all duration-300 mt-6`}>
-          <CaregiverWalkHistory walks={walks} onWalkClick={(id) => console.log('View walk map:', id)} />
-        </div>
-      }
-      inviteModal={
-        <InviteCaregiverModal
-          isOpen={isInviteModalOpen}
-          onClose={() => setIsInviteModalOpen(false)}
-          groupName={groupName}
-        />
-      }
-    />
+    <>
+      <CaregiverDashboardLayout
+        headerSection={
+          <CaregiverHeader
+            patientName={patientName}
+            isOwner={isOwner}
+            groupName={groupName}
+            onInviteClick={() => setIsInviteModalOpen(true)}
+          />
+        }
+        mapSection={
+          <>
+            {notification && (
+              <NotificationBanner
+                message={notification.message}
+                type={notification.type}
+                onDismiss={() => setNotification(null)}
+              />
+            )}
+            {renderMapSection()}
+          </>
+        }
+        statusCard={
+          <PatientStatusCard
+            patientName={patientName}
+            isConnected={isConnected}
+            isActive={isActive}
+            isPatientConnected={isPatientConnected}
+            isMonitoringPaused={isMonitoringPaused}
+            currentLocation={currentLocation}
+            routeHistory={routeHistory}
+            deviceStatus={deviceStatus}
+            timeAgo={timeAgo}
+            batteryTimeAgo={batteryTimeAgo}
+            watchersCount={watchersCount}
+            onPauseMonitoring={() => { setIsMonitoringPaused(true); setIsExtraInfoOpen(true); }}
+            onResumeMonitoring={() => setIsMonitoringPaused(false)}
+          />
+        }
+        analyticsSection={
+          <CaregiverAnalytics
+            analytics={analytics}
+            walks={walks}
+            isExtraInfoOpen={isExtraInfoOpen}
+            onToggleInfo={() => setIsExtraInfoOpen(!isExtraInfoOpen)}
+            onWalkClick={(id) => console.log('View walk map:', id)}
+          />
+        }
+        walkHistory={
+          <div className={`${isExtraInfoOpen ? 'block' : 'hidden'} transition-all duration-300 mt-6`}>
+            <CaregiverWalkHistory walks={walks} onWalkClick={(id) => console.log('View walk map:', id)} />
+          </div>
+        }
+        inviteModal={
+          <InviteCaregiverModal
+            isOpen={isInviteModalOpen}
+            onClose={() => setIsInviteModalOpen(false)}
+            groupName={groupName}
+          />
+        }
+      />
+      <SOSAlertModal patientName={patientName} />
+    </>
   );
 }

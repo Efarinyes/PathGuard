@@ -6,7 +6,9 @@ import { useLocationTracking } from '@/hooks/useLocationTracking';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useBatteryMonitoring } from '@/hooks/useBatteryMonitoring';
 import { locationService } from '@/services/locationService';
+import { patientService } from '@/services/patientService';
 import NotificationBanner from '../NotificationBanner';
+import SOSButton from '../SOSButton';
 import { API_BASE_URL, WS_HEARTBEAT_INTERVAL_MS } from '@/lib/config';
 
 interface Notification {
@@ -21,12 +23,19 @@ interface Notification {
  * Enforces the CRITICAL RULESET: single action, minimal text, no jargon.
  */
 export default function PatientWalkController() {
-  const { deviceToken, activeWalkId, startWalk, endWalk } = useAppState();
+  const { deviceToken, activeWalkId, startWalk, endWalk, sosEnabled, setSosEnabled } = useAppState();
   const { isTracking, currentPosition, startTracking, stopTracking } = useLocationTracking();
   const isWalking = activeWalkId !== null;
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<Notification | null>(null);
   const notifCounter = useRef(0);
+
+  useEffect(() => {
+    if (!deviceToken) return;
+    patientService.getPatientStatus(deviceToken)
+      .then((status) => setSosEnabled(status.sos_enabled))
+      .catch(() => setSosEnabled(false));
+  }, [deviceToken, setSosEnabled]);
 
   // Presence WebSocket for Heartbeat
   const wsUrlParams = deviceToken ? `?patient_token=${deviceToken}` : '';
@@ -203,6 +212,13 @@ export default function PatientWalkController() {
           type={notification.type}
           onDismiss={() => setNotification(null)}
         />
+      )}
+
+      {/* SOS Button - only visible when walk is active and enabled */}
+      {sosEnabled && deviceToken && isWalking && (
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <SOSButton deviceToken={deviceToken} />
+        </div>
       )}
     </main>
   );

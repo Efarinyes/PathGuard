@@ -7,6 +7,8 @@ from app.api.auth import routers as auth_routers
 from app.api.routers import locations as locations_router
 from app.api.routers import walks as walks_router
 from app.api.routers import analytics as analytics_router
+from app.api.routers import sos as sos_router
+from app.api.routers import patient as patient_router
 from app.api.websocket import websocket_endpoint as websockets_router
 from app.core.config.settings import settings
 from app.core.constants import CACHE_MAX_AGE_SECONDS
@@ -76,6 +78,8 @@ app.include_router(auth_routers.router, prefix=f"{settings.API_V1_STR}/auth", ta
 app.include_router(locations_router.router, prefix=f"{settings.API_V1_STR}/locations", tags=["locations"])
 app.include_router(walks_router.router, prefix=f"{settings.API_V1_STR}/walks", tags=["walks"])
 app.include_router(analytics_router.router, prefix=f"{settings.API_V1_STR}/analytics", tags=["analytics"])
+app.include_router(sos_router.router, prefix=f"{settings.API_V1_STR}/sos", tags=["sos"])
+app.include_router(patient_router.router, prefix=f"{settings.API_V1_STR}/patient", tags=["patient"])
 app.include_router(websockets_router.router, prefix=f"{settings.API_V1_STR}/ws", tags=["websocket"])
 
 @app.get("/")

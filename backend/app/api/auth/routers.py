@@ -33,7 +33,8 @@ def register(
             email=data.email,
             password=data.password,
             patient_name=data.patient_name,
-            group_name=data.group_name
+            group_name=data.group_name,
+            sos_enabled=data.sos_enabled
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
