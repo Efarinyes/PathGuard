@@ -55,7 +55,8 @@ describe('RegistrationForm Component', () => {
         group_name: 'Família Soler',
         patient_name: 'Joan',
         email: 'joan@example.com',
-        password: 'password123'
+        password: 'password123',
+        sos_enabled: false,
       })
     }));
   });

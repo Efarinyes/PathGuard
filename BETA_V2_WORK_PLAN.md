@@ -131,6 +131,8 @@ FASE C (noves funcionalitats: SOS, Walk Recovery)
   ↓
 FASE D (qualitat: validació, analytics, tests, Alembic, export)
 ```
+<<<<<<< HEAD
+=======
 
 ---
 

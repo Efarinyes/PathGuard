@@ -7,6 +7,7 @@ class RegisterRequest(BaseModel):
     group_name: Optional[str] = None
     email: EmailStr
     password: str
+    sos_enabled: bool = False
 
 class RegisterResponse(BaseModel):
     device_token: UUID

@@ -26,6 +26,16 @@ def setup_event_handlers(connection_manager):
     async def _broadcast_location(data: dict):
         await connection_manager.broadcast_to_group(data["group_id"], data)
 
+    async def _broadcast_sos_alert(data: dict):
+        await connection_manager.broadcast_to_group(data["group_id"], {
+            "type": "sos_alert",
+            "walk_id": data["walk_id"],
+            "patient_id": data["patient_id"],
+            "sos_count": data["sos_count"],
+            "timestamp": data["timestamp"]
+        })
+
     event_publisher.subscribe("walk_started", _broadcast_walk_started)
     event_publisher.subscribe("walk_stopped", _broadcast_walk_stopped)
     event_publisher.subscribe("location", _broadcast_location)
+    event_publisher.subscribe("sos_alert", _broadcast_sos_alert)

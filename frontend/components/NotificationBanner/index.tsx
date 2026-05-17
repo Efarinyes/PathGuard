@@ -10,6 +10,8 @@ export interface NotificationBannerProps {
   /** Automatically dismiss the notification after X milliseconds. 0 disables auto-dismiss. */
   durationMs?: number;
   onDismiss?: () => void;
+  /** Position of the banner on screen. Default: bottom */
+  position?: 'top' | 'bottom';
 }
 
 /**
@@ -21,7 +23,8 @@ export default function NotificationBanner({
   message, 
   type = 'info', 
   durationMs = 4000,
-  onDismiss 
+  onDismiss,
+  position = 'bottom'
 }: NotificationBannerProps) {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -54,9 +57,11 @@ export default function NotificationBanner({
     warning: 'bg-[#F59E0B]',   // Amber warning
   }[type];
 
+  const positionClasses = position === 'top' ? 'top-6' : 'bottom-6';
+
   return (
-    <div 
-      className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 transition-opacity duration-500 ease-in-out ${
+    <div
+      className={`fixed ${positionClasses} left-1/2 transform -translate-x-1/2 z-50 transition-opacity duration-500 ease-in-out ${
         isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
     >

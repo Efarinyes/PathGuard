@@ -20,6 +20,7 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [activateAsPatient, setActivateAsPatient] = useState(true);
+  const [sosEnabled, setSosEnabled] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,12 +30,13 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
     setIsLoading(true);
     setError(null);
 
-    try {
+      try {
       const payload = {
         group_name: groupName,
         patient_name: patientName,
         email: email,
         password: password,
+        sos_enabled: sosEnabled,
       };
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
@@ -162,6 +164,26 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
               </label>
               <p className="text-slate-500 mt-0.5">
                 Si marques aquesta opció, aquest mòbil es convertirà en el dispositiu de seguiment i quedarà bloquejat a la pantalla del pacient.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 p-4 bg-red-50/50 rounded-xl border border-red-100/50 mt-2">
+            <div className="flex items-center h-5">
+              <input
+                id="sosEnabled"
+                type="checkbox"
+                checked={sosEnabled}
+                onChange={(e) => setSosEnabled(e.target.checked)}
+                className="w-5 h-5 text-[#DC2626] border-slate-300 rounded focus:ring-[#DC2626] transition-all cursor-pointer"
+              />
+            </div>
+            <div className="text-sm">
+              <label htmlFor="sosEnabled" className="font-bold text-[#DC2626] cursor-pointer">
+                Habilitar avís d'emergència (SOS)
+              </label>
+              <p className="text-slate-500 mt-0.5">
+                Quan estigui activat, el pacient podrà demanar ajuda prement un botó. Els cuidadors rebutjaran una notificació d'emergència.
               </p>
             </div>
           </div>

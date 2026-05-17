@@ -3,6 +3,7 @@
 import React, { ReactNode } from 'react';
 
 interface CaregiverDashboardLayoutProps {
+  headerSection: ReactNode;
   mapSection: ReactNode;
   statusCard: ReactNode;
   analyticsSection: ReactNode;
@@ -11,6 +12,7 @@ interface CaregiverDashboardLayoutProps {
 }
 
 export default function CaregiverDashboardLayout({
+  headerSection,
   mapSection,
   statusCard,
   analyticsSection,
@@ -24,6 +26,7 @@ export default function CaregiverDashboardLayout({
       </div>
 
       <div className="w-full md:w-[350px] shrink-0 order-2 md:order-2">
+        {headerSection}
         {statusCard}
         {analyticsSection}
         {walkHistory}

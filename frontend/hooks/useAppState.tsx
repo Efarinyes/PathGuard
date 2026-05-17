@@ -9,11 +9,13 @@ interface AppState {
   deviceToken: string | null;
   patientId: number | null;
   activeWalkId: number | null;
+  sosEnabled: boolean;
   isHydrated: boolean;
   setUserSession: (token: string) => void;
   setPatientSession: (token: string, id: number) => void;
   startWalk: (walkId: number) => void;
   endWalk: () => void;
+  setSosEnabled: (enabled: boolean) => void;
   clearAll: () => void;
   clearUserSession: () => void;
 }
@@ -26,6 +28,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const [patientId, setPatientId] = useState<number | null>(null);
   const [activeWalkId, setActiveWalkId] = useState<number | null>(null);
+  const [sosEnabled, setSosEnabled] = useState<boolean>(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const hydrationRef = useRef(false);
 
@@ -85,7 +88,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }, [activeWalkId, isHydrated]);
 
   const setUserSession = (token: string) => setUserToken(token);
-  
+
   const setPatientSession = (token: string, id: number) => {
     setDeviceToken(token);
     setPatientId(id);
@@ -99,6 +102,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setDeviceToken(null);
     setPatientId(null);
     setActiveWalkId(null);
+    setSosEnabled(false);
   };
 
   const clearUserSession = () => {
@@ -107,8 +111,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AppStateContext.Provider value={{
-      userToken, deviceToken, patientId, activeWalkId, isHydrated,
-      setUserSession, setPatientSession, startWalk, endWalk, clearAll, clearUserSession
+      userToken, deviceToken, patientId, activeWalkId, sosEnabled, isHydrated,
+      setUserSession, setPatientSession, startWalk, endWalk, setSosEnabled, clearAll, clearUserSession
     }}>
       {children}
     </AppStateContext.Provider>
