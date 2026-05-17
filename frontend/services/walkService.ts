@@ -7,8 +7,6 @@ export interface WalkHistoryItem {
   active: boolean;
   duration_seconds: number;
   distance_meters?: number;
-  incidents_count?: number;
-  signal_loss?: boolean;
 }
 
 export interface ActiveWalkSnapshot {

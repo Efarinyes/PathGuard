@@ -20,7 +20,7 @@ def test_websocket_device_status_update(
     if not patient:
         patient = Patient()
         patient.name = "WS Status Test Patient"
-        patient.device_token = uuid4()
+        patient.device_token = str(uuid4())
         patient.group_id = caregiver_user.group_id
         db.add(patient)
         db.commit()
@@ -78,7 +78,7 @@ def test_websocket_snapshot_includes_battery(
     if not patient:
         patient = Patient()
         patient.name = "WS Snapshot Test Patient"
-        patient.device_token = uuid4()
+        patient.device_token = str(uuid4())
         patient.group_id = caregiver_user.group_id
         db.add(patient)
         db.commit()

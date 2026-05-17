@@ -1,4 +1,3 @@
-import uuid
 from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -21,15 +20,7 @@ def get_patient_from_device_token(
     Dependency to validate X-Patient-Token header and return the Patient.
     The Patient is implicitly bound to their Group via their DB record.
     """
-    try:
-        token_uuid = uuid.UUID(x_patient_token)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid device token format"
-        )
-        
-    patient = db.query(Patient).filter(Patient.device_token == token_uuid).first()
+    patient = db.query(Patient).filter(Patient.device_token == x_patient_token).first()
     if not patient:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -63,11 +54,7 @@ def get_optional_patient(
 ) -> Patient | None:
     if not x_patient_token:
         return None
-    try:
-        token_uuid = uuid.UUID(x_patient_token)
-        return db.query(Patient).filter(Patient.device_token == token_uuid).first()
-    except ValueError:
-        return None
+    return db.query(Patient).filter(Patient.device_token == x_patient_token).first()
 
 def resolve_patient(patient: Patient | None, user: User | None) -> Patient:
     """

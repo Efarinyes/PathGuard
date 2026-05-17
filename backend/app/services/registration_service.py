@@ -42,7 +42,7 @@ class RegistrationService:
         # 3. Create Patient
         new_patient = Patient(
             name=patient_name,
-            device_token=uuid.uuid4(),
+            device_token=str(uuid.uuid4()),
             group_id=new_group.id
         )
         db.add(new_patient)

@@ -14,19 +14,16 @@ import { formatTimeAgo, formatBatteryTime } from '@/lib/formatTimeAgo';
 
 import CaregiverHeader from './CaregiverHeader';
 import PatientStatusCard from './PatientStatusCard';
-import CaregiverAnalytics from './CaregiverAnalytics';
 import CaregiverWalkHistory from './CaregiverWalkHistory';
 import CaregiverDashboardLayout from './CaregiverDashboardLayout';
 
 export default function CaregiverDashboard() {
   const { userToken } = useAppState();
   const locationHook = useLivePatientLocation();
-  const { currentLocation, routeHistory, isConnected, isPatientConnected, isLoading, isActive, watchersCount, deviceStatus, latestSosData } = locationHook;
+  const { currentLocation, routeHistory, isConnected, isPatientConnected, isLoading, isActive, deviceStatus, latestSosData } = locationHook;
   const { showAlert } = useSOSAlert();
   const [timeAgo, setTimeAgo] = useState<string>('Esperant dades...');
   const [batteryTimeAgo, setBatteryTimeAgo] = useState<string>('');
-  const [isExtraInfoOpen, setIsExtraInfoOpen] = useState(false);
-  const [isMonitoringPaused, setIsMonitoringPaused] = useState(false);
   const [notification, setNotification] = useState<{ message: string, type: 'info' | 'warning' } | null>(null);
 
   const [patientName, setPatientName] = useState<string>('el Pacient');
@@ -34,7 +31,7 @@ export default function CaregiverDashboard() {
   const [groupName, setGroupName] = useState<string>('');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
-  const { walks, analytics } = useCaregiverAnalytics(userToken, isActive);
+  const { walks } = useCaregiverAnalytics(userToken, isActive);
 
   useEffect(() => {
     if (latestSosData) {
@@ -92,13 +89,13 @@ export default function CaregiverDashboard() {
   }, [isPatientConnected, isActive, isLoading]);
 
   const renderMapSection = () => {
-    if (isActive && routeHistory.length > 0 && !isMonitoringPaused) {
+    if (isActive && routeHistory.length > 0) {
       return <CaregiverMap locations={routeHistory} isPatientOffline={!isPatientConnected} />;
     }
     return (
       <div className="w-full h-full min-h-[400px] border border-slate-200 rounded-xl bg-slate-100 flex flex-col items-center justify-center gap-4">
         <span className="text-slate-500 font-medium tracking-wide">
-          {isMonitoringPaused ? 'Seguiment en temps real pausat' : 'Pendent de la primera connexió...'}
+          Pendent de la primera connexió...
         </span>
       </div>
     );
@@ -129,32 +126,18 @@ export default function CaregiverDashboard() {
         }
         statusCard={
           <PatientStatusCard
-            patientName={patientName}
             isConnected={isConnected}
             isActive={isActive}
             isPatientConnected={isPatientConnected}
-            isMonitoringPaused={isMonitoringPaused}
             currentLocation={currentLocation}
             routeHistory={routeHistory}
             deviceStatus={deviceStatus}
             timeAgo={timeAgo}
             batteryTimeAgo={batteryTimeAgo}
-            watchersCount={watchersCount}
-            onPauseMonitoring={() => { setIsMonitoringPaused(true); setIsExtraInfoOpen(true); }}
-            onResumeMonitoring={() => setIsMonitoringPaused(false)}
-          />
-        }
-        analyticsSection={
-          <CaregiverAnalytics
-            analytics={analytics}
-            walks={walks}
-            isExtraInfoOpen={isExtraInfoOpen}
-            onToggleInfo={() => setIsExtraInfoOpen(!isExtraInfoOpen)}
-            onWalkClick={(id) => console.log('View walk map:', id)}
           />
         }
         walkHistory={
-          <div className={`${isExtraInfoOpen ? 'block' : 'hidden'} transition-all duration-300 mt-6`}>
+          <div className="mt-6">
             <CaregiverWalkHistory walks={walks} onWalkClick={(id) => console.log('View walk map:', id)} />
           </div>
         }

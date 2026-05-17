@@ -1,6 +1,5 @@
 from typing import Optional
 from pydantic import BaseModel, EmailStr
-from uuid import UUID
 
 class RegisterRequest(BaseModel):
     patient_name: str
@@ -10,7 +9,7 @@ class RegisterRequest(BaseModel):
     sos_enabled: bool = False
 
 class RegisterResponse(BaseModel):
-    device_token: UUID
+    device_token: str
     patient_id: int
     caregiver_jwt: str
     is_owner: bool = True
