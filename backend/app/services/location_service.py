@@ -5,7 +5,7 @@ from app.db.models.location import Location
 from app.db.models.walk import Walk
 from app.db.models.patient import Patient
 from app.db.state import walk_state_cache
-from app.api.ws_manager import manager
+from app.api.websocket.event_publisher import event_publisher
 from app.core.utils import format_timestamp_utc
 
 
@@ -103,10 +103,13 @@ class LocationService:
         result = LocationService.save_location(
             db, latitude, longitude, timestamp, walk_id, client_id, is_recovered, patient
         )
-        
+
         if patient:
-            await manager.broadcast_to_group(patient.group_id, result)
-        
+            await event_publisher.publish("location", {
+                "group_id": patient.group_id,
+                **result
+            })
+
         return result
 
     @staticmethod
@@ -171,7 +174,10 @@ class LocationService:
             
             # Broadcast individual events
             for event in broadcast_events:
-                await manager.broadcast_to_group(patient.group_id, event)
+                await event_publisher.publish("location", {
+                    "group_id": patient.group_id,
+                    **event
+                })
 
         return {
             "status": "synced",

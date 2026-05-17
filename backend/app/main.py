@@ -7,7 +7,7 @@ from app.api.auth import routers as auth_routers
 from app.api.routers import locations as locations_router
 from app.api.routers import walks as walks_router
 from app.api.routers import analytics as analytics_router
-from app.api import ws_manager as websockets_router
+from app.api.websocket import websocket_endpoint as websockets_router
 from app.core.config.settings import settings
 from app.core.constants import CACHE_MAX_AGE_SECONDS
 
@@ -38,6 +38,11 @@ async def lifespan(app: FastAPI):
     import app.db.models.base  # noqa — registers all models
     from app.db.base.base_class import Base
     Base.metadata.create_all(bind=engine)
+
+    # Setup WebSocket event handlers (broadcast subscriptions)
+    from app.api.websocket import setup_websocket_events
+    setup_websocket_events()
+
     yield
 
 app = FastAPI(

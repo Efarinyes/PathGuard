@@ -5,7 +5,7 @@ from app.db.models.walk import Walk
 from app.db.models.location import Location
 from app.db.models.patient import Patient
 from app.db.state import walk_state_cache
-from app.api.ws_manager import manager
+from app.api.websocket.event_publisher import event_publisher
 from app.core.constants import MAX_LOCATION_HISTORY
 from app.core.utils import format_timestamp_utc
 
@@ -49,17 +49,16 @@ class WalkService:
         initiated_by_id: int
     ) -> int:
         walk_id = WalkService.start_walk(db, patient, initiated_by_type, initiated_by_id)
-        
-        # Get walk for broadcast
+
         walk = db.query(Walk).filter(Walk.id == walk_id).first()
-        
-        await manager.broadcast_to_group(patient.group_id, {
-            "type": "walk_started",
+
+        await event_publisher.publish("walk_started", {
+            "group_id": patient.group_id,
             "walk_id": walk.id,
             "patient_id": patient.id,
             "start_time": format_timestamp_utc(walk.start_time)
         })
-        
+
         return walk_id
 
     @staticmethod
@@ -113,23 +112,23 @@ class WalkService:
         stopped_by_id: int
     ) -> dict[str, Any]:
         result = WalkService.stop_walk(db, patient, stopped_by_type, stopped_by_id)
-        
+
         walk = db.query(Walk).filter(Walk.id == result["id"]).first()
-        
+
         integrity_report = {
             "is_valid": result["is_valid"],
             "points_count": result["points_count"],
             "errors": result["errors"]
         }
-        
-        await manager.broadcast_to_group(patient.group_id, {
-            "type": "walk_stopped",
+
+        await event_publisher.publish("walk_stopped", {
+            "group_id": patient.group_id,
             "walk_id": walk.id,
             "patient_id": patient.id,
             "end_time": walk.end_time.isoformat(),
             "integrity": integrity_report
         })
-        
+
         return {
             "id": walk.id,
             "location_count": result["location_count"],
