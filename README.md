@@ -1,106 +1,89 @@
-# 🛡️ PathGuard - Real-Time GPS Tracking System
+# PathGuard
 
-PathGuard is a specialized real-time GPS tracking application designed for patient safety. It allows caregivers to monitor patient walks in real-time with sub-second latency using WebSockets and a high-performance FastAPI/Next.js stack.
+Family safety app for real-time walk monitoring. Calm, discreet, reliable.
 
-## ✨ Key Features
+## Philosophy
 
-- **Real-time Tracking**: Live GPS updates with sub-second latency via WebSockets.
-- **Dual Interface**: 
-  - **Patient Mode**: Minimalist, high-contrast PWA optimized for seniors.
-  - **Caregiver Dashboard**: Interactive map with walk history and analytics.
-- **PWA Excellence**: Fully installable on iOS (Safari), Android (Chrome), and Desktop.
-- **Offline Resilience**: Intelligent location batching and local synchronization for poor network areas.
-- **Discreet Privacy**: Designed to be unobtrusive and respect patient dignity.
+PathGuard helps caregivers watch over elderly relatives during walks. The product must feel warm, not clinical. It must be discrete, not invasive. It must be reliable, not overwhelming.
 
-## 🚀 Getting Started
+- **Calm**: The SOS sound is a warm chime, not a fire alarm. The patient screen has one button. No analytics noise during active monitoring.
+- **Discreet**: No watcher counts, no incident logs, no cumulative SOS counters. The caregiver knows their relative is safe — that's it.
+- **Reliable**: Offline-first sync, adaptive GPS, WebSocket rehydration. No pause monitoring button. If a walk is active, we are watching.
+
+## Current Status
+
+**Pre-beta audit complete. Applying improvements before first external user.**
+
+See `docs/action-plan.md` for the full improvement plan organized by phase:
+- **Phase 1**: Beta blockers (delete dead code, fix SOS sound, clean UI)
+- **Phase 2**: Patient activation flow (activation code instead of registration checkbox)
+- **Phase 3**: Pre-beta polish (language, dead code removal)
+- **Phase 4**: Post-beta (owner dashboard, architecture cleanup)
+
+## Get Started
 
 ### Prerequisites
 
-- **Python 3.11+**
-- **Node.js 18+**
-- **Micromamba/Conda** (Recommended for backend environment management)
+- Python 3.11+
+- Node.js 18+
+- Micromamba/Conda (recommended for backend)
 
-### 1. Backend Setup (FastAPI)
-
-The backend manages authentication, GPS data ingestion, and real-time broadcasting.
+### Backend (FastAPI)
 
 ```bash
 cd backend
-
-# Create and activate environment
 micromamba env create -f environment.yml
 micromamba activate tracker-env
-
-# Initialize the database (SQLite)
 python init_db.py
-
-# Run the server
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
-The API will be available at `http://localhost:8000`. 
-Documentation: `http://localhost:8000/docs`.
+API docs: `http://localhost:8000/docs`
 
-### 2. Frontend Setup (Next.js)
-
-The frontend features dual interfaces for Patients (minimalist PWA) and Caregivers (real-time mapping dashboard).
+### Frontend (Next.js)
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Run the development server
 npm run dev
 ```
 
-The application will be available at `http://localhost:3000`.
+App: `http://localhost:3000`
 
-### 3. Running E2E Tests (Playwright)
-
-To verify the full "Golden Path" (Registration -> Real-time Tracking -> Termination):
+### E2E Tests (Playwright)
 
 ```bash
 cd frontend
 npx playwright test
 ```
 
-## 🏗️ Architecture
+## Architecture
 
-- **Frontend**: Next.js 15 (App Router), Tailwind CSS v4, Lucide Icons.
-- **Backend**: FastAPI, SQLAlchemy (SQLite), Pydantic v2.
-- **PWA**: `@ducanh2912/next-pwa` for robust service worker management and offline caching.
-- **Real-time**: WebSockets for live location broadcasting.
-- **State Management**: Custom React Hooks with LocalStorage persistence and offline sync buffers.
+| Layer | Stack |
+|---|---|
+| Frontend | Next.js 15 (App Router), Tailwind CSS v4, Lucide Icons |
+| Backend | FastAPI, SQLAlchemy (SQLite dev / PostgreSQL prod), Pydantic v2 |
+| Real-time | WebSockets with pub/sub event system |
+| PWA | Service worker with offline-first sync (IndexedDB) |
+| State | Custom React hooks + LocalStorage persistence |
 
-## 📱 Mobile & PWA
+## Core Flows
 
-PathGuard is built as a First-Class Progressive Web App:
-- **Standalone Mode**: Behaves like a native app on mobile home screens.
-- **Install Support**: Custom install prompts for Android/Chrome.
-- **Safe Areas**: Optimized for modern devices with notches and gesture navigation.
-- **Performance**: Optimized for low-power mobile devices.
+**Registration**: Owner creates family group + patient + caregiver account. Receives an activation code for the patient device.
 
-## 🔐 Core Rules
+**Patient activation**: Separate `/activate` route — enter the code, device is linked, land on the walk screen. One button.
 
-1. **Patient Isolation**: Only one active walk is allowed per patient.
-2. **Dual-Auth**: Supports both JWT (Caregivers) and Device Tokens (Patients).
-3. **Data Integrity**: GPS points are timestamped in UTC and strictly validated for sequence consistency.
+**Caregiver monitoring**: Real-time map, walk history, device status. Analytics available on-demand from owner dashboard only.
 
-## 💡 Technical Notices
+## Battery Monitoring Compatibility
 
-### Battery Monitoring Compatibility
-PathGuard utilizes the **Battery Status API** for real-time device health updates. Due to privacy restrictions implemented by browser vendors:
-- ✅ **Fully Supported**: Android (Chrome, Edge, Samsung Internet), Desktop (Chrome, Edge, Brave).
-- ⚠️ **Unsupported (Browser Limitation)**: iOS/iPadOS (All browsers including Safari PWA), Desktop (Safari, Firefox).
-*When monitoring from an unsupported device, the dashboard will display a "Functionality not available on this device" message.*
+- Supported: Android (Chrome, Edge), Desktop (Chrome, Edge, Brave)
+- Unsupported: iOS/iPadOS (all browsers), Desktop (Safari, Firefox)
 
-## 🏷️ Status
+## References
 
-Current Status: **Beta Ready (Alpha Final)**
-*PWA features are production-ready for real-world beta testing.*
+- `docs/action-plan.md` — Consolidated improvement plan with audit checkpoints
 
 ---
-*Developed for PathGuard Patient Safety Project.*
 
+*Developed for the PathGuard Family Safety Project.*
