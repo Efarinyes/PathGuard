@@ -140,6 +140,7 @@ export default function SOSButton({ deviceToken, patientName }: SOSButtonProps) 
           message={notificationMessage}
           type={phase === 'confirming' ? 'success' : 'warning'}
           durationMs={0}
+          position="top"
           onDismiss={() => {
             if (phase === 'idle') {
               setNotificationMessage(null);

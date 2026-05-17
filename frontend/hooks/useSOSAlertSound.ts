@@ -11,7 +11,7 @@ interface UseSOSAlertSoundReturn {
 const BEEP_FREQUENCY_HZ = 1500;
 const BEEP_DURATION_MS = 100;
 const BEEP_GAP_MS = 100;
-const BEEP_REPEAT = 3;
+const BEEP_REPEAT = 225;
 
 export function useSOSAlertSound(): UseSOSAlertSoundReturn {
   const audioContextRef = useRef<AudioContext | null>(null);

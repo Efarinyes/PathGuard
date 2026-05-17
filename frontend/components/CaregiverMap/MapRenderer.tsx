@@ -122,16 +122,6 @@ export default function MapRenderer({ locations, isPatientOffline }: MapRenderer
         )}
       </MapContainer>
 
-      <div className="absolute bottom-3 left-3 z-[1000] bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg text-xs shadow-md border border-slate-200">
-        <div className="flex items-center gap-2">
-          <span className="w-6 h-0.5 bg-[#1E3A8A] opacity-60 rounded"></span>
-          <span className="text-slate-600">Temps real</span>
-        </div>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="w-6 h-0.5 bg-[#F59E0B] opacity-60 rounded" style={{ backgroundImage: 'repeating-linear-gradient(90deg, #F59E0B 0px, #F59E0B 4px, transparent 4px, transparent 8px)' }}></span>
-          <span className="text-slate-600">Recuperat (offline)</span>
-        </div>
-      </div>
     </div>
   );
 }
