@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from app.db.models.patient import Patient
 from app.api.users.models import User
-from app.api.ws_manager import manager
+from app.api.websocket.connection_manager import connection_manager as manager
 from uuid import uuid4
 
 def test_websocket_device_status_update(

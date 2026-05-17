@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { formatDate, formatTime, formatDuration } from '@/lib/formatTimeAgo';
 
 export interface WalkHistoryItem {
   id: number;
@@ -15,41 +16,7 @@ export interface WalkHistoryItem {
 
 export interface WalkHistoryListProps {
   walks: WalkHistoryItem[];
-  /** Handler fired when a caregiver clicks a specific walk to view its map */
   onWalkClick: (walkId: number) => void;
-}
-
-/**
- * Format helper for date
- */
-function formatDate(isoString: string): string {
-  return new Intl.DateTimeFormat('ca-ES', {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit',
-  }).format(new Date(isoString));
-}
-
-/**
- * Format helper for time
- */
-function formatTime(isoString: string | null | undefined): string {
-  if (!isoString) return '--:--';
-  return new Intl.DateTimeFormat('ca-ES', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(isoString));
-}
-
-/**
- * Format helper to turn duration seconds into highly readable strings
- */
-function formatDuration(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  if (remainingSeconds === 0) return `${minutes}m`;
-  return `${minutes}m ${remainingSeconds}s`;
 }
 
 /**

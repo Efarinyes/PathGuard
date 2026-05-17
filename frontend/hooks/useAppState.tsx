@@ -2,17 +2,20 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useOfflineRecovery } from "./useOfflineRecovery";
+import { STORAGE_KEYS } from "@/lib/config";
 
 interface AppState {
   userToken: string | null;
   deviceToken: string | null;
   patientId: number | null;
   activeWalkId: number | null;
+  sosEnabled: boolean;
   isHydrated: boolean;
   setUserSession: (token: string) => void;
   setPatientSession: (token: string, id: number) => void;
   startWalk: (walkId: number) => void;
   endWalk: () => void;
+  setSosEnabled: (enabled: boolean) => void;
   clearAll: () => void;
   clearUserSession: () => void;
 }
@@ -25,98 +28,91 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const [patientId, setPatientId] = useState<number | null>(null);
   const [activeWalkId, setActiveWalkId] = useState<number | null>(null);
+  const [sosEnabled, setSosEnabled] = useState<boolean>(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const hydrationRef = useRef(false);
 
-  // Mount offline recovery listener globally
   useOfflineRecovery();
 
-  // 🔄 Hydration
   useEffect(() => {
     if (hydrationRef.current) return;
 
-    const storedUserToken = localStorage.getItem('pg_user_token');
-    const storedDeviceToken = localStorage.getItem('pg_device_token');
-    const storedPatientId = localStorage.getItem('pg_patient_id');
-    const storedWalkId = localStorage.getItem('pg_active_walk_id');
+    const storedUserToken = localStorage.getItem(STORAGE_KEYS.USER_TOKEN);
+    const storedDeviceToken = localStorage.getItem(STORAGE_KEYS.DEVICE_TOKEN);
+    const storedPatientId = localStorage.getItem(STORAGE_KEYS.PATIENT_ID);
+    const storedWalkId = localStorage.getItem(STORAGE_KEYS.ACTIVE_WALK_ID);
 
-    // Update state all at once to ensure batching
     if (storedUserToken) setUserToken(storedUserToken);
     if (storedDeviceToken) setDeviceToken(storedDeviceToken);
     if (storedPatientId) setPatientId(parseInt(storedPatientId, 10));
     if (storedWalkId) setActiveWalkId(parseInt(storedWalkId, 10));
     
-    // Mark as hydrated BEFORE potential persistence runs
     setIsHydrated(true);
     hydrationRef.current = true;
   }, []);
 
-  // 🔄 Multi-tab/window sync (PWA stability)
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'pg_user_token') setUserToken(e.newValue);
-      if (e.key === 'pg_device_token') setDeviceToken(e.newValue);
-      if (e.key === 'pg_patient_id') setPatientId(e.newValue ? parseInt(e.newValue, 10) : null);
-      if (e.key === 'pg_active_walk_id') setActiveWalkId(e.newValue ? parseInt(e.newValue, 10) : null);
+      if (e.key === STORAGE_KEYS.USER_TOKEN) setUserToken(e.newValue);
+      if (e.key === STORAGE_KEYS.DEVICE_TOKEN) setDeviceToken(e.newValue);
+      if (e.key === STORAGE_KEYS.PATIENT_ID) setPatientId(e.newValue ? parseInt(e.newValue, 10) : null);
+      if (e.key === STORAGE_KEYS.ACTIVE_WALK_ID) setActiveWalkId(e.newValue ? parseInt(e.newValue, 10) : null);
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // 💾 Persistence
   useEffect(() => {
     if (!isHydrated) return;
-    if (userToken) localStorage.setItem('pg_user_token', userToken);
-    else localStorage.removeItem('pg_user_token');
+    if (userToken) localStorage.setItem(STORAGE_KEYS.USER_TOKEN, userToken);
+    else localStorage.removeItem(STORAGE_KEYS.USER_TOKEN);
   }, [userToken, isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) return;
-    if (deviceToken) localStorage.setItem('pg_device_token', deviceToken);
-    else localStorage.removeItem('pg_device_token');
+    if (deviceToken) localStorage.setItem(STORAGE_KEYS.DEVICE_TOKEN, deviceToken);
+    else localStorage.removeItem(STORAGE_KEYS.DEVICE_TOKEN);
   }, [deviceToken, isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) return;
-    if (patientId !== null) localStorage.setItem('pg_patient_id', patientId.toString());
-    else localStorage.removeItem('pg_patient_id');
+    if (patientId !== null) localStorage.setItem(STORAGE_KEYS.PATIENT_ID, patientId.toString());
+    else localStorage.removeItem(STORAGE_KEYS.PATIENT_ID);
   }, [patientId, isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) return;
-    if (activeWalkId !== null) localStorage.setItem('pg_active_walk_id', activeWalkId.toString());
-    else localStorage.removeItem('pg_active_walk_id');
+    if (activeWalkId !== null) localStorage.setItem(STORAGE_KEYS.ACTIVE_WALK_ID, activeWalkId.toString());
+    else localStorage.removeItem(STORAGE_KEYS.ACTIVE_WALK_ID);
   }, [activeWalkId, isHydrated]);
 
   const setUserSession = (token: string) => setUserToken(token);
-  
+
   const setPatientSession = (token: string, id: number) => {
     setDeviceToken(token);
     setPatientId(id);
-    // DO NOT clear userToken here to allow coexistence
   };
 
   const startWalk = (walkId: number) => setActiveWalkId(walkId);
   const endWalk = () => setActiveWalkId(null);
 
-  // Clear everything (used for complete reset)
   const clearAll = () => {
     setUserToken(null);
     setDeviceToken(null);
     setPatientId(null);
     setActiveWalkId(null);
+    setSosEnabled(false);
   };
 
-  // Clear ONLY caregiver session (preserves patient device link)
   const clearUserSession = () => {
     setUserToken(null);
   };
 
   return (
     <AppStateContext.Provider value={{
-      userToken, deviceToken, patientId, activeWalkId, isHydrated,
-      setUserSession, setPatientSession, startWalk, endWalk, clearAll, clearUserSession
+      userToken, deviceToken, patientId, activeWalkId, sosEnabled, isHydrated,
+      setUserSession, setPatientSession, startWalk, endWalk, setSosEnabled, clearAll, clearUserSession
     }}>
       {children}
     </AppStateContext.Provider>

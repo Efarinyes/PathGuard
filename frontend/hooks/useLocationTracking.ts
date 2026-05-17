@@ -1,12 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { getDistanceHaversine, estimateSpeed, Position } from "../lib/gpsUtils";
-
-// Constants for Adaptive Sampling & Filtering
-const MIN_DISTANCE_M = 10;       // Don't send if moved < 10m
-const SPEED_IDLE_M_MIN = 5;     // < 5m/min is idle
-const INTERVAL_IDLE_MS = 15000; // 15s when idle
-const INTERVAL_NORMAL_MS = 5000; // 5s when walking
-const INTERVAL_FAST_MS = 2000;   // 2s when running
+import { GPS_MIN_DISTANCE_M, GPS_SPEED_IDLE_THRESHOLD_M_MIN, GPS_INTERVAL_IDLE_MS, GPS_INTERVAL_NORMAL_MS, GPS_INTERVAL_FAST_MS, GPS_TIMEOUT_MS, GPS_RETRY_DELAY_MS } from "@/lib/config";
 
 export const useLocationTracking = () => {
   const [isTracking, setIsTracking] = useState(false);
@@ -40,15 +34,15 @@ export const useLocationTracking = () => {
 
     const now = Date.now();
     const timeDelta = now - lastSampleTime.current;
-    let nextInterval = INTERVAL_NORMAL_MS;
+    let nextInterval = GPS_INTERVAL_NORMAL_MS;
 
     if (latestPositionRef.current && lastSentPositionRef.current) {
       const speed = estimateSpeed(lastSentPositionRef.current, latestPositionRef.current, timeDelta);
 
-      if (speed < SPEED_IDLE_M_MIN) {
-        nextInterval = INTERVAL_IDLE_MS;
+      if (speed < GPS_SPEED_IDLE_THRESHOLD_M_MIN) {
+        nextInterval = GPS_INTERVAL_IDLE_MS;
       } else if (speed > 100) { // Fast movement (>100m/min ~ 6km/h)
-        nextInterval = INTERVAL_FAST_MS;
+        nextInterval = GPS_INTERVAL_FAST_MS;
       }
     }
 
@@ -71,7 +65,7 @@ export const useLocationTracking = () => {
     // ⚡ Haversine Filtering (Redundancy suppression)
     if (lastSentPositionRef.current) {
       const distance = getDistanceHaversine(lastSentPositionRef.current, current);
-      if (distance < MIN_DISTANCE_M) {
+      if (distance < GPS_MIN_DISTANCE_M) {
         // Suppress update but keep tracking local state
         scheduleNextSample();
         return;
@@ -120,9 +114,9 @@ export const useLocationTracking = () => {
         }
         setTimeout(() => {
           if (isTrackingRef.current) startTracking();
-        }, 5000);
+        }, GPS_RETRY_DELAY_MS);
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: GPS_TIMEOUT_MS, maximumAge: 0 }
     );
 
     // Initial processing cycle

@@ -1,7 +1,9 @@
 import { AppStateProvider } from "@/hooks/useAppState";
+import { SOSAlertProvider } from "@/hooks/useSOSAlert";
 import { RoleGuard } from "@/components/RoleGuard";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { PWAErrorBoundary } from "@/components/PWAErrorBoundary";
+import ServiceWorkerRegistration from "@/lib/swRegistration";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -19,7 +21,6 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "PathGuard",
-    // startupImage: [] // Add splash screens here if available
   },
   formatDetection: {
     telephone: false,
@@ -50,50 +51,20 @@ export default function RootLayout({
       className={`${inter.variable} h-full antialiased`}
     >
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                window.addEventListener('beforeinstallprompt', function(e) {
-                  e.preventDefault();
-                  window.deferredPrompt = e;
-                  window.dispatchEvent(new CustomEvent('pwa-installable'));
-                });
-
-                if ('serviceWorker' in navigator) {
-                  var shouldRegister = true;
-                  if (typeof window !== 'undefined') {
-                    var hostname = window.location.hostname;
-                    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-                      shouldRegister = ${process.env.NEXT_PUBLIC_ENABLE_SW_ON_LOCALHOST === 'true' ? 'true' : 'false'};
-                    }
-                  }
-                  if (shouldRegister) {
-                    window.addEventListener('load', function() {
-                      navigator.serviceWorker.register('/pathguard-sw.js').then(function(registration) {
-                        console.log('SW registered:', registration.scope);
-                      }, function(err) {
-                        console.log('SW registration failed:', err);
-                      });
-                    });
-                  }
-                }
-              })();
-            `,
-          }}
-        />
+        <ServiceWorkerRegistration />
       </head>
       <body className="min-h-full flex flex-col font-sans">
         <PWAErrorBoundary>
-          <AppStateProvider>
-            <RoleGuard>
-              {children}
-              <PWAInstallPrompt />
-            </RoleGuard>
-          </AppStateProvider>
+          <SOSAlertProvider>
+            <AppStateProvider>
+              <RoleGuard>
+                {children}
+                <PWAInstallPrompt />
+              </RoleGuard>
+            </AppStateProvider>
+          </SOSAlertProvider>
         </PWAErrorBoundary>
       </body>
     </html>
   );
 }
-

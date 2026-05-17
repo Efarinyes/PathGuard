@@ -20,7 +20,8 @@ class RegistrationService:
         email: str,
         password: str,
         patient_name: str,
-        group_name: str | None = None
+        group_name: str | None = None,
+        sos_enabled: bool = False
     ) -> dict[str, Any]:
         # 1. Security Check: Validate email uniqueness
         existing_user = db.query(User).filter(User.email == email).first()
@@ -30,7 +31,10 @@ class RegistrationService:
         # 2. Create Group (Environment)
         # Fallback to "[Patient Name]'s Family" if group_name is not provided
         group_name = group_name or f"Família {patient_name}"
-        new_group = Group(name=group_name)
+        new_group = Group(
+            name=group_name,
+            sos_enabled=sos_enabled
+        )
         db.add(new_group)
         db.commit()
         db.refresh(new_group)

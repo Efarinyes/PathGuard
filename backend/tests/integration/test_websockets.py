@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.db.models.walk import Walk
 from app.db.models.patient import Patient
 from app.api.users.models import User
-from app.api.ws_manager import manager
+from app.api.websocket.connection_manager import connection_manager as manager
 from datetime import datetime, timezone
 from uuid import uuid4
 

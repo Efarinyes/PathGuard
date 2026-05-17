@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+import { API_BASE_URL } from '@/lib/config';
 
 
 
@@ -21,21 +20,23 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [activateAsPatient, setActivateAsPatient] = useState(true);
+  const [sosEnabled, setSosEnabled] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [errorError, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    try {
+      try {
       const payload = {
         group_name: groupName,
         patient_name: patientName,
         email: email,
         password: password,
+        sos_enabled: sosEnabled,
       };
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
@@ -78,9 +79,9 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
-        {errorError && (
+        {error && (
           <div className="w-full p-4 bg-red-50 border border-red-100 rounded-xl text-[#EF4444] text-sm text-center font-medium">
-            {errorError}
+            {error}
           </div>
         )}
 
@@ -163,6 +164,26 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
               </label>
               <p className="text-slate-500 mt-0.5">
                 Si marques aquesta opció, aquest mòbil es convertirà en el dispositiu de seguiment i quedarà bloquejat a la pantalla del pacient.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 p-4 bg-red-50/50 rounded-xl border border-red-100/50 mt-2">
+            <div className="flex items-center h-5">
+              <input
+                id="sosEnabled"
+                type="checkbox"
+                checked={sosEnabled}
+                onChange={(e) => setSosEnabled(e.target.checked)}
+                className="w-5 h-5 text-[#DC2626] border-slate-300 rounded focus:ring-[#DC2626] transition-all cursor-pointer"
+              />
+            </div>
+            <div className="text-sm">
+              <label htmlFor="sosEnabled" className="font-bold text-[#DC2626] cursor-pointer">
+                Habilitar avís d'emergència (SOS)
+              </label>
+              <p className="text-slate-500 mt-0.5">
+                Quan estigui activat, el pacient podrà demanar ajuda prement un botó. Els cuidadors rebutjaran una notificació d'emergència.
               </p>
             </div>
           </div>

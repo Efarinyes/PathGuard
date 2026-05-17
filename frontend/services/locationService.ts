@@ -4,7 +4,7 @@
  */
 import { offlineSyncService } from "./offlineSyncService";
 import { gpsTransportService } from "./gpsTransportService";
-import { API_BASE_URL } from '@/lib/config';
+import { API_BASE_URL, STORAGE_KEYS, BATCH_SIZE_THRESHOLD, BATCH_TIME_THRESHOLD_MS } from '@/lib/config';
 
 export interface LocationPayload {
   latitude: number;
@@ -18,8 +18,6 @@ export interface LocationPayload {
 let batchBuffer: LocationPayload[] = [];
 let batchTimer: NodeJS.Timeout | null = null;
 let _isSyncing = false; // Internal lock for chronological sync
-const BATCH_SIZE_THRESHOLD = 5;
-const BATCH_TIME_THRESHOLD_MS = 5000;
 
 export const locationService = {
   /**
@@ -77,7 +75,7 @@ export const locationService = {
 
     const walkId = currentBatch[0].walk_id;
     const batchId = crypto.randomUUID();
-    const deviceToken = typeof window !== "undefined" ? localStorage.getItem("pg_device_token") : null;
+    const deviceToken = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEYS.DEVICE_TOKEN) : null;
 
     console.log(`[locationService] flushBatch executing. Batch size: ${currentBatch.length}, Walk ID: ${walkId}`);
 
@@ -140,7 +138,7 @@ export const locationService = {
       const unsynced = await offlineSyncService.getUnsynced();
       if (unsynced.length === 0) return;
 
-    const deviceToken = typeof window !== "undefined" ? localStorage.getItem("pg_device_token") : null;
+    const deviceToken = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEYS.DEVICE_TOKEN) : null;
 
     for (const point of unsynced) {
       const success = await gpsTransportService.sendPoint({

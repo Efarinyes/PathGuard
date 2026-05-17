@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-
-const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:8000/api/v1/ws/";
+import { WS_BASE_URL, WS_MAX_RECONNECT_ATTEMPTS, WS_RECONNECT_BASE_DELAY_MS, WS_RECONNECT_MAX_DELAY_MS } from '@/lib/config';
 
 export interface UseWebSocketOptions {
   debounceMs?: number;
@@ -81,7 +80,7 @@ export function useWebSocket<T = any>(
         socket.onmessage = (event) => {
           if (!isMounted.current) return;
           try {
-            console.log(`[WS] Received: ${event.data}`);
+            console.debug(`[WS] Received: ${event.data}`);
             const data: T = JSON.parse(event.data);
             processMessage(data);
           } catch {
@@ -106,12 +105,12 @@ export function useWebSocket<T = any>(
 
     function scheduleReconnect() {
       if (!isMounted.current) return;
-      if (reconnectAttempt.current >= 5) {
+      if (reconnectAttempt.current >= WS_MAX_RECONNECT_ATTEMPTS) {
         console.warn('[WS] Maximum reconnect attempts reached (5). Stopping.');
         return;
       }
 
-      const delay = Math.min(1000 * Math.pow(2, reconnectAttempt.current), 10_000);
+      const delay = Math.min(WS_RECONNECT_BASE_DELAY_MS * Math.pow(2, reconnectAttempt.current), WS_RECONNECT_MAX_DELAY_MS);
       reconnectAttempt.current += 1;
       console.debug(`[WS] Reconnecting in ${delay}ms (attempt ${reconnectAttempt.current})`);
       reconnectTimeout.current = setTimeout(connect, delay);

@@ -5,16 +5,11 @@ from app.db.models.location import Location
 from app.db.models.walk import Walk
 from app.db.models.patient import Patient
 from app.db.state import walk_state_cache
-from app.api.ws_manager import manager
+from app.api.websocket.event_publisher import event_publisher
+from app.core.utils import format_timestamp_utc
 
 
 class LocationService:
-    @staticmethod
-    def _format_timestamp(ts: datetime) -> str:
-        ts_str = ts.isoformat().replace('+00:00', 'Z')
-        if not ts_str.endswith('Z') and '+' not in ts_str:
-            ts_str += 'Z'
-        return ts_str
 
     @staticmethod
     def verify_walk(db: Session, walk_id: int, patient: Patient) -> Walk:
@@ -43,7 +38,7 @@ class LocationService:
         if client_id:
             existing = db.query(Location).filter(Location.client_id == client_id).first()
             if existing:
-                ts_str = LocationService._format_timestamp(existing.timestamp)
+                ts_str = format_timestamp_utc(existing.timestamp)
                 return {
                     "type": "location",
                     "status": "already_synced",
@@ -72,7 +67,7 @@ class LocationService:
         db.commit()
         db.refresh(new_location)
         
-        ts_str = LocationService._format_timestamp(new_location.timestamp)
+        ts_str = format_timestamp_utc(new_location.timestamp)
 
         location_data = {
             "type": "location",
@@ -108,10 +103,13 @@ class LocationService:
         result = LocationService.save_location(
             db, latitude, longitude, timestamp, walk_id, client_id, is_recovered, patient
         )
-        
+
         if patient:
-            await manager.broadcast_to_group(patient.group_id, result)
-        
+            await event_publisher.publish("location", {
+                "group_id": patient.group_id,
+                **result
+            })
+
         return result
 
     @staticmethod
@@ -150,7 +148,7 @@ class LocationService:
             inserted_count += 1
             
             # Prepare for broadcast
-            ts_str = LocationService._format_timestamp(p["timestamp"])
+            ts_str = format_timestamp_utc(p["timestamp"])
             
             broadcast_events.append({
                 "type": "location",
@@ -166,7 +164,7 @@ class LocationService:
             
             # Update cache with LATEST point from batch
             last_point = points[-1]
-            last_ts_str = LocationService._format_timestamp(last_point["timestamp"])
+            last_ts_str = format_timestamp_utc(last_point["timestamp"])
             
             walk_state_cache.update(walk_id, {
                 "latitude": last_point["latitude"],
@@ -176,7 +174,10 @@ class LocationService:
             
             # Broadcast individual events
             for event in broadcast_events:
-                await manager.broadcast_to_group(patient.group_id, event)
+                await event_publisher.publish("location", {
+                    "group_id": patient.group_id,
+                    **event
+                })
 
         return {
             "status": "synced",
