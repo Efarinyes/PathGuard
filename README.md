@@ -83,7 +83,6 @@ npx playwright test
 ## References
 
 - `docs/action-plan.md` — Consolidated improvement plan with audit checkpoints
-- `.audit_archive/` — Product and technical audit reports (local, not tracked)
 
 ---
 
