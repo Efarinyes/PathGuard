@@ -13,6 +13,7 @@ class RegisterResponse(BaseModel):
     patient_id: int
     caregiver_jwt: str
     is_owner: bool = True
+    activation_code: str
 
 class Token(BaseModel):
     access_token: str
@@ -46,3 +47,14 @@ class UserGroupInfo(BaseModel):
     patient_name: str
     group_name: str
     is_owner: bool
+
+class ActivateDeviceRequest(BaseModel):
+    code: str
+
+class ActivateDeviceResponse(BaseModel):
+    device_token: str
+    patient_id: int
+
+class ActivationCodeResponse(BaseModel):
+    activation_code: str
+    is_used: bool

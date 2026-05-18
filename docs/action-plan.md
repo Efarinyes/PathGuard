@@ -32,26 +32,30 @@
 
 ---
 
-## Fase 2 — Canvi de registre/activació del pacient
+## Fase 2 — Canvi de registre/activació del pacient ✅ COMPLETADA (2026-05-18, branca `fix/phase1-beta-blockers`)
 
 ### 2.1 Backend: model i endpoints
-- [ ] `Patient`: afegir `activation_code = Column(String(6), unique=True, index=True)` i `activation_code_used = Column(Boolean, default=False)`
-- [ ] Generar `activation_code` automàticament al `registration_service.register_family()`
-- [ ] Nou endpoint `POST /auth/activate-device` — rep `{ code }`, busca pacient per activation_code, retorna `{ device_token, patient_id }`, marca codi com utilitzat
-- [ ] Modificar resposta de `POST /auth/register` — afegir `activation_code`
-- [ ] Nou endpoint `GET /patient/activation-code` (autenticat com a owner) — retorna i/o regenera el codi
+- [x] `Patient`: afegit `activation_code = Column(String(6), unique=True, index=True)` i `activation_code_used = Column(Boolean, default=False)`
+- [x] Generat `activation_code` automàticament al `registration_service.register_family()` (6 caràcters alfanumèrics, `secrets.choice`)
+- [x] Nou endpoint `POST /auth/activate-device` — rep `{ code }`, busca pacient per activation_code, retorna `{ device_token, patient_id }`, marca codi com utilitzat (410 si ja usat, 404 si no existeix, case-insensitive)
+- [x] Modificada resposta de `POST /auth/register` — afegit `activation_code`
+- [x] Nou endpoint `GET /auth/patient/activation-code` (autenticat com a owner) — retorna el codi, regenera si ja està usat
+- [x] Nous schemas: `ActivateDeviceRequest`, `ActivateDeviceResponse`, `ActivationCodeResponse`
+- [x] Tests: 6/6 tests d'activació passen (codi vàlid, case-insensitive, invàlid, ja usat, register retorna codi, owner endpoint)
 
 ### 2.2 Frontend: formulari de registre
-- [ ] `RegistrationForm`: eliminar checkbox "Activa aquest dispositiu per al pacient" i lògica `activateAsPatient`
-- [ ] Després del registre exitós, mostrar pantalla de confirmació amb el codi d'activació en gran: *"Codi per al dispositiu: A3K7M"*
+- [x] `RegistrationForm`: eliminat checkbox "Activa aquest dispositiu per al pacient" i lògica `activateAsPatient`
+- [x] `RegistrationForm`: eliminat checkbox SOS del formulari de registre (SOS es configura des del dashboard d'owner en el futur)
+- [x] Després del registre exitós, es mostra el codi d'activació en gran: pantalla de confirmació amb codi destacat
 
 ### 2.3 Frontend: pantalla d'activació
-- [ ] Crear `/app/activate/page.tsx` — pantalla neta amb un sol camp: "Introdueix el codi d'activació"
-- [ ] Cridar `POST /auth/activate-device`, rebre `device_token` + `patient_id`, guardar amb `setPatientSession`, redirigir a `/patient`
+- [x] Creat `/app/activate/page.tsx` — pantalla neta amb un sol camp de 6 caràcters, botó verd "Activar"
+- [x] Crida `POST /auth/activate-device`, rep `device_token` + `patient_id`, guarda amb `setPatientSession`, redirigeix a `/patient`
+- [x] Errors: 404 (codi invàlid), 410 (codi ja usat), missatges en català
 
 ### 2.4 Frontend: landing page i guards
-- [ ] `app/page.tsx`: afegir tercera opció "Activar dispositiu" (icona mòbil) entre "Crear entorn familiar" i "Accedir com a cuidador"
-- [ ] `RoleGuard.tsx`: afegir `/activate` com a ruta accessible sense token
+- [x] `app/page.tsx`: afegida tercera opció "Activar dispositiu" (icona Smartphone, verd) entre "Crear entorn familiar" i "Accedir com a cuidador"
+- [x] `RoleGuard.tsx`: `/activate` ja era accessible sense token (només protegeix `/patient`)
 
 ---
 
