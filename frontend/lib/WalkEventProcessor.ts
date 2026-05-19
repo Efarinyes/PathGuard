@@ -1,16 +1,9 @@
 import { LocationPayload } from '../services/locationService';
 
-export interface DeviceStatus {
-  battery_level: number;
-  is_charging: boolean;
-  timestamp: string;
-}
-
 export interface WalkState {
   currentLocation: LocationPayload | null;
   routeHistory: LocationPayload[];
   isActive: boolean;
-  deviceStatus: DeviceStatus | null;
 }
 
 export interface BatchLocationUpdatePayload {
@@ -58,16 +51,6 @@ export interface WalkEventMessage {
   [key: string]: unknown;
 }
 
-export interface DeviceStatusMessage {
-  type: 'device_status_update';
-  status: DeviceStatus;
-  event_id?: string;
-  timestamp?: string;
-  [key: string]: unknown;
-}
-
-export type WalkMessage = WalkSnapshotMessage | WalkLocationMessage | WalkEventMessage | DeviceStatusMessage;
-
 interface SnapshotPayload {
   active_walk?: ActiveWalkData;
   [key: string]: unknown;
@@ -96,7 +79,6 @@ export type WalkAction =
   | { type: 'WALK_STOPPED' }
   | { type: 'LOCATION_UPDATE'; payload: LocationPayload }
   | { type: 'BATCH_LOCATION_UPDATE'; payload: BatchLocationUpdatePayload }
-  | { type: 'DEVICE_STATUS_UPDATE'; payload: DeviceStatus }
   | { type: 'RESET' };
 
 /**
@@ -119,7 +101,7 @@ export class WalkEventProcessor {
    * Evaluates if a raw message should be processed, based on deduplication and chronological ordering.
    * Returns true if valid, false if it should be ignored.
    */
-  public shouldProcessMessage(message: WalkMessage | null): boolean {
+  public shouldProcessMessage(message: WalkSnapshotMessage | WalkLocationMessage | WalkEventMessage | null): boolean {
     if (!message) return false;
 
     // A. Event Deduplication (Strict UUID check)
@@ -166,13 +148,12 @@ export class WalkEventProcessor {
     switch (action.type) {
       case 'SNAPSHOT': {
         const rawPayload = action.payload as Record<string, unknown>;
-        const deviceStatus = rawPayload.device_status as DeviceStatus | undefined;
         const activeWalk = rawPayload.active_walk as ActiveWalkData | undefined;
         const walkData = activeWalk || rawPayload as unknown as ActiveWalkData | undefined;
         
         if (!walkData || !walkData.id) {
           this.reset();
-          return { isActive: false, currentLocation: null, routeHistory: [], deviceStatus: null };
+          return { isActive: false, currentLocation: null, routeHistory: [] };
         }
 
         const walkId = walkData.id;
@@ -202,8 +183,7 @@ export class WalkEventProcessor {
         return {
           isActive: true,
           routeHistory: history,
-          currentLocation: latestLoc,
-          deviceStatus: deviceStatus || null
+          currentLocation: latestLoc
         };
       }
 
@@ -213,8 +193,7 @@ export class WalkEventProcessor {
         return {
           isActive: true,
           currentLocation: null,
-          routeHistory: [],
-          deviceStatus: state.deviceStatus
+          routeHistory: []
         };
       }
 
@@ -280,16 +259,9 @@ export class WalkEventProcessor {
         };
       }
 
-      case 'DEVICE_STATUS_UPDATE': {
-        return {
-          ...state,
-          deviceStatus: action.payload
-        };
-      }
-
       case 'RESET': {
         this.reset();
-        return { isActive: false, currentLocation: null, routeHistory: [], deviceStatus: null };
+        return { isActive: false, currentLocation: null, routeHistory: [] };
       }
 
       default:

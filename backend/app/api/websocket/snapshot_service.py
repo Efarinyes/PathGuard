@@ -7,7 +7,7 @@ from app.db.models.patient import Patient
 from app.db.state import walk_state_cache
 from app.core.utils import format_timestamp_utc
 from app.core.constants import MAX_LOCATION_HISTORY
-from app.api.websocket.connection_manager import ConnectionManager, _patient_device_status_store
+from app.api.websocket.connection_manager import ConnectionManager
 
 
 class SnapshotService:
@@ -30,8 +30,7 @@ class SnapshotService:
             "group_id": group_id,
             "watchers_count": watchers_count,
             "server_timestamp": format_timestamp_utc(datetime.now(timezone.utc)),
-            "active_walk": None,
-            "device_status": _patient_device_status_store.get(group_id)
+            "active_walk": None
         }
 
         if active_walk:

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Shield, Users, Heart } from 'lucide-react';
+import { Shield, Users, Heart, Smartphone } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -30,6 +30,14 @@ export default function Home() {
             </Link>
             
             <Link
+              href="/activate"
+              className="flex items-center justify-center gap-3 w-full py-4 px-6 bg-[#22C55E] hover:bg-[#22C55E]/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-green-900/10"
+            >
+              <Smartphone className="w-5 h-5" />
+              Activar dispositiu
+            </Link>
+
+            <Link
               href="/caregiver"
               className="flex items-center justify-center gap-3 w-full py-4 px-6 bg-white border-2 border-slate-200 hover:border-[#1E3A8A]/30 text-[#0F172A] font-bold rounded-xl transition-all"
             >
@@ -39,7 +47,7 @@ export default function Home() {
           </div>
 
           <p className="text-slate-400 text-sm mt-8">
-            Si ja formes part d&apos;un grup, demanar al propietari un codi d&apos;invitació
+            Si ja formes part d&apos;un grup, demana al propietari un codi d&apos;invitació
           </p>
         </div>
       </div>

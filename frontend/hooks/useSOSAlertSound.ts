@@ -8,16 +8,20 @@ interface UseSOSAlertSoundReturn {
   isPlaying: boolean;
 }
 
-const BEEP_FREQUENCY_HZ = 1500;
-const BEEP_DURATION_MS = 100;
-const BEEP_GAP_MS = 100;
-const BEEP_REPEAT = 225;
+const CHIME_NOTES = [440, 523, 660];
+const TONE_DURATION_S = 0.5;
+const TONE_GAP_S = 0.3;
+const CHIME_PAUSE_S = 1.0;
+const CHIME_CYCLES = 3;
 
 export function useSOSAlertSound(): UseSOSAlertSoundReturn {
   const audioContextRef = useRef<AudioContext | null>(null);
   const isPlayingRef = useRef(false);
+  const timeoutsRef = useRef<number[]>([]);
 
   const stopAlertSound = useCallback(() => {
+    timeoutsRef.current.forEach(clearTimeout);
+    timeoutsRef.current = [];
     if (audioContextRef.current) {
       audioContextRef.current.close().catch(() => {});
       audioContextRef.current = null;
@@ -29,45 +33,45 @@ export function useSOSAlertSound(): UseSOSAlertSoundReturn {
     if (isPlayingRef.current) return;
 
     try {
-      audioContextRef.current = new AudioContext();
+      const ctx = new AudioContext();
+      audioContextRef.current = ctx;
       isPlayingRef.current = true;
 
-      const ctx = audioContextRef.current;
-      let beepIndex = 0;
+      let offset = ctx.currentTime + 0.05;
 
-      function playBeep() {
-        if (!isPlayingRef.current || beepIndex >= BEEP_REPEAT) {
-          stopAlertSound();
-          return;
+      for (let cycle = 0; cycle < CHIME_CYCLES; cycle++) {
+        for (let i = 0; i < CHIME_NOTES.length; i++) {
+          const freq = CHIME_NOTES[i];
+          const oscillator = ctx.createOscillator();
+          const gainNode = ctx.createGain();
+
+          oscillator.connect(gainNode);
+          gainNode.connect(ctx.destination);
+
+          oscillator.frequency.value = freq;
+          oscillator.type = 'sine';
+
+          gainNode.gain.setValueAtTime(0.001, offset);
+          gainNode.gain.linearRampToValueAtTime(0.25, offset + 0.08);
+          gainNode.gain.setValueAtTime(0.25, offset + TONE_DURATION_S - 0.1);
+          gainNode.gain.linearRampToValueAtTime(0.001, offset + TONE_DURATION_S);
+
+          oscillator.start(offset);
+          oscillator.stop(offset + TONE_DURATION_S);
+
+          offset += TONE_DURATION_S + TONE_GAP_S;
         }
 
-        const oscillator = ctx.createOscillator();
-        const gainNode = ctx.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(ctx.destination);
-
-        oscillator.frequency.value = BEEP_FREQUENCY_HZ;
-        oscillator.type = 'sine';
-
-        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + BEEP_DURATION_MS / 1000);
-
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + BEEP_DURATION_MS / 1000);
-
-        beepIndex++;
-
-        if (beepIndex < BEEP_REPEAT) {
-          setTimeout(playBeep, BEEP_DURATION_MS + BEEP_GAP_MS);
-        } else {
-          setTimeout(() => {
-            stopAlertSound();
-          }, BEEP_DURATION_MS + BEEP_GAP_MS);
+        if (cycle < CHIME_CYCLES - 1) {
+          offset += CHIME_PAUSE_S;
         }
       }
 
-      playBeep();
+      const totalTimeMs = (offset - ctx.currentTime) * 1000 + 200;
+      const tid = window.setTimeout(() => {
+        stopAlertSound();
+      }, totalTimeMs);
+      timeoutsRef.current.push(tid);
     } catch {
       isPlayingRef.current = false;
     }

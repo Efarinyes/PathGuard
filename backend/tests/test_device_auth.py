@@ -23,7 +23,7 @@ def test_device_auth_valid_token(client: TestClient, db: Session, group):
     Expect: 200 OK
     """
     # Setup Patient — group_id is required (nullable=False)
-    token = uuid4()
+    token = str(uuid4())
     patient = Patient(name="Device Auth Patient", device_token=token, group_id=group.id)
     db.add(patient)
     db.commit()
