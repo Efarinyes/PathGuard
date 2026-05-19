@@ -69,9 +69,9 @@ export default function CaregiverDashboard() {
     if (isLoading || !isActive) return;
 
     if (!isPatientConnected) {
-      setNotification({ message: 'El pacient ha perdut la cobertura', type: 'warning' });
+      setNotification({ message: 'El familiar ha perdut la cobertura', type: 'warning' });
     } else {
-      setNotification({ message: 'El pacient ha recuperat la cobertura', type: 'info' });
+      setNotification({ message: 'El familiar ha recuperat la cobertura', type: 'info' });
     }
   }, [isPatientConnected, isActive, isLoading]);
 

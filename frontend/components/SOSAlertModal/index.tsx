@@ -11,7 +11,7 @@ interface SOSAlertModalProps {
 
 const ALERT_DURATION_MS = 45000;
 
-export default function SOSAlertModal({ patientName = 'el pacient', durationMs = ALERT_DURATION_MS }: SOSAlertModalProps) {
+export default function SOSAlertModal({ patientName = 'la persona', durationMs = ALERT_DURATION_MS }: SOSAlertModalProps) {
   const { activeAlert, dismissAlert } = useSOSAlert();
   const { playAlertSound, stopAlertSound } = useSOSAlertSound();
 

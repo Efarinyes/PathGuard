@@ -153,7 +153,7 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
                 Habilitar avís d&apos;emergència (SOS)
               </label>
               <p className="text-slate-500 mt-0.5">
-                Quan estigui activat, el pacient podrà demanar ajuda prement un botó. Els cuidadors rebran una notificació d&apos;emergència.
+                Quan estigui activat, el familiar podrà demanar ajuda prement un botó. Els cuidadors rebran una notificació d&apos;emergència.
               </p>
             </div>
           </div>
