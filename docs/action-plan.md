@@ -78,18 +78,18 @@
 - [x] Verificar que `sos_count` i `walk_id` no es mostren al SOS modal ✓
 - [x] Verificar que `CaregiverAnalytics` està fora de la vista de monitorització activa ✓
 - [x] Executar `pytest` i `npm run build` — 27/27 tests pass, frontend build pass ✓ (1 test previ falla, no relacionat amb canvis)
-### Auditoria post-Fase 2 (Registre/Activació)
-- [ ] Verificar que el model `Patient` té `activation_code` i `activation_code_used`
-- [ ] Verificar que `POST /auth/activate-device` funciona: rep codi → retorna device_token
-- [ ] Verificar que `POST /auth/register` retorna `activation_code` a la resposta
-- [ ] Verificar que `GET /patient/activation-code` (owner) funciona i pot regenerar el codi
-- [ ] Verificar que `RegistrationForm` no té el checkbox "activa com a pacient"
-- [ ] Verificar que la pantalla post-registre mostra el codi d'activació
-- [ ] Verificar que `/activate` existeix, demana el codi, valida, guarda token, redirigeix a `/patient`
-- [ ] Verificar que la landing page té 3 opcions (registre / login / activar dispositiu)
-- [ ] Verificar que `RoleGuard` permet accedir a `/activate` sense token
-- [ ] Prova completa: registre → obtenir codi → activar des d'un altre dispositiu → veure `/patient`
-- [ ] Prova de regressió: el flux existent de cuidador (registre + login + invitació) segueix funcionant
+### Auditoria post-Fase 2 (Registre/Activació) ✅ VERIFICADA (2026-05-19)
+- [x] Verificar que el model `Patient` té `activation_code` i `activation_code_used` ✓
+- [x] Verificar que `POST /auth/activate-device` funciona: rep codi → retorna device_token ✓
+- [x] Verificar que `POST /auth/register` retorna `activation_code` a la resposta ✓
+- [x] Verificar que `GET /patient/activation-code` (owner) funciona i pot regenerar el codi ✓
+- [x] Verificar que `RegistrationForm` no té el checkbox "activa com a pacient" ✓
+- [x] Verificar que la pantalla post-registre mostra el codi d'activació ✓
+- [x] Verificar que `/activate` existeix, demana el codi, valida, guarda token, redirigeix a `/patient` ✓
+- [x] Verificar que la landing page té 3 opcions (registre / login / activar dispositiu) ✓
+- [x] Verificar que `RoleGuard` permet accedir a `/activate` sense token ✓
+- [x] Prova completa: registre → obtenir codi → activar des d'un altre dispositiu → veure `/patient` ✓
+- [x] Prova de regressió: el flux existent de cuidador (registre + login + invitació) segueix funcionant ✓
 ### Auditoria post-Fase 3 (Poliment) ✅ VERIFICADA (2026-05-19)
 - [x] Verificar que "pacient" ja no apareix a les strings visibles en català (substituït per "familiar"/"persona") ✓
 - [x] Verificar que `smoothTrajectory()` està eliminat de `trajectoryService.ts` ✓
