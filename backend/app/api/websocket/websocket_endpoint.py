@@ -1,7 +1,6 @@
 import asyncio
 import logging
 from typing import Optional
-from datetime import datetime, timezone
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends
 from sqlalchemy.orm import Session
 from app.api import deps
@@ -67,19 +66,6 @@ async def _handle_patient_loop(websocket: WebSocket, group_id: int):
                 if PresenceTracker.get_patient_status(group_id) != "online":
                     PresenceTracker.set_patient_online(group_id)
                     await connection_manager.broadcast_to_group(group_id, {"type": "patient_online"})
-
-            elif data.get("type") == "device_status_update":
-                PresenceTracker.update_device_status(
-                    group_id,
-                    data.get("battery_level"),
-                    data.get("is_charging")
-                )
-                device_status = PresenceTracker.get_device_status(group_id)
-                device_status["timestamp"] = datetime.now(timezone.utc).isoformat()
-                await connection_manager.broadcast_to_group(group_id, {
-                    "type": "device_status_update",
-                    "status": device_status
-                })
 
         except asyncio.TimeoutError:
             if PresenceTracker.get_patient_status(group_id) == "online":

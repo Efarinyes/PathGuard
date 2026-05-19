@@ -57,7 +57,7 @@ def test_websocket_receive_updates(
     if not patient:
         patient = Patient(
             name="WS Test Patient",
-            device_token=uuid4(),
+            device_token=str(uuid4()),
             group_id=caregiver_user.group_id
         )
         db.add(patient)

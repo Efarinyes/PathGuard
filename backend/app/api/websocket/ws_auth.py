@@ -1,4 +1,3 @@
-import uuid
 from typing import Optional, Tuple
 from sqlalchemy.orm import Session
 from app.core.security.jwt import verify_token
@@ -26,12 +25,8 @@ class WSAuth:
                     pass
 
         if patient_token:
-            try:
-                token_uuid = uuid.UUID(patient_token)
-                patient = db.query(Patient).filter(Patient.device_token == token_uuid).first()
-                if patient:
-                    return patient.group_id, "patient", None
-            except ValueError:
-                pass
+            patient = db.query(Patient).filter(Patient.device_token == patient_token).first()
+            if patient:
+                return patient.group_id, "patient", None
 
         return None, None, None

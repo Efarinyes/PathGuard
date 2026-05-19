@@ -88,7 +88,7 @@ def isolate(db: Session):
 @pytest.fixture
 def patient(db: Session, group) -> Patient:
     """A standalone Patient with a known device_token."""
-    p = Patient(name="GPS Patient", device_token=uuid4(), group_id=group.id)
+    p = Patient(name="GPS Patient", device_token=str(uuid4()), group_id=group.id)
     db.add(p)
     db.commit()
     db.refresh(p)
@@ -113,7 +113,7 @@ def linked_patient(db: Session, caregiver_user: User) -> Patient:
 
     p = Patient(
         name="Linked Patient",
-        device_token=uuid4(),
+        device_token=str(uuid4()),
         group_id=caregiver_user.group_id
     )
     db.add(p)

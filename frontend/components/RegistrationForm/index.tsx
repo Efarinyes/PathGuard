@@ -3,23 +3,15 @@
 import React, { useState } from 'react';
 import { API_BASE_URL } from '@/lib/config';
 
-
-
 export interface RegistrationFormProps {
-  /** Callback fired upon successful registration, providing the deviceToken, patientId, and activation preference */
-  onRegisterSuccess: (deviceToken: string, patientId: number, activateAsPatient: boolean) => void;
+  onRegisterSuccess: (deviceToken: string, patientId: number, caregiverJwt: string, activationCode: string) => void;
 }
 
-/**
- * Clean, minimalistic registration form.
- * Directly integrates with the backend /register endpoint.
- */
 export default function RegistrationForm({ onRegisterSuccess }: RegistrationFormProps) {
   const [groupName, setGroupName] = useState('');
   const [patientName, setPatientName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [activateAsPatient, setActivateAsPatient] = useState(true);
   const [sosEnabled, setSosEnabled] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +22,7 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
     setIsLoading(true);
     setError(null);
 
-      try {
+    try {
       const payload = {
         group_name: groupName,
         patient_name: patientName,
@@ -53,15 +45,13 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
 
       const data = await response.json();
 
-      // Reset form fields
       setGroupName('');
       setPatientName('');
       setEmail('');
       setPassword('');
 
-      // Ensure state is updated and then redirect via callback
       if (data.device_token || data.patient_id) {
-        onRegisterSuccess(data.device_token, data.patient_id, activateAsPatient);
+        onRegisterSuccess(data.device_token, data.patient_id, data.caregiver_jwt, data.activation_code);
       }
     } catch (err: any) {
       setError(err.message || 'Hi ha hagut un problema en connectar.');
@@ -103,7 +93,7 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
 
           <div className="flex flex-col gap-2">
             <label htmlFor="patientName" className="text-sm font-bold text-[#0F172A] ml-1">
-              Qui portarà el dispositiu? (Nom del Pacient)
+              Qui portarà el dispositiu? (Nom)
             </label>
             <input
               id="patientName"
@@ -148,26 +138,6 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
             />
           </div>
 
-          <div className="flex items-start gap-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100/50 mt-2">
-            <div className="flex items-center h-5">
-              <input
-                id="activateAsPatient"
-                type="checkbox"
-                checked={activateAsPatient}
-                onChange={(e) => setActivateAsPatient(e.target.checked)}
-                className="w-5 h-5 text-[#1E3A8A] border-slate-300 rounded focus:ring-[#1E3A8A] transition-all cursor-pointer"
-              />
-            </div>
-            <div className="text-sm">
-              <label htmlFor="activateAsPatient" className="font-bold text-[#1E3A8A] cursor-pointer">
-                Activa aquest dispositiu per al pacient
-              </label>
-              <p className="text-slate-500 mt-0.5">
-                Si marques aquesta opció, aquest mòbil es convertirà en el dispositiu de seguiment i quedarà bloquejat a la pantalla del pacient.
-              </p>
-            </div>
-          </div>
-
           <div className="flex items-start gap-3 p-4 bg-red-50/50 rounded-xl border border-red-100/50 mt-2">
             <div className="flex items-center h-5">
               <input
@@ -180,10 +150,10 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
             </div>
             <div className="text-sm">
               <label htmlFor="sosEnabled" className="font-bold text-[#DC2626] cursor-pointer">
-                Habilitar avís d'emergència (SOS)
+                Habilitar avís d&apos;emergència (SOS)
               </label>
               <p className="text-slate-500 mt-0.5">
-                Quan estigui activat, el pacient podrà demanar ajuda prement un botó. Els cuidadors rebutjaran una notificació d'emergència.
+                Quan estigui activat, el pacient podrà demanar ajuda prement un botó. Els cuidadors rebran una notificació d&apos;emergència.
               </p>
             </div>
           </div>
@@ -194,7 +164,7 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
           disabled={isLoading}
           className="w-full mt-4 bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white font-bold py-4 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E3A8A] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/10 transition-all"
         >
-          {isLoading ? 'Creant entorn...' : 'Continuar cap a l\'activació'}
+          {isLoading ? 'Creant entorn...' : 'Crear entorn familiar'}
         </button>
       </form>
     </div>

@@ -6,7 +6,7 @@ interface CaregiverDashboardLayoutProps {
   headerSection: ReactNode;
   mapSection: ReactNode;
   statusCard: ReactNode;
-  analyticsSection: ReactNode;
+  analyticsSection?: ReactNode;
   walkHistory: ReactNode;
   inviteModal: ReactNode;
 }

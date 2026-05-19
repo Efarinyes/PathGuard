@@ -13,7 +13,7 @@ from app.db.models.location import Location
 
 def _create_patient_and_walk(db: Session, group: Group) -> tuple[Patient, Walk]:
     """Helper: create a patient in the group and an active walk for them."""
-    patient = Patient(name="Loc Patient", device_token=uuid4(), group_id=group.id)
+    patient = Patient(name="Loc Patient", device_token=str(uuid4()), group_id=group.id)
     db.add(patient)
     db.commit()
     db.refresh(patient)
@@ -68,7 +68,7 @@ def test_location_ingestion_caregiver_auth(
     if not patient:
         patient = Patient(
             name="Caregiver's Loc Patient",
-            device_token=uuid4(),
+            device_token=str(uuid4()),
             group_id=caregiver_user.group_id
         )
         db.add(patient)

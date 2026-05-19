@@ -11,7 +11,7 @@ from app.db.models.walk import Walk
 
 def test_start_walk_patient_auth(client: TestClient, db: Session, group: Group):
     """Patient can start a walk using their device token."""
-    token = uuid4()
+    token = str(uuid4())
     patient = Patient(name="Walk Patient", device_token=token, group_id=group.id)
     db.add(patient)
     db.commit()
@@ -44,7 +44,7 @@ def test_start_walk_caregiver_auth(
     if not existing_patient:
         existing_patient = Patient(
             name="Caregiver's Patient",
-            device_token=uuid4(),
+            device_token=str(uuid4()),
             group_id=caregiver_user.group_id
         )
         db.add(existing_patient)

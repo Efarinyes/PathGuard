@@ -57,19 +57,6 @@ export default function SOSAlertModal({ patientName = 'el pacient', durationMs =
           </p>
         </div>
 
-        <div className="flex flex-col gap-2 text-sm text-slate-500 text-center">
-          <p>
-            <span className="font-medium">Cops enviat: </span>
-            {activeAlert.sos_count}
-          </p>
-          {activeAlert.walk_id && (
-            <p>
-              <span className="font-medium">Passeig: </span>
-              #{activeAlert.walk_id}
-            </p>
-          )}
-        </div>
-
         <button
           onClick={dismissAlert}
           className="w-full bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white font-bold py-4 px-6 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E3A8A]"

@@ -160,3 +160,74 @@ def check_invitation(
     Returns: { valid: bool, email: str | None, group_name: str | None }
     """
     return invitation_service.check_invitation(db=db, code=code)
+
+@router.post("/activate-device", response_model=auth_schemas.ActivateDeviceResponse)
+def activate_device(
+    data: auth_schemas.ActivateDeviceRequest,
+    db: Session = Depends(deps.get_db)
+) -> Any:
+    """
+    Activate a patient device using an activation code.
+    No authentication required — the code itself is the credential.
+    Returns the device_token and patient_id for the patient's device to store.
+    """
+    code = data.code.strip().upper()
+    patient = db.query(Patient).filter(Patient.activation_code == code).first()
+
+    if not patient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invalid activation code"
+        )
+
+    if patient.activation_code_used:
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="Activation code already used"
+        )
+
+    patient.activation_code_used = True
+    db.commit()
+    db.refresh(patient)
+
+    logger.info(f"Device activated for patient {patient.id} (group {patient.group_id})")
+
+    return {
+        "device_token": patient.device_token,
+        "patient_id": patient.id
+    }
+
+@router.get("/patient/activation-code", response_model=auth_schemas.ActivationCodeResponse)
+def get_activation_code(
+    current_user: User = Depends(deps.get_current_caregiver),
+    db: Session = Depends(deps.get_db)
+) -> Any:
+    """
+    Get or regenerate the activation code for the patient in the current user's group.
+    Only the group owner can access this endpoint.
+    """
+    if not current_user.is_owner:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the group owner can view the activation code"
+        )
+
+    patient = db.query(Patient).filter(Patient.group_id == current_user.group_id).first()
+
+    if not patient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No patient found in this group"
+        )
+
+    if patient.activation_code_used:
+        from app.db.models.patient import _generate_activation_code
+        patient.activation_code = _generate_activation_code()
+        patient.activation_code_used = False
+        db.commit()
+        db.refresh(patient)
+
+    return {
+        "activation_code": patient.activation_code,
+        "is_used": patient.activation_code_used
+    }

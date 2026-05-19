@@ -87,7 +87,7 @@ def patient_with_caregiver(db: Session, caregiver_user: User) -> Patient:
 
     patient = Patient(
         name="Test Patient",
-        device_token=uuid.uuid4(),
+        device_token=str(uuid.uuid4()),
         group_id=caregiver_user.group_id  # Group-based architecture
     )
     db.add(patient)
