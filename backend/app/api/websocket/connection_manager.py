@@ -89,12 +89,7 @@ class ConnectionManager:
     def patient_status(self) -> Dict[int, str]:
         return _patient_status_store
 
-    @property
-    def patient_device_status(self) -> Dict[int, dict]:
-        return _patient_device_status_store
-
 
 _patient_status_store: Dict[int, str] = {}
-_patient_device_status_store: Dict[int, dict] = {}
 
 connection_manager = ConnectionManager()

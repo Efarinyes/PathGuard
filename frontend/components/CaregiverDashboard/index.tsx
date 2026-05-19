@@ -10,7 +10,7 @@ import { useSOSAlert } from '@/hooks/useSOSAlert';
 import { useAppState } from '@/hooks/useAppState';
 import { walkService } from '@/services/walkService';
 import { useCaregiverAnalytics } from '@/hooks/useCaregiverAnalytics';
-import { formatTimeAgo, formatBatteryTime } from '@/lib/formatTimeAgo';
+import { formatTimeAgo } from '@/lib/formatTimeAgo';
 
 import CaregiverHeader from './CaregiverHeader';
 import PatientStatusCard from './PatientStatusCard';
@@ -20,10 +20,9 @@ import CaregiverDashboardLayout from './CaregiverDashboardLayout';
 export default function CaregiverDashboard() {
   const { userToken } = useAppState();
   const locationHook = useLivePatientLocation();
-  const { currentLocation, routeHistory, isConnected, isPatientConnected, isLoading, isActive, deviceStatus, latestSosData } = locationHook;
+  const { currentLocation, routeHistory, isConnected, isPatientConnected, isLoading, isActive, latestSosData } = locationHook;
   const { showAlert } = useSOSAlert();
   const [timeAgo, setTimeAgo] = useState<string>('Esperant dades...');
-  const [batteryTimeAgo, setBatteryTimeAgo] = useState<string>('');
   const [notification, setNotification] = useState<{ message: string, type: 'info' | 'warning' } | null>(null);
 
   const [patientName, setPatientName] = useState<string>('el Pacient');
@@ -65,18 +64,6 @@ export default function CaregiverDashboard() {
 
     return () => clearInterval(updateTimer);
   }, [currentLocation]);
-
-  useEffect(() => {
-    if (!deviceStatus?.timestamp) return;
-
-    const update = () => {
-      setBatteryTimeAgo(formatBatteryTime(deviceStatus.timestamp));
-    };
-
-    update();
-    const timer = setInterval(update, 30000);
-    return () => clearInterval(timer);
-  }, [deviceStatus]);
 
   useEffect(() => {
     if (isLoading || !isActive) return;
@@ -131,9 +118,7 @@ export default function CaregiverDashboard() {
             isPatientConnected={isPatientConnected}
             currentLocation={currentLocation}
             routeHistory={routeHistory}
-            deviceStatus={deviceStatus}
             timeAgo={timeAgo}
-            batteryTimeAgo={batteryTimeAgo}
           />
         }
         walkHistory={

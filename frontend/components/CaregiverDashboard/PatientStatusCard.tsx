@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { formatTimeAgo, formatBatteryTime } from '@/lib/formatTimeAgo';
+import { formatTimeAgo } from '@/lib/formatTimeAgo';
 
 interface PatientStatusCardProps {
   isConnected: boolean;
@@ -9,9 +9,7 @@ interface PatientStatusCardProps {
   isPatientConnected: boolean;
   currentLocation: { timestamp: string } | null;
   routeHistory: unknown[];
-  deviceStatus: { battery_level: number; is_charging: boolean; timestamp: string } | null;
   timeAgo: string;
-  batteryTimeAgo: string;
 }
 
 export default function PatientStatusCard({
@@ -20,9 +18,7 @@ export default function PatientStatusCard({
   isPatientConnected,
   currentLocation,
   routeHistory,
-  deviceStatus,
   timeAgo,
-  batteryTimeAgo,
 }: PatientStatusCardProps) {
   const getStatusColor = () => {
     if (!isConnected || !isActive) return 'bg-slate-400';
@@ -67,29 +63,6 @@ export default function PatientStatusCard({
         <div>
           <p className="text-sm text-slate-500 font-medium mb-1">Punts de ruta</p>
           <p className="text-[#0F172A] font-semibold">{routeHistory.length}</p>
-        </div>
-      )}
-
-      {isActive && (
-        <div>
-          <p className="text-sm text-slate-500 font-medium mb-1">Estat de la bateria</p>
-          {deviceStatus ? (
-            deviceStatus.battery_level === -1 ? (
-              <p className="text-slate-400 text-sm italic">No disponible en el dispositiu</p>
-            ) : (
-              <p className="text-[#0F172A] font-semibold flex items-center gap-1.5">
-                <span role="img" aria-label="battery">
-                  {deviceStatus.is_charging ? '⚡🔋' : deviceStatus.battery_level > 20 ? '🔋' : '🪫'}
-                </span>
-                {deviceStatus.battery_level}%
-                <span className="text-xs text-slate-400 font-normal ml-1">
-                  ({batteryTimeAgo})
-                </span>
-              </p>
-            )
-          ) : (
-            <p className="text-slate-400 text-sm italic">Pendent de rebre dades...</p>
-          )}
         </div>
       )}
     </div>
