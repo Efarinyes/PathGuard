@@ -22,12 +22,14 @@ describe('RegistrationForm Component', () => {
   it('Scenario 1: Successful Registration and Redirect', async () => {
     const mockOnSuccess = vi.fn();
     (global.fetch as any).mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        device_token: 'test-token',
-        patient_id: 123
-      }),
-    });
+        ok: true,
+        json: async () => ({
+          device_token: 'test-token',
+          patient_id: 123,
+          caregiver_jwt: 'jwt-token',
+          activation_code: 'ABC123',
+        }),
+      });
 
     render(
       <AppStateProvider>
@@ -37,15 +39,15 @@ describe('RegistrationForm Component', () => {
 
     // Fill form
     fireEvent.change(screen.getByLabelText(/Nom de la Família/i), { target: { value: 'Família Soler' } });
-    fireEvent.change(screen.getByLabelText(/Nom del Pacient/i), { target: { value: 'Joan' } });
+    fireEvent.change(screen.getByLabelText(/Qui portarà el dispositiu/i), { target: { value: 'Joan' } });
     fireEvent.change(screen.getByLabelText(/El teu correu/i), { target: { value: 'joan@example.com' } });
     fireEvent.change(screen.getByLabelText(/Contrasenya de seguretat/i), { target: { value: 'password123' } });
 
     // Submit
-    fireEvent.click(screen.getByRole('button', { name: /Continuar cap a l'activació/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Crear entorn familiar/i }));
 
     await waitFor(() => {
-      expect(mockOnSuccess).toHaveBeenCalledWith('test-token', 123, true);
+      expect(mockOnSuccess).toHaveBeenCalledWith('test-token', 123, 'jwt-token', 'ABC123');
     });
 
     // Verify fetch call
@@ -75,11 +77,11 @@ describe('RegistrationForm Component', () => {
     );
 
     fireEvent.change(screen.getByLabelText(/Nom de la Família/i), { target: { value: 'Família Soler' } });
-    fireEvent.change(screen.getByLabelText(/Nom del Pacient/i), { target: { value: 'Joan' } });
+    fireEvent.change(screen.getByLabelText(/Qui portarà el dispositiu/i), { target: { value: 'Joan' } });
     fireEvent.change(screen.getByLabelText(/El teu correu/i), { target: { value: 'joan@example.com' } });
     fireEvent.change(screen.getByLabelText(/Contrasenya de seguretat/i), { target: { value: 'password123' } });
 
-    fireEvent.click(screen.getByRole('button', { name: /Continuar cap a l'activació/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Crear entorn familiar/i }));
 
     // Assert UI shows error
     await waitFor(() => {
@@ -99,11 +101,11 @@ describe('RegistrationForm Component', () => {
     );
 
     fireEvent.change(screen.getByLabelText(/Nom de la Família/i), { target: { value: 'Família Soler' } });
-    fireEvent.change(screen.getByLabelText(/Nom del Pacient/i), { target: { value: 'Joan' } });
+    fireEvent.change(screen.getByLabelText(/Qui portarà el dispositiu/i), { target: { value: 'Joan' } });
     fireEvent.change(screen.getByLabelText(/El teu correu/i), { target: { value: 'joan@example.com' } });
     fireEvent.change(screen.getByLabelText(/Contrasenya de seguretat/i), { target: { value: 'password123' } });
 
-    fireEvent.click(screen.getByRole('button', { name: /Continuar cap a l'activació/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Crear entorn familiar/i }));
 
     // Check button text changes
     expect(screen.getByRole('button')).toHaveTextContent(/Creant entorn/i);

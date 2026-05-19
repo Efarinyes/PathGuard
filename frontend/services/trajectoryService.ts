@@ -57,27 +57,7 @@ export const trajectoryService = {
   },
 
   /**
-   * Applies a lightweight moving average smoothing (last 3 points).
-   * For VISUALIZATION layer only.
-   */
-  smoothTrajectory(points: GPSPoint[]): GPSPoint[] {
-    if (points.length < 3) return points;
 
-    return points.map((p, i, arr) => {
-      if (i === 0 || i === arr.length - 1) return p; // Keep endpoints raw
-
-      const pPrev = arr[i - 1];
-      const pNext = arr[i + 1];
-
-      return {
-        ...p,
-        latitude: (pPrev.latitude + p.latitude + pNext.latitude) / 3,
-        longitude: (pPrev.longitude + p.longitude + pNext.longitude) / 3,
-      };
-    });
-  },
-
-  /**
    * Validates walk integrity (Monotonicity and Continuity).
    */
   validateIntegrity(points: GPSPoint[]): { valid: boolean; errors: string[] } {

@@ -59,13 +59,13 @@
 
 ---
 
-## Fase 3 — Poliment pre-beta
+## Fase 3 — Poliment pre-beta ✅ COMPLETADA (2026-05-19, branca `fix/phase3-poliment`)
 
 ### 3.1 Llenguatge
-- [ ] Renombrar UI strings: "pacient" → "familiar" o "persona" en català (component names i backend models queden per post-beta)
+- [x] Renombrar UI strings: "pacient" → "familiar" o "persona" en català (component names i backend models queden per post-beta)
 
 ### 3.2 Netesa de codi
-- [ ] `trajectoryService.ts`: eliminar `smoothTrajectory()` (mètode no utilitzat)
+- [x] `trajectoryService.ts`: eliminar `smoothTrajectory()` (mètode no utilitzat)
 
 ---
 ## Punts d'auditoria (revisió després de cada fase)
@@ -90,10 +90,10 @@
 - [ ] Verificar que `RoleGuard` permet accedir a `/activate` sense token
 - [ ] Prova completa: registre → obtenir codi → activar des d'un altre dispositiu → veure `/patient`
 - [ ] Prova de regressió: el flux existent de cuidador (registre + login + invitació) segueix funcionant
-### Auditoria post-Fase 3 (Poliment)
-- [ ] Verificar que "pacient" ja no apareix a les strings visibles en català (substituït per "familiar"/"persona")
-- [ ] Verificar que `smoothTrajectory()` està eliminat de `trajectoryService.ts`
-- [ ] Executar `pytest` i `npm run build` sense errors
+### Auditoria post-Fase 3 (Poliment) ✅ VERIFICADA (2026-05-19)
+- [x] Verificar que "pacient" ja no apareix a les strings visibles en català (substituït per "familiar"/"persona") ✓
+- [x] Verificar que `smoothTrajectory()` està eliminat de `trajectoryService.ts` ✓
+- [x] Executar `pytest` i `npm run build` sense errors ✓ (152/152 backend tests, frontend build pass, 3 pre-existing test failures unrelated to changes)
 
 ## Fase 4 — Post-beta
 

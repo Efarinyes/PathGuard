@@ -56,9 +56,9 @@
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "Mode Pacient",
-      "short_name": "Pacient",
-      "description": "Inicia el seguiment del pacient",
+      "name": "Mode Seguiment",
+      "short_name": "Seguiment",
+      "description": "Inicia el seguiment del familiar",
       "url": "/patient",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }

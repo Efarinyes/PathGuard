@@ -15,7 +15,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "PathGuard | Geo-protecció Discreta",
-  description: "Seguiment de geolocalització discret per a pacients i cuidadors.",
+  description: "Seguiment de geolocalització discret per a la persona a càrrec i cuidadors.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
