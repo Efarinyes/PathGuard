@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/lib/config';
+import { LocationPayload } from '@/services/locationService';
 
 export interface WalkHistoryItem {
   id: number;
@@ -105,6 +106,7 @@ export const walkService = {
     patient_name: string;
     group_name: string;
     is_owner: boolean;
+    sos_enabled: boolean;
   }> {
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
       headers: {
@@ -115,6 +117,67 @@ export const walkService = {
 
     if (!response.ok) {
       throw new Error('Failed to fetch user group info');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Fetches the patient activation code for the owner's group.
+   * If the code has been used, the endpoint regenerates it automatically.
+   * Requires owner privileges.
+   */
+  async getActivationCode(token: string): Promise<{
+    activation_code: string;
+    is_used: boolean;
+  }> {
+    const response = await fetch(`${API_BASE_URL}/auth/patient/activation-code`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('No s\'ha pogut obtenir el codi d\'activació');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Toggles the SOS enabled state for the current user's group.
+   * Only the group owner can call this endpoint.
+   */
+  async toggleSOS(token: string): Promise<{ sos_enabled: boolean }> {
+    const response = await fetch(`${API_BASE_URL}/groups/sos-toggle`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('No s\'ha pogut canviar l\'estat SOS');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Fetches locations for a specific walk (owner-only).
+   */
+  async getWalkLocations(token: string, walkId: number): Promise<LocationPayload[]> {
+    const response = await fetch(`${API_BASE_URL}/walks/${walkId}/locations`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('No s\'ha pogut carregar la ruta del passeig');
     }
 
     return response.json();

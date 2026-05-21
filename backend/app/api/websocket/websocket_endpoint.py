@@ -43,8 +43,15 @@ async def websocket_endpoint(
             await _handle_patient_loop(websocket, group_id)
         else:
             await websocket.receive_text()
-    except (WebSocketDisconnect, Exception) as e:
-        logger.warning("Disconnect/Error for %s in group %s: %s", role, group_id, str(e))
+    except WebSocketDisconnect as e:
+        # Code 1005 = normal client close (no status code received), not an error
+        if e.code == 1005:
+            logger.info("Connection closed normally for %s in group %s", role, group_id)
+        else:
+            logger.warning("WebSocket disconnect for %s in group %s: code=%s", role, group_id, e.code)
+        connection_manager.disconnect(websocket, group_id, role)
+    except Exception as e:
+        logger.error("Unexpected error for %s in group %s: %s", role, group_id, str(e))
         connection_manager.disconnect(websocket, group_id, role)
 
         if role == "caregiver":

@@ -97,13 +97,22 @@
 
 ## Fase 4 — Post-beta
 
-### 4.1 Owner Dashboard (`/caregiver/dashboard`)
-Ruta separada, accessible des d'un menú, només per owner. Contingut:
+### 4.1 Owner Dashboard (`/caregiver/dashboard`) ✅ COMPLETADA (2026-05-21, branca `feat/phase4-owner-dashboard`)
 
-- [ ] Històric de passejades (data, durada, ruta al mapa)
-- [ ] Activar/desactivar SOS per al pacient
-- [ ] Veure i regenerar codi d'activació del dispositiu
-- [ ] Reutilitzar `CaregiverAnalytics` aquí: freqüència setmanal, durada mitjana, hores habituals — enquadrat com "informació disponible si la vols veure", no com a vigilància passiva
+- [x] Ruta `/caregiver/dashboard` accessible només per owner (auth + owner guard)
+- [x] Menú drawer a `CaregiverHeader` (hamburguesa, fons transparent, transició suau) — component `OwnerMenuDrawer.tsx` extret (SRP)
+- [x] Històric de passejades (data, durada, ruta al mapa) amb detall clic-able només per owner (`WalkDetailModal.tsx`)
+- [x] Activar/desactivar SOS per al pacient (`PATCH /groups/sos-toggle`, backend + `SOSToggle.tsx` frontend)
+- [x] Veure i regenerar codi d'activació del dispositiu (`ActivationCodeDisplay.tsx`, ocult per defecte, botó per revelar)
+- [x] Reutilitzar `CaregiverAnalytics` aquí: freqüència setmanal, durada mitjana, hores habituals — accordion opt-in
+- [x] Neteja arquitectural: hook `useOwnerData()` compartit (DRY), `walkHistory` opcional al layout, `OwnerMenuDrawer` separat (SRP)
+- [x] Correcció so SOS: `ctx.resume()` a `useSOSAlertSound.ts` per navegadors moderns
+- [x] Correcció log backend: codi WebSocket 1005 (tancament normal) logat com a INFO, no WARNING
+
+**Canvis de refactorització:**
+- `CaregiverHeader.tsx` → només header + logout (SRP), drawer mogut a `OwnerMenuDrawer.tsx`
+- `CaregiverDashboard/index.tsx` → usa `useOwnerData()`, sense `CaregiverWalkHistory`
+- `OwnerDashboard/page.tsx` → usa `useOwnerData()`, amb `CaregiverWalkHistory` + `CaregiverAnalytics`
 
 **No inclou:**
 - Pèrdua de cobertura com a mètrica o columna. La pèrdua de cobertura només es mostra com a estat transitori a la UI de monitorització activa ("Reconnectant..."). No es loga, no es comptabilitza, no es mostra al dashboard. Si el cuidador mira l'historial de mapes, les zones sense punts ja són implícitament visibles.

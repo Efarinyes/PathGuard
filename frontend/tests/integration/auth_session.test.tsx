@@ -1,6 +1,7 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AppStateProvider } from '@/hooks/useAppState';
+import { SOSAlertProvider } from '@/hooks/useSOSAlert';
 import CaregiverPage from '@/app/caregiver/page';
 import { RoleGuard } from '@/components/RoleGuard';
 
@@ -25,9 +26,11 @@ describe('Caregiver Session & Protection Integration', () => {
   it('Scenario 3 & 5: Route Protection - Redirects to login if NO token', async () => {
     render(
       <AppStateProvider>
-        <RoleGuard>
-          <CaregiverPage />
-        </RoleGuard>
+        <SOSAlertProvider>
+          <RoleGuard>
+            <CaregiverPage />
+          </RoleGuard>
+        </SOSAlertProvider>
       </AppStateProvider>
     );
 
@@ -44,9 +47,11 @@ describe('Caregiver Session & Protection Integration', () => {
 
     render(
       <AppStateProvider>
-        <RoleGuard>
-          <CaregiverPage />
-        </RoleGuard>
+        <SOSAlertProvider>
+          <RoleGuard>
+            <CaregiverPage />
+          </RoleGuard>
+        </SOSAlertProvider>
       </AppStateProvider>
     );
 
@@ -64,9 +69,11 @@ describe('Caregiver Session & Protection Integration', () => {
 
     render(
       <AppStateProvider>
-        <RoleGuard>
-          <CaregiverPage />
-        </RoleGuard>
+        <SOSAlertProvider>
+          <RoleGuard>
+            <CaregiverPage />
+          </RoleGuard>
+        </SOSAlertProvider>
       </AppStateProvider>
     );
 

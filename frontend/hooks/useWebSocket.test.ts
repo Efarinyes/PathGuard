@@ -79,7 +79,7 @@ describe('useWebSocket', () => {
     it('A1 — creates a WebSocket on mount (enabled=true)', () => {
       renderHook(() => useWebSocket(true));
       expect(mockWsInstances).toHaveLength(1);
-      expect(mockWsInstances[0].url).toContain('127.0.0.1:8000');
+      expect(mockWsInstances[0].url).toContain('localhost:8000');
     });
 
     it('A2 — does NOT create a WebSocket when enabled=false', () => {

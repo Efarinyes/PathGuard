@@ -37,6 +37,9 @@ export function useSOSAlertSound(): UseSOSAlertSoundReturn {
       audioContextRef.current = ctx;
       isPlayingRef.current = true;
 
+      // Ensure audio context is resumed (required by browser autoplay policies)
+      ctx.resume().catch(() => {});
+
       let offset = ctx.currentTime + 0.05;
 
       for (let cycle = 0; cycle < CHIME_CYCLES; cycle++) {

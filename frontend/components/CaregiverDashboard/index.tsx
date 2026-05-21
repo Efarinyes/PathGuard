@@ -8,13 +8,11 @@ import SOSAlertModal from '../SOSAlertModal';
 import { useLivePatientLocation } from '@/hooks/useLivePatientLocation';
 import { useSOSAlert } from '@/hooks/useSOSAlert';
 import { useAppState } from '@/hooks/useAppState';
-import { walkService } from '@/services/walkService';
-import { useCaregiverAnalytics } from '@/hooks/useCaregiverAnalytics';
+import { useOwnerData } from '@/hooks/useOwnerData';
 import { formatTimeAgo } from '@/lib/formatTimeAgo';
 
 import CaregiverHeader from './CaregiverHeader';
 import PatientStatusCard from './PatientStatusCard';
-import CaregiverWalkHistory from './CaregiverWalkHistory';
 import CaregiverDashboardLayout from './CaregiverDashboardLayout';
 
 export default function CaregiverDashboard() {
@@ -24,33 +22,15 @@ export default function CaregiverDashboard() {
   const { showAlert } = useSOSAlert();
   const [timeAgo, setTimeAgo] = useState<string>('Esperant dades...');
   const [notification, setNotification] = useState<{ message: string, type: 'info' | 'warning' } | null>(null);
-
-  const [patientName, setPatientName] = useState<string>('el Pacient');
-  const [isOwner, setIsOwner] = useState<boolean>(false);
-  const [groupName, setGroupName] = useState<string>('');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
-  const { walks } = useCaregiverAnalytics(userToken, isActive);
+  const { patientName, isOwner, groupName } = useOwnerData(userToken);
 
   useEffect(() => {
     if (latestSosData) {
       showAlert(latestSosData);
     }
   }, [latestSosData, showAlert]);
-
-  useEffect(() => {
-    if (!userToken) return;
-
-    walkService.getUserGroupInfo(userToken)
-      .then(data => {
-        setPatientName(data.patient_name);
-        setIsOwner(data.is_owner);
-        setGroupName(data.group_name);
-      })
-      .catch(err => {
-        console.error('Error fetching group info:', err);
-      });
-  }, [userToken]);
 
   useEffect(() => {
     if (!currentLocation?.timestamp) return;
@@ -120,11 +100,6 @@ export default function CaregiverDashboard() {
             routeHistory={routeHistory}
             timeAgo={timeAgo}
           />
-        }
-        walkHistory={
-          <div className="mt-6">
-            <CaregiverWalkHistory walks={walks} onWalkClick={(id) => console.log('View walk map:', id)} />
-          </div>
         }
         inviteModal={
           <InviteCaregiverModal

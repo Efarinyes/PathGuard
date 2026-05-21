@@ -16,16 +16,16 @@ def test_group_isolation_enforcement(client: TestClient, db: Session):
     db.flush()
     patient_a = Patient(name="Patient A", group_id=group_a.id)
     db.add(patient_a)
-    caregiver_a = User(email="a@example.com", hashed_password=hash_password("pw"), group_id=group_a.id, is_caregiver=True)
+    caregiver_a = User(email="a@example.com", hashed_password=hash_password("pw"), group_id=group_a.id, is_caregiver=True, is_owner=True)
     db.add(caregiver_a)
-    
+
     # 2. Setup Group B
     group_b = Group(name="Family B")
     db.add(group_b)
     db.flush()
     patient_b = Patient(name="Patient B", group_id=group_b.id)
     db.add(patient_b)
-    caregiver_b = User(email="b@example.com", hashed_password=hash_password("pw"), group_id=group_b.id, is_caregiver=True)
+    caregiver_b = User(email="b@example.com", hashed_password=hash_password("pw"), group_id=group_b.id, is_caregiver=True, is_owner=True)
     db.add(caregiver_b)
     
     db.commit()
@@ -89,6 +89,6 @@ def test_group_isolation_enforcement(client: TestClient, db: Session):
     db.add(walk_a)
     db.commit()
     
-    # Patient B tries to get A's walk locations
+    # Patient B tries to get A's walk locations — now owner-only, patients cannot access
     response = client.get(f"/api/v1/walks/{walk_a.id}/locations", headers=headers_patient_b)
-    assert response.status_code == 404
+    assert response.status_code == 401

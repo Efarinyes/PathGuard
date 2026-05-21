@@ -47,6 +47,7 @@ class UserGroupInfo(BaseModel):
     patient_name: str
     group_name: str
     is_owner: bool
+    sos_enabled: bool
 
 class ActivateDeviceRequest(BaseModel):
     code: str

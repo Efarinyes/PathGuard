@@ -89,7 +89,8 @@ def get_current_user_info(
     return {
         "patient_name": patient.name if patient else "Pacient",
         "group_name": current_user.group.name if current_user.group else "Grup",
-        "is_owner": current_user.is_owner
+        "is_owner": current_user.is_owner,
+        "sos_enabled": current_user.group.sos_enabled if current_user.group else False
     }
 
 @router.post("/generate-invitation", response_model=auth_schemas.GenerateInvitationResponse)

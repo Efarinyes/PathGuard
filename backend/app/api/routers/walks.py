@@ -4,7 +4,7 @@ from app.db.session import database as db_session
 
 from app.api.users.models import User
 from app.db.models.patient import Patient
-from app.api.dependencies.auth import get_optional_patient, get_optional_caregiver, resolve_patient
+from app.api.dependencies.auth import get_optional_patient, get_optional_caregiver, get_current_caregiver, resolve_patient
 from app.services.walk_service import walk_service
 
 router = APIRouter()
@@ -59,13 +59,24 @@ async def stop_walk(
 def get_walk_locations(
     id: int, 
     db: Session = Depends(db_session.get_db),
-    patient: Patient | None = Depends(get_optional_patient),
-    user: User | None = Depends(get_optional_caregiver)
+    user: User = Depends(get_current_caregiver)
 ):
     """
-    Returns locations for a specific walk, strictly enforced by patient ownership.
+    Returns locations for a specific walk.
+    Only the group owner can access walk detail locations.
     """
-    active_patient = resolve_patient(patient, user)
+    if not user.is_owner:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the group owner can view walk details"
+        )
+    
+    active_patient = user.group.patient if user.group else None
+    if not active_patient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No patient found in this group"
+        )
     
     try:
         return walk_service.get_walk_locations(db=db, walk_id=id, patient=active_patient)
