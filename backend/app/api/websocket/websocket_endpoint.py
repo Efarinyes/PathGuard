@@ -5,7 +5,6 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends
 from sqlalchemy.orm import Session
 from app.api import deps
 from app.api.websocket.connection_manager import ConnectionManager, connection_manager
-from app.api.websocket.presence_tracker import PresenceTracker
 from app.api.websocket.snapshot_service import SnapshotService
 from app.api.websocket.ws_auth import WSAuth
 from app.api.websocket.event_publisher import event_publisher
@@ -59,8 +58,8 @@ async def websocket_endpoint(
 
         if role == "patient":
             if not connection_manager.patient_connections.get(group_id):
-                if PresenceTracker.get_patient_status(group_id) == "online":
-                    PresenceTracker.set_patient_offline(group_id)
+                if connection_manager.get_patient_status(group_id) == "online":
+                    connection_manager.set_patient_offline(group_id)
                     await connection_manager.broadcast_to_group(group_id, {"type": "patient_offline"})
 
 
@@ -70,13 +69,13 @@ async def _handle_patient_loop(websocket: WebSocket, group_id: int):
             data = await asyncio.wait_for(websocket.receive_json(), timeout=HEARTBEAT_TIMEOUT_SECONDS)
 
             if data.get("type") == "heartbeat":
-                if PresenceTracker.get_patient_status(group_id) != "online":
-                    PresenceTracker.set_patient_online(group_id)
+                if connection_manager.get_patient_status(group_id) != "online":
+                    connection_manager.set_patient_online(group_id)
                     await connection_manager.broadcast_to_group(group_id, {"type": "patient_online"})
 
         except asyncio.TimeoutError:
-            if PresenceTracker.get_patient_status(group_id) == "online":
-                PresenceTracker.set_patient_offline(group_id)
+            if connection_manager.get_patient_status(group_id) == "online":
+                connection_manager.set_patient_offline(group_id)
                 await connection_manager.broadcast_to_group(group_id, {"type": "patient_offline"})
 
 

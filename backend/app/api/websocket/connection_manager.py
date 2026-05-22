@@ -16,6 +16,7 @@ class ConnectionManager:
         self.caregivers: Dict[int, Set[int]] = {}
         self.websocket_to_user: Dict[WebSocket, int] = {}
         self.websocket_to_group: Dict[WebSocket, int] = {}
+        self._patient_status_store: Dict[int, str] = {}
 
     async def connect(self, websocket: WebSocket, group_id: int, role: str, user_id: Optional[int] = None):
         await websocket.accept()
@@ -87,9 +88,16 @@ class ConnectionManager:
 
     @property
     def patient_status(self) -> Dict[int, str]:
-        return _patient_status_store
+        return self._patient_status_store
 
+    def set_patient_online(self, group_id: int):
+        self._patient_status_store[group_id] = "online"
 
-_patient_status_store: Dict[int, str] = {}
+    def set_patient_offline(self, group_id: int):
+        self._patient_status_store[group_id] = "offline"
+
+    def get_patient_status(self, group_id: int) -> str:
+        return self._patient_status_store.get(group_id, "offline")
+
 
 connection_manager = ConnectionManager()
