@@ -96,7 +96,7 @@ export default function SOSButton({ deviceToken, patientName }: SOSButtonProps) 
   };
 
   const getButtonClasses = () => {
-    const base = 'w-full min-h-[80px] rounded-2xl shadow-lg transition-all duration-300 focus:outline-none focus:ring-4 flex items-center justify-center';
+    const base = 'w-full min-h-[80px] rounded-2xl shadow-lg flex items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-4';
 
     switch (phase) {
       case 'pressing':
@@ -104,7 +104,7 @@ export default function SOSButton({ deviceToken, patientName }: SOSButtonProps) 
       case 'confirming':
         return `${base} bg-[#22C55E] focus:ring-[#22C55E]/40`;
       default:
-        return `${base} bg-[#EF4444] hover:bg-[#EF4444]/90 active:scale-[0.98] focus:ring-[#EF4444]/30`;
+        return `${base} bg-[#EF4444] hover:bg-[#EF4444]/90 focus:ring-[#EF4444]/30`;
     }
   };
 

@@ -131,12 +131,45 @@
 - `websocket_endpoint.py`: eliminada importació de `PresenceTracker`, 5 crides substituïdes per `connection_manager.*`
 - `presence_tracker.py`: eliminat
 
-### 4.3 Arquitectura frontend
-- [ ] Convertir `locationService` de object literal a classe (eliminar `_resetInternalState()`)
-- [ ] Extreure `useWalkSession` hook de `PatientWalkController` (start/stop walk + auto-recovery)
-- [ ] Eliminar `fetch()` directs de `PatientWalkController` — delegar a `walkService`
-- [ ] Crear `WSEventType` discriminated union per type-safe dispatch a `useLivePatientLocation`
-- [ ] Moure if-else chain de `useLivePatientLocation` a `WalkEventProcessor.classifyEvent()`
+### 4.3 Arquitectura frontend ✅ COMPLETADA (2026-05-22, branca `refactor/phase4-frontend-architecture`)
+
+- [x] Convertir `locationService` de object literal a classe (`LocationService` amb estat privat)
+- [x] Eliminar `_resetInternalState()` del nivell de mòdul (ara és mètode d'instància, reseteja `isSyncing` també)
+- [x] Eliminar 6 `console.log`/`console.debug` de `locationService.ts` (Golden Rule)
+- [x] Extreure `useWalkSession` hook de `PatientWalkController` (start/stop walk + auto-recovery)
+- [x] Afegir `walkService.startWalk()` i `walkService.stopWalk()` — zero `fetch()` directes al component
+- [x] Crear `WSEventType` discriminated union (`frontend/lib/wsEventTypes.ts`)
+- [x] Afegir `WalkEventProcessor.classifyEvent()` amb validació estructural
+- [x] Refactoritzar `useLivePatientLocation` per usar `switch` exhaustiu sobre `classifyEvent`
+- [x] Eliminar `any` tipus a `useLivePatientLocation` i `useWebSocket` (`unknown` en lloc de `any`)
+- [x] `npm run build --webpack` passa, `npm test` 108 passats / 6 skipped (preexistents)
+
+**Canvis:**
+- `frontend/services/locationService.ts`: classe amb estat privat, singleton exportat, zero logs
+- `frontend/lib/wsEventTypes.ts`: nou — 8-tipus discriminated union + type guards
+- `frontend/lib/WalkEventProcessor.ts`: nou mètode `classifyEvent()`, `shouldProcessMessage` accepta `unknown`
+- `frontend/hooks/useLivePatientLocation.ts`: `switch` exhaustiu, zero `any`, `useWebSocket<unknown>`
+- `frontend/hooks/useWalkSession.ts`: nou — encapsula lifecycle walk + auto-recovery stuck-walk
+- `frontend/services/walkService.ts`: nous mètodes `startWalk()`, `stopWalk()`, `StuckWalkError`
+- `frontend/components/PatientWalkController/index.tsx`: ~90 línies menys, zero `fetch()`, SRP pur
+
+---
+
+## TODO — Descoberts durant verificació de la Fase 4.3
+
+### TODO-1: SOS Toggle Real-Time
+**Problema:** Quan l'owner activa SOS des del dashboard (`/caregiver/dashboard`), `/patient` no mostra el botó SOS fins que l'usuari refresca la pàgina.
+**Causa:** `PatientWalkController` consulta `sos_enabled` un cop al mount via `patientService.getPatientStatus()`. No hi ha mecanisme de revalidació en temps real.
+**Comportament actual (acceptable per a beta):** El pacient veurà el botó SOS quan torni a accedir a la PWA (re-login o refresh).
+**Comportament desitjat (post-beta):** Actualització en temps real via WebSocket. El backend enviaria un event `sos_config_changed`; `useLivePatientLocation` escoltaria i actualitzaria `sosEnabled` via `setSosEnabled`.
+**Impacte:** UX/Seguretat — en escenari d'emergència real, el familiar pot no tenir el botó disponible immediatament si l'owner acaba d'activar-lo.
+**Estimació:** 2-3h
+**Prioritat:** Post-beta (no bloquejant per a llançament)
+
+### TODO-2: SOS Button Visual Stabilitat (FIX aplicat 2026-05-22)
+**Problema:** El botó SOS canviava de dimensions/visual quan es premia (`active:scale-[0.98]` + `transition-all`) provocant que el dit sortís de l'àrea en mòbil.
+**Fix:** Canviat `transition-all duration-300` per `transition-colors duration-200`. Eliminat `active:scale-[0.98]`. El botó ara roman estable visualment durant el hold.
+**Fitxer:** `frontend/components/SOSButton/index.tsx`
 
 ### 4.4 So SOS — test d'usuari
 - [ ] Test d'usuari amb resposta emocional al so substituït (chime càlid vs alarm)
