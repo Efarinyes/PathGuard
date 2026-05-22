@@ -4,11 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAppState } from '@/hooks/useAppState';
 import { useLocationTracking } from '@/hooks/useLocationTracking';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { useWalkSession } from '@/hooks/useWalkSession';
 import { locationService } from '@/services/locationService';
 import { patientService } from '@/services/patientService';
 import NotificationBanner from '../NotificationBanner';
 import SOSButton from '../SOSButton';
-import { API_BASE_URL, WS_HEARTBEAT_INTERVAL_MS } from '@/lib/config';
+import { WS_HEARTBEAT_INTERVAL_MS } from '@/lib/config';
 
 interface Notification {
   message: string;
@@ -22,10 +23,9 @@ interface Notification {
  * Enforces the CRITICAL RULESET: single action, minimal text, no jargon.
  */
 export default function PatientWalkController() {
-  const { deviceToken, activeWalkId, startWalk, endWalk, sosEnabled, setSosEnabled } = useAppState();
+  const { deviceToken, activeWalkId, sosEnabled, setSosEnabled } = useAppState();
   const { isTracking, currentPosition, startTracking, stopTracking } = useLocationTracking();
-  const isWalking = activeWalkId !== null;
-  const [isLoading, setIsLoading] = useState(false);
+  const { isWalking, isLoading, handleStartWalk, handleStopWalk } = useWalkSession();
   const [notification, setNotification] = useState<Notification | null>(null);
   const notifCounter = useRef(0);
 
@@ -38,16 +38,16 @@ export default function PatientWalkController() {
 
   // Presence WebSocket for Heartbeat
   const wsUrlParams = deviceToken ? `?patient_token=${deviceToken}` : '';
-  const { isConnected, sendMessage } = useWebSocket<any>(!!deviceToken, wsUrlParams);
+  const { isConnected, sendMessage } = useWebSocket(!!deviceToken, wsUrlParams);
 
   useEffect(() => {
     if (!isConnected) return;
-    
+
     sendMessage({ type: 'heartbeat' });
     const interval = setInterval(() => {
       sendMessage({ type: 'heartbeat' });
     }, WS_HEARTBEAT_INTERVAL_MS);
-    
+
     return () => clearInterval(interval);
   }, [isConnected, sendMessage]);
 
@@ -77,74 +77,21 @@ export default function PatientWalkController() {
     }
   }, [currentPosition, isWalking, activeWalkId]);
 
-  const handleStartWalk = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/walks/start`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(deviceToken ? { 'X-Patient-Token': deviceToken } : {}),
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorData = { detail: 'Unknown error' };
-        try {
-          errorData = JSON.parse(errorText);
-        } catch (e) {
-          errorData.detail = errorText || `HTTP ${response.status}`;
-        }
-
-        // 🛠️ AUTO-RECOVERY: If the backend has a stuck active walk, stop it and retry
-        if (response.status === 400 && errorData.detail === 'Walk already active') {
-          await fetch(`${API_BASE_URL}/walks/stop`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(deviceToken ? { 'X-Patient-Token': deviceToken } : {}),
-            },
-          });
-          return handleStartWalk();
-        }
-
-        console.error(`[PatientWalkController] Start walk failed (HTTP ${response.status}):`, errorData);
-        throw new Error(errorData.detail || 'Failed to start walk');
-      }
-
-      const data = await response.json();
-      const walkId = typeof data === "number" ? data : data.walk_id;
-
-      startWalk(walkId);
+  const onStartWalk = async () => {
+    const result = await handleStartWalk();
+    if (result.success) {
       showNotification('Passeig iniciat', 'success');
-    } catch {
+    } else {
       showNotification('No s\'ha pogut iniciar. Torna a intentar-ho.', 'warning');
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleStopWalk = async () => {
-    setIsLoading(true);
-    try {
-      // Flush any remaining batched points before stopping
-      await locationService.flushFinal();
-
-      const response = await fetch(`${API_BASE_URL}/walks/stop`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(deviceToken ? { 'X-Patient-Token': deviceToken } : {}),
-        },
-      });
-      if (!response.ok) throw new Error();
-      endWalk();
+  const onStopWalk = async () => {
+    const result = await handleStopWalk();
+    if (result.success) {
       showNotification('Passeig finalitzat', 'info');
-    } catch {
+    } else {
       showNotification('No s\'ha pogut aturar. Torna a intentar-ho.', 'warning');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -174,7 +121,7 @@ export default function PatientWalkController() {
       <div className="w-full max-w-xs">
         {!isWalking ? (
           <button
-            onClick={handleStartWalk}
+            onClick={onStartWalk}
             disabled={isLoading}
             className="w-full min-h-[64px] bg-[#22C55E] hover:bg-[#22C55E]/90 active:scale-[0.98] text-white font-bold text-xl rounded-2xl shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-[#22C55E]/30"
           >
@@ -182,7 +129,7 @@ export default function PatientWalkController() {
           </button>
         ) : (
           <button
-            onClick={handleStopWalk}
+            onClick={onStopWalk}
             disabled={isLoading}
             className="w-full min-h-[64px] bg-[#EF4444] hover:bg-[#EF4444]/90 active:scale-[0.98] text-white font-bold text-xl rounded-2xl shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-[#EF4444]/30"
           >

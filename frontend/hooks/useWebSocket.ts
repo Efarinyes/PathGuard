@@ -8,7 +8,7 @@ export interface UseWebSocketOptions {
 export interface UseWebSocketReturn<T> {
   lastMessage: T | null;
   isConnected: boolean;
-  sendMessage: (msg: any) => void;
+  sendMessage: (msg: Record<string, unknown>) => void;
 }
 
 /**
@@ -17,7 +17,7 @@ export interface UseWebSocketReturn<T> {
  * exponential backoff, safe cleanup on unmount, and optional debouncing
  * to reduce re-renders from high-frequency messages.
  */
-export function useWebSocket<T = any>(
+export function useWebSocket<T = unknown>(
   enabled: boolean = true,
   urlParams: string = '',
   options: UseWebSocketOptions = {}
@@ -33,7 +33,7 @@ export function useWebSocket<T = any>(
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const pendingMessage = useRef<T | null>(null);
 
-  const sendMessage = useCallback((msg: any) => {
+  const sendMessage = useCallback((msg: Record<string, unknown>) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify(msg));
     }

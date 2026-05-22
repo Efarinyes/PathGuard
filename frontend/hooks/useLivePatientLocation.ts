@@ -63,8 +63,8 @@ export function useLivePatientLocation(
       }
       // On rehydration, we assume patient might be connected if walk is active, 
       // but the WS events will provide the definitive state.
-    } catch (error) {
-      console.error('[useLivePatientLocation] Recovery failed:', error);
+    } catch {
+      // Silently ignore rehydration errors — WS events will provide definitive state
     } finally {
       setIsLoading(false);
       setIsReady(true);
@@ -81,7 +81,6 @@ export function useLivePatientLocation(
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "visible" && appIsHydrated && (userToken || deviceToken)) {
-        console.debug("[useLivePatientLocation] App returned to foreground, re-syncing state...");
         rehydrateState(true);
       }
     };
@@ -92,10 +91,7 @@ export function useLivePatientLocation(
 
   // 2. Real-time Updates: Connect WS only after we have the REST snapshot
   const wsUrlParams = userToken ? `?token=${userToken}` : deviceToken ? `?patient_token=${deviceToken}` : '';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const { lastMessage, isConnected } = useWebSocket<any>(isReady, wsUrlParams);
-
-
+  const { lastMessage, isConnected } = useWebSocket<unknown>(isReady, wsUrlParams);
 
   // 3. Seamless Integration: Handle new messages via Processor
   useEffect(() => {
@@ -103,51 +99,71 @@ const { lastMessage, isConnected } = useWebSocket<any>(isReady, wsUrlParams);
       return;
     }
 
-    const eventTime = lastMessage.timestamp ? new Date(lastMessage.timestamp).getTime() : 0;
+    const classified = processor.current.classifyEvent(lastMessage);
+    if (!classified) {
+      return;
+    }
 
-    if (lastMessage.type === 'snapshot') {
-      dispatch({ type: 'SNAPSHOT', payload: lastMessage });
-      if (typeof lastMessage.watchers_count === 'number') {
-        console.debug(`[WS] Watchers from snapshot: ${lastMessage.watchers_count}`);
-        setWatchersCount(lastMessage.watchers_count);
+    switch (classified.type) {
+      case 'snapshot': {
+        dispatch({ type: 'SNAPSHOT', payload: classified.payload });
+        if (typeof classified.payload.watchers_count === 'number') {
+          setWatchersCount(classified.payload.watchers_count);
+        }
+        break;
       }
-    } else if (lastMessage.type === 'walk_started') {
-      dispatch({ type: 'WALK_STARTED', timestamp: eventTime });
-    } else if (lastMessage.type === 'walk_stopped') {
-      dispatch({ type: 'WALK_STOPPED' });
-    } else if (lastMessage.type === 'patient_online') {
-      setIsPatientConnected(true);
-    } else if (lastMessage.type === 'patient_offline') {
-      setIsPatientConnected(false);
-    } else if (lastMessage.type === 'watchers_update') {
-      console.debug(`[WS] Watchers update: ${lastMessage.count}`);
-      setWatchersCount(lastMessage.count || 0);
-    } else if (lastMessage.type === 'sos_alert') {
-      if (lastMessage.sos_count > lastProcessedSosCount.current) {
-        console.warn('[WS] SOS ALERT RECEIVED:', lastMessage);
-        lastProcessedSosCount.current = lastMessage.sos_count;
-        setLatestSosData({
-          patient_id: lastMessage.patient_id,
-          walk_id: lastMessage.walk_id,
-          sos_count: lastMessage.sos_count,
-          timestamp: lastMessage.timestamp,
-        });
-      }
-    } else {
-      const isLocation = lastMessage.type === 'location' || 
-                         (!lastMessage.type && lastMessage.latitude != null && lastMessage.longitude != null);
 
-      if (isLocation && typeof lastMessage.latitude === 'number' && typeof lastMessage.longitude === 'number') {
-        const normalized: LocationPayload = {
-          latitude: lastMessage.latitude,
-          longitude: lastMessage.longitude,
-          timestamp: lastMessage.timestamp,
-          ...(lastMessage.walk_id !== undefined ? { walk_id: lastMessage.walk_id } : {}),
-        };
-        dispatch({ type: 'LOCATION_UPDATE', payload: normalized });
+      case 'walk_started': {
+        dispatch({ type: 'WALK_STARTED', timestamp: classified.timestamp });
+        break;
+      }
+
+      case 'walk_stopped': {
+        dispatch({ type: 'WALK_STOPPED' });
+        break;
+      }
+
+      case 'patient_online': {
+        setIsPatientConnected(true);
+        break;
+      }
+
+      case 'patient_offline': {
+        setIsPatientConnected(false);
+        break;
+      }
+
+      case 'watchers_update': {
+        setWatchersCount(classified.count);
+        break;
+      }
+
+      case 'sos_alert': {
+        if (classified.sos_count > lastProcessedSosCount.current) {
+          lastProcessedSosCount.current = classified.sos_count;
+          setLatestSosData({
+            patient_id: classified.patient_id,
+            walk_id: classified.walk_id,
+            sos_count: classified.sos_count,
+            timestamp: classified.timestamp,
+          });
+          onSOSAlert?.(classified);
+        }
+        break;
+      }
+
+      case 'location_update': {
+        dispatch({ type: 'LOCATION_UPDATE', payload: classified.payload });
+        break;
+      }
+
+      default: {
+        // Exhaustiveness check — TypeScript ensures all cases are handled
+        const _exhaustive: never = classified;
+        void _exhaustive;
       }
     }
-  }, [lastMessage]);
+  }, [lastMessage, onSOSAlert]);
 
   return {
     ...walkState,

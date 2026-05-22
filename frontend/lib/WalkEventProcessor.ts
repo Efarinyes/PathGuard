@@ -1,4 +1,5 @@
 import { LocationPayload } from '../services/locationService';
+import { WSEventType, WalkSnapshotMessage } from './wsEventTypes';
 
 export interface WalkState {
   currentLocation: LocationPayload | null;
@@ -11,28 +12,7 @@ export interface BatchLocationUpdatePayload {
   walk_id: number;
 }
 
-export interface WalkSnapshotMessage {
-  type: 'snapshot';
-  timestamp?: string;
-  event_id?: string;
-  active_walk?: {
-    id: number;
-    active_walk_id?: number;
-    history: Array<{
-      latitude: number;
-      longitude: number;
-      timestamp: string;
-      walk_id?: number;
-    }>;
-    latest_location?: {
-      latitude: number;
-      longitude: number;
-      timestamp: string;
-      walk_id?: number;
-    };
-  };
-  [key: string]: unknown;
-}
+export type { WalkSnapshotMessage } from './wsEventTypes';
 
 export interface WalkLocationMessage {
   type?: 'location';
@@ -101,15 +81,18 @@ export class WalkEventProcessor {
    * Evaluates if a raw message should be processed, based on deduplication and chronological ordering.
    * Returns true if valid, false if it should be ignored.
    */
-  public shouldProcessMessage(message: WalkSnapshotMessage | WalkLocationMessage | WalkEventMessage | null): boolean {
-    if (!message) return false;
+  public shouldProcessMessage(message: unknown): boolean {
+    if (!message || typeof message !== 'object') return false;
+
+    const msg = message as Record<string, unknown>;
 
     // A. Event Deduplication (Strict UUID check)
-    if (message.event_id) {
-      if (this.processedEvents.has(message.event_id)) {
+    const eventId = msg.event_id;
+    if (typeof eventId === 'string') {
+      if (this.processedEvents.has(eventId)) {
         return false;
       }
-      this.processedEvents.add(message.event_id);
+      this.processedEvents.add(eventId);
 
       // Keep memory usage low by capping the set
       if (this.processedEvents.size > 200) {
@@ -119,18 +102,101 @@ export class WalkEventProcessor {
     }
 
     // B. Chronological Ordering (Strict Timestamp check) - Only for locations
-    const isLocationMsg = message.type === 'location' || (!message.type && (message as any).latitude != null);
-    
+    const msgType = msg.type;
+    const isLocationMsg =
+      msgType === 'location' ||
+      (!msgType && typeof msg.latitude === 'number' && typeof msg.longitude === 'number');
+
     if (isLocationMsg) {
-      const eventTime = message.timestamp ? new Date(message.timestamp).getTime() : 0;
+      const tsRaw = msg.timestamp;
+      const eventTime = typeof tsRaw === 'string' ? new Date(tsRaw).getTime() : 0;
       if (eventTime > 0 && eventTime < this.latestTimestamp) {
-        console.debug('[WalkEventProcessor] Ignoring out-of-order location event:', message);
         return false;
       }
       if (eventTime > 0) this.latestTimestamp = eventTime;
     }
 
     return true;
+  }
+
+  /**
+   * Classifies a raw WebSocket message into a strongly-typed WSEventType.
+   * Returns null if the message is unrecognised or malformed.
+   */
+  public classifyEvent(rawMessage: unknown): WSEventType | null {
+    if (!rawMessage || typeof rawMessage !== 'object') {
+      return null;
+    }
+
+    const msg = rawMessage as Record<string, unknown>;
+    const msgType = msg.type;
+
+    // 1. Snapshot
+    if (msgType === 'snapshot') {
+      return { type: 'snapshot', payload: msg as WalkSnapshotMessage };
+    }
+
+    // 2. Walk lifecycle
+    if (msgType === 'walk_started') {
+      const ts = msg.timestamp ? new Date(msg.timestamp as string).getTime() : Date.now();
+      return { type: 'walk_started', timestamp: ts };
+    }
+
+    if (msgType === 'walk_stopped') {
+      return { type: 'walk_stopped' };
+    }
+
+    // 3. Patient presence
+    if (msgType === 'patient_online') {
+      return { type: 'patient_online' };
+    }
+
+    if (msgType === 'patient_offline') {
+      return { type: 'patient_offline' };
+    }
+
+    // 4. Watchers update
+    if (msgType === 'watchers_update') {
+      const count = typeof msg.count === 'number' ? msg.count : 0;
+      return { type: 'watchers_update', count };
+    }
+
+    // 5. SOS alert
+    if (msgType === 'sos_alert') {
+      if (
+        typeof msg.patient_id === 'number' &&
+        typeof msg.sos_count === 'number' &&
+        typeof msg.timestamp === 'string'
+      ) {
+        return {
+          type: 'sos_alert',
+          patient_id: msg.patient_id,
+          walk_id: typeof msg.walk_id === 'number' ? msg.walk_id : null,
+          sos_count: msg.sos_count,
+          timestamp: msg.timestamp,
+        };
+      }
+      return null;
+    }
+
+    // 6. Location update (explicit type or typeless with lat/lng)
+    const isLocation =
+      msgType === 'location' ||
+      (!msgType && typeof msg.latitude === 'number' && typeof msg.longitude === 'number');
+
+    if (isLocation && typeof msg.latitude === 'number' && typeof msg.longitude === 'number') {
+      return {
+        type: 'location_update',
+        payload: {
+          latitude: msg.latitude,
+          longitude: msg.longitude,
+          timestamp: typeof msg.timestamp === 'string' ? msg.timestamp : new Date().toISOString(),
+          walk_id: typeof msg.walk_id === 'number' ? msg.walk_id : undefined,
+        },
+      };
+    }
+
+    return null;
   }
 
   /**

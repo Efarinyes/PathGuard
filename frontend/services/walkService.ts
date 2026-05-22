@@ -181,5 +181,64 @@ export const walkService = {
     }
 
     return response.json();
+  },
+
+  /**
+   * Starts a new walk session for the patient device.
+   * Returns the walk_id on success.
+   * Throws StuckWalkError if a walk is already active (caller should stop and retry).
+   */
+  async startWalk(deviceToken: string | null): Promise<number> {
+    const response = await fetch(`${API_BASE_URL}/walks/start`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(deviceToken ? { 'X-Patient-Token': deviceToken } : {}),
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let detail = 'Failed to start walk';
+      try {
+        const parsed = JSON.parse(errorText);
+        detail = parsed.detail || detail;
+      } catch {
+        detail = errorText || detail;
+      }
+
+      if (response.status === 400 && detail === 'Walk already active') {
+        throw new StuckWalkError(detail);
+      }
+
+      throw new Error(detail);
+    }
+
+    const data = await response.json();
+    return typeof data === 'number' ? data : data.walk_id;
+  },
+
+  /**
+   * Stops the current active walk session.
+   */
+  async stopWalk(deviceToken: string | null): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/walks/stop`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(deviceToken ? { 'X-Patient-Token': deviceToken } : {}),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to stop walk');
+    }
   }
 };
+
+export class StuckWalkError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StuckWalkError';
+  }
+}

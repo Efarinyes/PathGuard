@@ -14,19 +14,18 @@ export interface LocationPayload {
   is_recovered?: boolean;
 }
 
-// In-memory buffer for adaptive batching
-let batchBuffer: LocationPayload[] = [];
-let batchTimer: NodeJS.Timeout | null = null;
-let _isSyncing = false; // Internal lock for chronological sync
+class LocationService {
+  // Private state — no module-level mutable state (Golden Rule)
+  private batchBuffer: LocationPayload[] = [];
+  private batchTimer: NodeJS.Timeout | null = null;
+  private isSyncing = false; // Internal lock for chronological sync
 
-export const locationService = {
   /**
    * Sends GPS coordinates with Adaptive Batching.
    * 1. Add point to memory buffer.
    * 2. Flush if buffer is full (size threshold) or 5s have passed (time threshold).
    */
   async saveLocation(payload: LocationPayload): Promise<void> {
-    console.log(`[locationService] saveLocation called for ${payload.latitude}, ${payload.longitude}`);
     // Generate unique ID for deduplication (idempotency)
     const eventId = crypto.randomUUID();
 
@@ -39,35 +38,33 @@ export const locationService = {
     };
     await offlineSyncService.add(point);
 
-    batchBuffer.push(point);
+    this.batchBuffer.push(point);
 
     // Threshold check: Size
-    if (batchBuffer.length >= BATCH_SIZE_THRESHOLD) {
-      console.log(`[locationService] Flushing batch due to size threshold (${batchBuffer.length})`);
+    if (this.batchBuffer.length >= BATCH_SIZE_THRESHOLD) {
       await this.flushBatch();
-    } else if (!batchTimer) {
+    } else if (!this.batchTimer) {
       // Threshold check: Time
-      batchTimer = setTimeout(async () => {
-        console.log(`[locationService] Flushing batch due to time threshold (5s)`);
+      this.batchTimer = setTimeout(async () => {
         await this.flushBatch();
       }, BATCH_TIME_THRESHOLD_MS);
     }
-  },
+  }
 
   /**
    * Sends the current buffer as a single batch to the backend.
    * If network fails, entire batch is moved to persistent IndexedDB.
    */
   async flushBatch(): Promise<void> {
-    if (batchBuffer.length === 0 || _isSyncing) return;
+    if (this.batchBuffer.length === 0 || this.isSyncing) return;
 
-    if (batchTimer) {
-      clearTimeout(batchTimer);
-      batchTimer = null;
+    if (this.batchTimer) {
+      clearTimeout(this.batchTimer);
+      this.batchTimer = null;
     }
 
-    const currentBatch = [...batchBuffer];
-    batchBuffer = [];
+    const currentBatch = [...this.batchBuffer];
+    this.batchBuffer = [];
 
     if (currentBatch.length === 0) {
       return;
@@ -77,10 +74,7 @@ export const locationService = {
     const batchId = crypto.randomUUID();
     const deviceToken = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEYS.DEVICE_TOKEN) : null;
 
-    console.log(`[locationService] flushBatch executing. Batch size: ${currentBatch.length}, Walk ID: ${walkId}`);
-
     try {
-      console.log(`[locationService] Sending batch via gpsTransportService...`);
       const pointsWithClientId = currentBatch.map(p => ({
         latitude: p.latitude,
         longitude: p.longitude,
@@ -100,7 +94,6 @@ export const locationService = {
       }
       await offlineSyncService.clearSynced();
     } catch (error) {
-      console.debug("[locationService] Batch sync failed, buffering to IndexedDB:", error);
       // Resilience: Persist entire batch to IndexedDB for later recovery
       for (const point of currentBatch) {
         if (!point.walk_id) continue;
@@ -112,12 +105,12 @@ export const locationService = {
             walk_id: point.walk_id,
             id: crypto.randomUUID()
           });
-        } catch (e) {
+        } catch {
           // Already in IndexedDB (from saveLocation), which is fine
         }
       }
     }
-  },
+  }
 
   /**
    * Final flush (e.g. on walk stop) to ensure zero data loss.
@@ -125,54 +118,58 @@ export const locationService = {
   async flushFinal(): Promise<void> {
     await this.flushBatch();
     await this.syncQueuedPoints();
-  },
+  }
 
   /**
    * Flushes all unsynced points from the IndexedDB queue to the backend.
    */
   async syncQueuedPoints(): Promise<void> {
-    if (_isSyncing) return;
-    _isSyncing = true;
+    if (this.isSyncing) return;
+    this.isSyncing = true;
 
     try {
       const unsynced = await offlineSyncService.getUnsynced();
       if (unsynced.length === 0) return;
 
-    const deviceToken = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEYS.DEVICE_TOKEN) : null;
+      const deviceToken = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEYS.DEVICE_TOKEN) : null;
 
-    for (const point of unsynced) {
-      const success = await gpsTransportService.sendPoint({
-        client_id: point.id,
-        latitude: point.latitude,
-        longitude: point.longitude,
-        timestamp: point.timestamp,
-        walk_id: point.walk_id,
-        is_recovered: true // Mark as recovered when syncing from offline
-      }, deviceToken);
+      for (const point of unsynced) {
+        const success = await gpsTransportService.sendPoint({
+          client_id: point.id,
+          latitude: point.latitude,
+          longitude: point.longitude,
+          timestamp: point.timestamp,
+          walk_id: point.walk_id,
+          is_recovered: true // Mark as recovered when syncing from offline
+        }, deviceToken);
 
-      if (success) {
-        await offlineSyncService.markSynced(point.id);
-      } else {
-        break; // Stop syncing on first network failure to maintain order
+        if (success) {
+          await offlineSyncService.markSynced(point.id);
+        } else {
+          break; // Stop syncing on first network failure to maintain order
+        }
       }
-    }
     } finally {
-      _isSyncing = false;
+      this.isSyncing = false;
       await offlineSyncService.clearSynced();
     }
-  },
+  }
 
   /**
    * Internal helper for testing state resets.
+   * Also resets the isSyncing lock to prevent cross-test contamination.
    */
   _resetInternalState(): void {
-    batchBuffer = [];
-    if (batchTimer) {
-      clearTimeout(batchTimer);
-      batchTimer = null;
+    this.batchBuffer = [];
+    this.isSyncing = false;
+    if (this.batchTimer) {
+      clearTimeout(this.batchTimer);
+      this.batchTimer = null;
     }
   }
-};
+}
+
+export const locationService = new LocationService();
 
 // DOM Event Listeners (online, visibilitychange, focus) have been moved to hooks/useOfflineRecovery.ts 
 // to ensure they are safely mounted within the React lifecycle and adhere to SRP.
