@@ -117,9 +117,19 @@
 **No inclou:**
 - Pèrdua de cobertura com a mètrica o columna. La pèrdua de cobertura només es mostra com a estat transitori a la UI de monitorització activa ("Reconnectant..."). No es loga, no es comptabilitza, no es mostra al dashboard. Si el cuidador mira l'historial de mapes, les zones sense punts ja són implícitament visibles.
 
-### 4.2 Arquitectura backend
-- [ ] Fusionar `PresenceTracker` dins de `ConnectionManager` — single source of truth per presència
-- [ ] Eliminar stores module-level (`_patient_status_store`, `_patient_device_status_store`) i moure'l a la classe
+### 4.2 Arquitectura backend ✅ COMPLETADA (2026-05-22, branca `refactor/phase4-architecture`)
+
+- [x] Fusionar `PresenceTracker` dins de `ConnectionManager` — 3 mètodes d'instància: `set_patient_online()`, `set_patient_offline()`, `get_patient_status()`
+- [x] Eliminar `_patient_status_store` com a variable module-level → propietat d'instància `self._patient_status_store`
+- [x] Eliminar `presence_tracker.py` completament (16 línies)
+- [x] Zero imports residuals de `PresenceTracker` o `_patient_status_store` al codi
+- [x] `pytest` 152/152 (10 WS timing preexistents, no relacionats)
+- [x] Zero impacte funcional — single source of truth dins `ConnectionManager`
+
+**Canvis:**
+- `connection_manager.py`: `_patient_status_store` mogut a `self._patient_status_store`, afegits 3 mètodes de presència, propietat `patient_status` actualitzada
+- `websocket_endpoint.py`: eliminada importació de `PresenceTracker`, 5 crides substituïdes per `connection_manager.*`
+- `presence_tracker.py`: eliminat
 
 ### 4.3 Arquitectura frontend
 - [ ] Convertir `locationService` de object literal a classe (eliminar `_resetInternalState()`)
