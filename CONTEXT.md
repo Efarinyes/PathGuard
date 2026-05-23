@@ -1,6 +1,6 @@
 # PathGuard — Project Context
 
-**Last updated:** 2026-05-21  
+**Last updated:** 2026-05-23  
 **Purpose:** Global context document for any AI agent or human developer working on the PathGuard project. Read this before making any changes.
 
 ---
@@ -43,7 +43,7 @@ The system consists of:
 - A **caregiver dashboard** (`/caregiver`) that monitors the patient in real-time via WebSocket
 - An **owner dashboard** (`/caregiver/dashboard`) for group configuration (SOS toggle, activation codes, walk history)
 
-**Current phase:** Post-beta (Phase 4.1 completed, Phases 4.2–4.5 pending)
+**Current phase:** Post-beta (Phase 4.3 + CSS Design System completed)
 
 ---
 
@@ -93,6 +93,7 @@ PathGuard-project/
 │   ├── product_audit.md
 │   └── technical_audit.md
 ├── CHANGELOG.md
+├── CONTEXT.md                   # THIS FILE — project context for agents
 └── README.md
 ```
 
@@ -162,7 +163,7 @@ develop (never commit directly)
 | `app/api/routers/groups.py` | `/groups/*` (SOS toggle, owner-only) |
 | `app/api/routers/locations.py` | `/locations/*` (GPS batch ingestion) |
 | `app/api/websocket/websocket_endpoint.py` | WebSocket entry point |
-| `app/api/websocket/connection_manager.py` | WS room management (7 global stores — to be refactored in Phase 4.2) |
+| `app/api/websocket/connection_manager.py` | WS room management + presence (merged in Phase 4.2) |
 | `app/services/walk_service.py` | Walk lifecycle business logic |
 
 ### Auth Model
@@ -185,9 +186,24 @@ develop (never commit directly)
 - **Language:** TypeScript
 - **Build:** `npm run build --webpack` (NOT `npm run build` — custom webpack config)
 - **Tests:** Vitest (`npm test`)
-- **Styling:** Tailwind CSS
+- **Styling:** Tailwind CSS v4 (`@tailwindcss/postcss`)
 - **Icons:** Lucide React
 - **Map:** Leaflet (dynamically imported, SSR disabled)
+
+### Design System (Tailwind v4 @theme)
+All design tokens are defined in `frontend/app/globals.css` via `@theme`. **No `tailwind.config.js`** — it was removed in Phase 4.3. The single source of truth is `@theme`.
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `primary` | `#1E3A8A` | Buttons, links, focus rings, trust color |
+| `success` | `#22C55E` | Start walk, SOS confirmed, active states |
+| `warning` | `#F59E0B` | Offline, caution states |
+| `danger` | `#EF4444` | Stop walk, SOS idle, errors |
+| `danger-dark` | `#DC2626` | SOS pressing state |
+| `background` | `#F8FAFC` | Page backgrounds, input backgrounds |
+| `foreground` | `#0F172A` | Body text, headings |
+
+**Z-index scale:** `z-drawer(40)`, `z-modal(50)`, `z-alert(100)`, `z-sos(200)`
 
 ### Architecture Patterns
 - **App Router:** `frontend/app/` — File-based routing
@@ -200,21 +216,24 @@ develop (never commit directly)
 | File | Purpose |
 |---|---|
 | `app/layout.tsx` | Root layout with `AppStateProvider`, `SOSAlertProvider`, `RoleGuard` |
+| `app/globals.css` | Tailwind v4 `@theme` — design token source of truth |
 | `app/caregiver/page.tsx` | Caregiver monitoring page |
 | `app/caregiver/dashboard/page.tsx` | Owner configuration dashboard |
 | `components/CaregiverDashboard/index.tsx` | Main caregiver view (monitoring only) |
 | `components/CaregiverDashboard/CaregiverHeader.tsx` | Header with drawer trigger (SRP) |
 | `components/OwnerMenuDrawer.tsx` | Navigation drawer (extracted from header) |
+| `components/SOSButton/index.tsx` | SOS hold button with progress bar (stable, no layout shift) |
 | `hooks/useAppState.tsx` | Global state (tokens, session, walk ID) |
 | `hooks/useOwnerData.ts` | Shared hook for `/auth/me` fetching (DRY) |
 | `hooks/useLivePatientLocation.ts` | WebSocket message handling + state |
 | `hooks/useSOSAlertSound.ts` | Web Audio API chime (440→523→660Hz) |
+| `hooks/useWalkSession.ts` | Walk lifecycle hook (start/stop/auto-recovery) |
 | `services/walkService.ts` | Walk-related API calls |
+| `services/locationService.ts` | Location service (class-based, module-level state eliminated) |
+| `lib/wsEventTypes.ts` | WSEventType discriminated union (8 types) |
+| `lib/WalkEventProcessor.ts` | Event classification + validation |
 
 ### Known Frontend Issues
-- **3 pre-existing test failures** (fixed during Phase 4.1):
-  - `auth_session.test.tsx` — missing `SOSAlertProvider` wrapper
-  - `useWebSocket.test.ts` — wrong URL assertion (`127.0.0.1` vs `localhost`)
 - **WebSocket reconnect logic** has timing edge cases (pre-existing)
 - **Battery monitoring removed entirely** (Safari/iOS incompatibility) — documented in `docs/safari-battery-api-removal.md`
 
@@ -224,16 +243,19 @@ develop (never commit directly)
 
 ### Decisions Already Made
 1. **SQLite for beta** — PostgreSQL migration deferred to post-beta
-2. **i18n deferred to post-beta** — 134 Catalan strings hardcoded, no translation infrastructure yet
+2. **i18n deferred to post-beta** — 165 Catalan strings hardcoded, no translation infrastructure yet. Strategy: cookie-based detection + manual override (see `docs/action-plan.md` 4.5)
 3. **No battery monitoring** — Completely removed (not patched) due to Safari/iOS unfixable API incompatibility
 4. **Owner-only walk details** — `GET /walks/{id}/locations` requires `is_owner` (implemented in 4.1.2)
 5. **SOS sound via Web Audio API** — Synthesized chime, not audio file. Requires `AudioContext.resume()` for autoplay policies
 6. **Drawer menu for owner navigation** — Replaces the old flat header. Semi-transparent, animated, non-full-height panel
+7. **Tailwind v4 only** — `tailwind.config.js` removed. All design tokens via `@theme` in `globals.css` (single source of truth)
+8. **SOS toggle is owner-controlled** — The owner activates SOS from the dashboard. The patient sees the button on next app launch. Real-time sync is deferred (TODO-1)
+9. **Design tokens are semantic** — Never use hardcoded hex values in components. Always use `primary`, `success`, `warning`, `danger`, `danger-dark`, `background`, `foreground`
 
 ### Constraints
 - **SOLID, CleanCode, SRP** — Mandatory. No technical debt accepted.
 - **Zero fetch() in components** — All API calls go through `services/` layer
-- **No module-level mutable state** — To be eliminated in Phase 4.2/4.3
+- **No module-level mutable state** — Eliminated in Phase 4.2/4.3
 - **No dead code** — Removed code must not leave imports or references
 - **Tests must pass** — No regression in existing tests
 
@@ -254,6 +276,8 @@ develop (never commit directly)
 - **Do NOT** modify `useAppState.tsx` lightly — it's the global state backbone
 - **Do NOT** forget the `--webpack` flag in build: `npm run build --webpack`
 - **Do NOT** add `any` types — maintain strict TypeScript
+- **Do NOT** use hardcoded hex colors (`[#1E3A8A]`, etc.) — use design tokens (`primary`, `success`, `danger`, etc.)
+- **Do NOT** create a new `tailwind.config.js` — all tokens live in `globals.css/@theme`
 
 ### Both
 - **Do NOT** add coverage loss metrics — explicitly prohibited by product audit (PD-7)
@@ -279,7 +303,7 @@ Before making ANY change:
 
 ---
 
-## 10. Current Phase Status (as of 2026-05-21)
+## 10. Current Phase Status (as of 2026-05-23)
 
 | Phase | Status | Branch |
 |---|---|---|
@@ -288,15 +312,23 @@ Before making ANY change:
 | 3 — Pre-beta Polish | ✅ Completed | `fix/phase3-poliment` (merged) |
 | 4.1 — Owner Dashboard | ✅ Completed | `feat/phase4-owner-dashboard` (merged to develop) |
 | 4.2 — Backend Architecture | ✅ Completed | `refactor/phase4-architecture` (merged to develop) |
-| 4.3 — Frontend Architecture | ✅ Completed | `refactor/phase4-frontend-architecture` |
+| 4.3 — Frontend Architecture | ✅ Completed | `refactor/phase4-frontend-architecture` (merged to develop) |
+| CSS Design System | ✅ Completed | `refactor/css-design-system` (merged to develop) |
 | 4.4 — SOS User Test | ⏳ Pending | — |
-| 4.5 — i18n | ⏳ Post-beta | — |
+| 4.5 — i18n | ⏳ Pending | — |
 
-**Next recommended action:** Merge `refactor/phase4-frontend-architecture` → `develop`, then begin Phase 4.4 (SOS user test) or close Phase 4.
+**Completed in this session (v4.3.0):**
+- CSS-1: 130+ hex colors migrated to semantic tokens across 20 files
+- CSS-2: Vestigial `tailwind.config.js` removed. Tailwind v4 `@theme` is the single source of truth
+- CSS-4: CustomIcons.ts keyframes moved to `globals.css`
+- CSS-5: PWAErrorBoundary aligned with design system
+- CSS-7: Z-index scale defined (`z-drawer`, `z-modal`, `z-alert`, `z-sos`)
+- CSS-8: `console.log` removed from production code
+- TODO-2: SOS button visual stability fixed (progress bar, fixed height, focus-visible, no pulse)
 
 **Pending TODOs (see `docs/action-plan.md`):**
-- TODO-1: SOS Toggle Real-Time (post-beta, 2-3h)
-- TODO-2: SOS Button visual stability (FIX aplicat 2026-05-22)
+- TODO-1: SOS Toggle Real-Time — PENDING, a revisar. Flux actual acceptable segons filosofia PathGuard.
+- CSS-3: Patrons duplicats (Card, Spinner, ModalOverlay, FormInput) — PENDING post-beta
 
 ---
 
