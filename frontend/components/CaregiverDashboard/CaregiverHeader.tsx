@@ -32,14 +32,14 @@ export default function CaregiverHeader({ patientName, isOwner, groupName, onInv
     <>
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <h2 className="text-[#0F172A] font-bold text-xl mb-1">
+          <h2 className="text-foreground font-bold text-xl mb-1">
             {isOnDashboard ? 'Configuració del grup' : 'Estat del passeig'}
           </h2>
         </div>
         {isOwner && (
           <button
             onClick={() => setIsMenuOpen(true)}
-            className="p-2 text-slate-400 hover:text-[#1E3A8A] transition-colors rounded-lg hover:bg-slate-100"
+            className="p-2 text-slate-400 hover:text-primary transition-colors rounded-lg hover:bg-slate-100"
             aria-label="Obrir menú"
           >
             <Menu size={20} />
@@ -50,7 +50,7 @@ export default function CaregiverHeader({ patientName, isOwner, groupName, onInv
       {isOwner && !isOnDashboard && (
         <button
           onClick={onInviteClick}
-          className="w-full py-3 px-4 bg-[#1E3A8A]/10 hover:bg-[#1E3A8A]/20 text-[#1E3A8A] font-bold text-sm rounded-lg transition-all flex items-center justify-center gap-2 border border-[#1E3A8A]/20 mt-2"
+          className="w-full py-3 px-4 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-sm rounded-lg transition-all flex items-center justify-center gap-2 border border-primary/20 mt-2"
         >
           <UserPlus size={16} />
           Afegir nou cuidador

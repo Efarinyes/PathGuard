@@ -51,15 +51,15 @@ export default function SOSAlertModal({ patientName = 'la persona', durationMs =
         </div>
 
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-[#0F172A] mb-2">Avís de seguretat</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Avís de seguretat</h2>
           <p className="text-slate-600">
-            <span className="font-semibold text-[#0F172A]">{patientName}</span> ha enviat un avís d'emergència
+            <span className="font-semibold text-foreground">{patientName}</span> ha enviat un avís d'emergència
           </p>
         </div>
 
         <button
           onClick={dismissAlert}
-          className="w-full bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white font-bold py-4 px-6 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E3A8A]"
+          className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 px-6 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
         >
           D'acord, ho he rebut
         </button>

@@ -3,11 +3,12 @@
 :root {
   /* PathGuard Palette */
   --color-primary: #1E3A8A;
-  --color-secondary: #22C55E;
+  --color-success: #22C55E;
   --color-warning: #F59E0B;
-  --color-critical: #EF4444;
+  --color-danger: #EF4444;
+  --color-danger-dark: #DC2626;
   --color-background: #F8FAFC;
-  --color-text: #0F172A;
+  --color-foreground: #0F172A;
 
   /* Typography */
   --font-sans: "Inter", system-ui, sans-serif;
@@ -15,25 +16,37 @@
   /* UI Tokens */
   --radius-xl: 16px;
   --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+  /* Z-index scale */
+  --z-drawer: 40;
+  --z-modal: 50;
+  --z-alert: 100;
+  --z-sos: 200;
 }
 
 @theme {
   --color-primary: var(--color-primary);
-  --color-secondary: var(--color-secondary);
+  --color-success: var(--color-success);
   --color-warning: var(--color-warning);
-  --color-critical: var(--color-critical);
+  --color-danger: var(--color-danger);
+  --color-danger-dark: var(--color-danger-dark);
   --color-background: var(--color-background);
-  --color-text: var(--color-text);
+  --color-foreground: var(--color-foreground);
 
   --font-sans: var(--font-sans);
 
   --radius-xl: var(--radius-xl);
   --shadow-soft: var(--shadow-soft);
+
+  --z-drawer: var(--z-drawer);
+  --z-modal: var(--z-modal);
+  --z-alert: var(--z-alert);
+  --z-sos: var(--z-sos);
 }
 
 body {
   background-color: var(--color-background);
-  color: var(--color-text);
+  color: var(--color-foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -49,10 +62,32 @@ button, a, .no-select {
   user-select: none;
 }
 
+/* Map marker animations (extracted from CustomIcons.ts) */
+@keyframes map-pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes map-pulse-offline {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* SOS button hold progress bar */
+@keyframes sos-hold-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Map marker Leaflet override */
+.custom-map-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
 /* Accessibility: Ensure minimum touch target */
 @layer base {
   button, a {
     @apply min-h-[44px];
   }
 }
-

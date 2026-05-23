@@ -63,21 +63,21 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
   return (
     <div className="w-full max-w-md mx-auto bg-white p-6 sm:p-10 rounded-2xl shadow-sm border border-slate-200">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-[#0F172A] tracking-tight">Crea el teu entorn familiar</h1>
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">Crea el teu entorn familiar</h1>
         <p className="text-slate-500 mt-3 text-base">Comença protegint els qui més estimes amb PathGuard.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
         {error && (
-          <div className="w-full p-4 bg-red-50 border border-red-100 rounded-xl text-[#EF4444] text-sm text-center font-medium">
+          <div className="w-full p-4 bg-red-50 border border-red-100 rounded-xl text-danger text-sm text-center font-medium">
             {error}
           </div>
         )}
 
         <div className="space-y-5">
           <div className="flex flex-col gap-2">
-            <label htmlFor="groupName" className="text-sm font-bold text-[#0F172A] ml-1">
+            <label htmlFor="groupName" className="text-sm font-bold text-foreground ml-1">
               Nom de la Família / Grup
             </label>
             <input
@@ -86,13 +86,13 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
               required
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              className="w-full px-4 py-3.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-[#0F172A] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all"
+              className="w-full px-4 py-3.5 rounded-xl bg-background border border-slate-200 text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               placeholder="Ex: Família Soler"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label htmlFor="patientName" className="text-sm font-bold text-[#0F172A] ml-1">
+            <label htmlFor="patientName" className="text-sm font-bold text-foreground ml-1">
               Qui portarà el dispositiu? (Nom)
             </label>
             <input
@@ -101,7 +101,7 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
               required
               value={patientName}
               onChange={(e) => setPatientName(e.target.value)}
-              className="w-full px-4 py-3.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-[#0F172A] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all"
+              className="w-full px-4 py-3.5 rounded-xl bg-background border border-slate-200 text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               placeholder="Ex: Avi Joan"
             />
           </div>
@@ -109,7 +109,7 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
           <hr className="my-6 border-slate-100" />
 
           <div className="flex flex-col gap-2">
-            <label htmlFor="email" className="text-sm font-bold text-[#0F172A] ml-1">
+            <label htmlFor="email" className="text-sm font-bold text-foreground ml-1">
               El teu correu (Cuidador)
             </label>
             <input
@@ -118,13 +118,13 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-[#0F172A] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all"
+              className="w-full px-4 py-3.5 rounded-xl bg-background border border-slate-200 text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               placeholder="el-teu@correu.com"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label htmlFor="password" className="text-sm font-bold text-[#0F172A] ml-1">
+            <label htmlFor="password" className="text-sm font-bold text-foreground ml-1">
               Contrasenya de seguretat
             </label>
             <input
@@ -133,7 +133,7 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3.5 rounded-xl bg-[#F8FAFC] border border-slate-200 text-[#0F172A] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all"
+              className="w-full px-4 py-3.5 rounded-xl bg-background border border-slate-200 text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               placeholder="••••••••"
             />
           </div>
@@ -145,11 +145,11 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
                 type="checkbox"
                 checked={sosEnabled}
                 onChange={(e) => setSosEnabled(e.target.checked)}
-                className="w-5 h-5 text-[#DC2626] border-slate-300 rounded focus:ring-[#DC2626] transition-all cursor-pointer"
+                className="w-5 h-5 text-danger-dark border-slate-300 rounded focus:ring-danger-dark transition-all cursor-pointer"
               />
             </div>
             <div className="text-sm">
-              <label htmlFor="sosEnabled" className="font-bold text-[#DC2626] cursor-pointer">
+              <label htmlFor="sosEnabled" className="font-bold text-danger-dark cursor-pointer">
                 Habilitar avís d&apos;emergència (SOS)
               </label>
               <p className="text-slate-500 mt-0.5">
@@ -162,7 +162,7 @@ export default function RegistrationForm({ onRegisterSuccess }: RegistrationForm
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full mt-4 bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white font-bold py-4 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E3A8A] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/10 transition-all"
+          className="w-full mt-4 bg-primary hover:bg-primary/90 text-white font-bold py-4 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/10 transition-all"
         >
           {isLoading ? 'Creant entorn...' : 'Crear entorn familiar'}
         </button>

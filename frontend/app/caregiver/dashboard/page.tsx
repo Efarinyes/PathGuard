@@ -36,7 +36,7 @@ export default function OwnerDashboardPage() {
   // Auth gate
   if (!userToken) {
     return (
-      <main className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-6">
+      <main className="min-h-screen bg-background flex items-center justify-center p-6">
         <LoginForm onLoginSuccess={() => { /* AppStateProvider ho gestiona */ }} />
       </main>
     );
@@ -50,9 +50,9 @@ export default function OwnerDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-[#1E3A8A] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           <p className="text-slate-500 text-sm font-medium">Carregant configuració...</p>
         </div>
       </div>
@@ -60,7 +60,7 @@ export default function OwnerDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-background">
       {/* Header amb menú drawer */}
       <div className="bg-white border-b border-slate-200 px-4 py-4 md:px-6 md:py-4">
         <CaregiverHeader
@@ -74,20 +74,20 @@ export default function OwnerDashboardPage() {
       {/* Contingut del dashboard */}
       <main className="p-4 md:p-6 max-w-3xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#0F172A]">Configuració del grup</h1>
+          <h1 className="text-2xl font-bold text-foreground">Configuració del grup</h1>
           <p className="text-slate-500 text-sm mt-1">Gestiona el dispositiu i les preferències del familiar</p>
         </div>
 
         {/* 4.1.4: Codi d'activació (ocult per defecte) */}
         <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-            <h2 className="text-[#0F172A] font-bold text-base">Dispositiu del familiar</h2>
+            <h2 className="text-foreground font-bold text-base">Dispositiu del familiar</h2>
           </div>
           <div className="p-6">
             {!showActivationCode ? (
               <button
                 onClick={() => setShowActivationCode(true)}
-                className="w-full py-3 px-4 bg-[#1E3A8A]/10 hover:bg-[#1E3A8A]/20 text-[#1E3A8A] font-bold text-sm rounded-lg transition-all flex items-center justify-center gap-2 border border-[#1E3A8A]/20"
+                className="w-full py-3 px-4 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-sm rounded-lg transition-all flex items-center justify-center gap-2 border border-primary/20"
               >
                 Codi activacio usuari
               </button>
@@ -96,7 +96,7 @@ export default function OwnerDashboardPage() {
                 {userToken && <ActivationCodeDisplay token={userToken} />}
                 <button
                   onClick={() => setShowActivationCode(false)}
-                  className="w-full py-2 text-slate-500 text-sm font-medium hover:text-[#0F172A] transition-colors"
+                  className="w-full py-2 text-slate-500 text-sm font-medium hover:text-foreground transition-colors"
                 >
                   Amagar codi
                 </button>
@@ -108,7 +108,7 @@ export default function OwnerDashboardPage() {
         {/* 4.1.3: SOS Toggle */}
         <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-            <h2 className="text-[#0F172A] font-bold text-base">SOS</h2>
+            <h2 className="text-foreground font-bold text-base">SOS</h2>
           </div>
           <div className="p-6">
             {userToken && <SOSToggle token={userToken} initialEnabled={sosEnabled} />}
@@ -118,7 +118,7 @@ export default function OwnerDashboardPage() {
         {/* 4.1.2: Historial de passejades */}
         <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-            <h2 className="text-[#0F172A] font-bold text-base">Historial de passejades</h2>
+            <h2 className="text-foreground font-bold text-base">Historial de passejades</h2>
           </div>
           <div className="p-2">
             <CaregiverWalkHistory walks={walks} onWalkClick={handleWalkClick} />
@@ -128,7 +128,7 @@ export default function OwnerDashboardPage() {
         {/* 4.1.5: CaregiverAnalytics (opt-in) */}
         <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-            <h2 className="text-[#0F172A] font-bold text-base">Informació d'activitat</h2>
+            <h2 className="text-foreground font-bold text-base">Informació d'activitat</h2>
           </div>
           <div className="p-4">
             <CaregiverAnalytics
@@ -136,7 +136,7 @@ export default function OwnerDashboardPage() {
               walks={walks}
               isExtraInfoOpen={isAnalyticsOpen}
               onToggleInfo={() => setIsAnalyticsOpen(!isAnalyticsOpen)}
-              onWalkClick={(id) => console.log('View walk:', id)}
+              onWalkClick={(id) => handleWalkClick(id)}
             />
           </div>
         </section>

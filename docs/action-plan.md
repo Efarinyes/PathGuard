@@ -131,12 +131,133 @@
 - `websocket_endpoint.py`: eliminada importació de `PresenceTracker`, 5 crides substituïdes per `connection_manager.*`
 - `presence_tracker.py`: eliminat
 
-### 4.3 Arquitectura frontend
-- [ ] Convertir `locationService` de object literal a classe (eliminar `_resetInternalState()`)
-- [ ] Extreure `useWalkSession` hook de `PatientWalkController` (start/stop walk + auto-recovery)
-- [ ] Eliminar `fetch()` directs de `PatientWalkController` — delegar a `walkService`
-- [ ] Crear `WSEventType` discriminated union per type-safe dispatch a `useLivePatientLocation`
-- [ ] Moure if-else chain de `useLivePatientLocation` a `WalkEventProcessor.classifyEvent()`
+### 4.3 Arquitectura frontend ✅ COMPLETADA (2026-05-22, branca `refactor/phase4-frontend-architecture`)
+
+- [x] Convertir `locationService` de object literal a classe (`LocationService` amb estat privat)
+- [x] Eliminar `_resetInternalState()` del nivell de mòdul (ara és mètode d'instància, reseteja `isSyncing` també)
+- [x] Eliminar 6 `console.log`/`console.debug` de `locationService.ts` (Golden Rule)
+- [x] Extreure `useWalkSession` hook de `PatientWalkController` (start/stop walk + auto-recovery)
+- [x] Afegir `walkService.startWalk()` i `walkService.stopWalk()` — zero `fetch()` directes al component
+- [x] Crear `WSEventType` discriminated union (`frontend/lib/wsEventTypes.ts`)
+- [x] Afegir `WalkEventProcessor.classifyEvent()` amb validació estructural
+- [x] Refactoritzar `useLivePatientLocation` per usar `switch` exhaustiu sobre `classifyEvent`
+- [x] Eliminar `any` tipus a `useLivePatientLocation` i `useWebSocket` (`unknown` en lloc de `any`)
+- [x] `npm run build --webpack` passa, `npm test` 108 passats / 6 skipped (preexistents)
+
+**Canvis:**
+- `frontend/services/locationService.ts`: classe amb estat privat, singleton exportat, zero logs
+- `frontend/lib/wsEventTypes.ts`: nou — 8-tipus discriminated union + type guards
+- `frontend/lib/WalkEventProcessor.ts`: nou mètode `classifyEvent()`, `shouldProcessMessage` accepta `unknown`
+- `frontend/hooks/useLivePatientLocation.ts`: `switch` exhaustiu, zero `any`, `useWebSocket<unknown>`
+- `frontend/hooks/useWalkSession.ts`: nou — encapsula lifecycle walk + auto-recovery stuck-walk
+- `frontend/services/walkService.ts`: nous mètodes `startWalk()`, `stopWalk()`, `StuckWalkError`
+- `frontend/components/PatientWalkController/index.tsx`: ~90 línies menys, zero `fetch()`, SRP pur
+
+---
+
+## TODO — Descoberts durant verificació de la Fase 4.3
+
+### TODO-1: SOS Toggle Real-Time
+**Problema:** Quan l'owner activa SOS des del dashboard (`/caregiver/dashboard`), `/patient` no mostra el botó SOS fins que l'usuari refresca la pàgina.
+**Causa:** `PatientWalkController` consulta `sos_enabled` un cop al mount via `patientService.getPatientStatus()`. No hi ha mecanisme de revalidació en temps real.
+**Comportament actual (acceptable per a beta):** El pacient veurà el botó SOS quan torni a accedir a la PWA (re-login o refresh).
+**Comportament desitjat (post-beta):** Actualització en temps real via WebSocket. El backend enviaria un event `sos_config_changed`; `useLivePatientLocation` escoltaria i actualitzaria `sosEnabled` via `setSosEnabled`.
+**Impacte:** UX/Seguretat — en escenari d'emergència real, el familiar pot no tenir el botó disponible immediatament si l'owner acaba d'activar-lo.
+**Estimació:** 2-3h
+**Prioritat:** Post-beta (no bloquejant per a llançament)
+
+### TODO-2: SOS Button Visual Stabilitat — PENDENT d'implementar
+**Problema:** El botó SOS canvia de dimensions/visual durant el mantenyiment (press-and-hold). El FIX anterior (canvi de `transition-all` a `transition-colors`, eliminació d'`active:scale-[0.98]`) no resol el problema completament. Es detecten 5 causes arrel:
+
+1. **`animate-pulse` durant la fase `pressing`** — L'animació oscil·la l'opacitat entre 1 → 0.5 → 1, creant un efecte percebut com a canvi de mida constant sobre fons vermell. (`SOSButton/index.tsx:103`)
+2. **`focus:ring-4` s'activa en touch mòbil** — A mòbil, tocar dispara `:focus`, afegint un anell de 4px (+8px totals). L'anell canvia de color entre fases (`focus:ring-[#EF4444]/30` → `focus:ring-[#DC2626]/40`). (`SOSButton/index.tsx:99`)
+3. **Text d'ajuda desapareix del DOM durant el mantenyiment** — `"Mantén premut per enviar ajuda"` es renderitza condicionalment (`phase === 'idle' && !notificationMessage`). Quan s'inicia el hold, el text (~20px + 8px margin) desapareix, el contenidor s'encongeix, i el botó salta de posició dins el layout `justify-between` del pare. (`SOSButton/index.tsx:132-136`)
+4. **`min-h-[80px]` sense alçada fixa** — Només garanteix un mínim, no una alçada fixa. Si el contingut intern canvia, l'alçada pot variar. (`SOSButton/index.tsx:99`)
+5. **`transition-colors duration-200`** — La transició de color durant el canvi d'estat crea un "morph" percebut. En un botó d'emergència la resposta ha de ser instantània, no transitòria. (`SOSButton/index.tsx:99`)
+
+**Solució proposta (5 canvis al component + 1 canvi a globals.css):**
+
+| # | Canvi | Fitxer | Motiu |
+|---|-------|--------|-------|
+| 1 | `min-h-[80px]` → `h-[80px] relative overflow-hidden` | `SOSButton/index.tsx` | Alçada fixa, conté la barra de progrés |
+| 2 | Eliminar `animate-pulse` de la fase `pressing` | `SOSButton/index.tsx` | Elimina l'oscil·lació d'opacitat |
+| 3 | `focus:ring-4` → `focus-visible:ring-4` | `SOSButton/index.tsx` | L'anell no apareixerà en touch mòbil |
+| 4 | Eliminar `transition-colors duration-200` | `SOSButton/index.tsx` | Canvi d'estat instantani, no transició |
+| 5 | Text d'ajuda sempre renderitzat (`opacity-0`/`opacity-100`) | `SOSButton/index.tsx` | Evita layout shift |
+| 6 | Afegir `<div>` barra de progrés dins el botó (fase `pressing`): `absolute bottom-0 left-0 right-0 h-[3px] bg-white/30 origin-left` amb animació `sos-hold-progress` (scaleX 0→1, 3s linear) | `SOSButton/index.tsx` + `globals.css` | Feedback visual estable sobre la durada del mantenyiment, zero layout shifts |
+
+**Estats visuals resultants:**
+
+| Estat | Fons botó | Contingut | Barra de progrés | Ring |
+|-------|-----------|-----------|-------------------|------|
+| `idle` | `#EF4444` | Icona + "Ajuda" | Cap | Només teclat (`focus-visible`) |
+| `pressing` | `#DC2626` (sòlid, sense pulse) | Icona + "Ajuda" | Barra 3px omplint-se | Cap |
+| `confirming` | `#22C55E` | Icona + "Ajuda" | Cap | Només teclat (`focus-visible`) |
+
+**Propietats clau de la barra de progrés:**
+- `scaleX` amb `transform` → GPU-accelerat, zero reflows, zero layout shifts
+- `origin-left` → s'omple d'esquerra a dreta
+- `bg-white/30` sobre vermell fosc → visible però discret, coherència amb filosofia "calm, discreet, reliable"
+- Si l'usuari deixa anar abans de 3s → la barra desapareix (canvi de fase a `idle`)
+- Si arriba a 3s → la barra desapareix (canvi de fase a `confirming`)
+- El botó **mai** canvia de mida, posició, ni pulsa
+
+**Fitxers afectats:** `frontend/components/SOSButton/index.tsx`, `frontend/app/globals.css`
+**Estimació:** 1h
+
+### TODO-3: Deute tècnic CSS — Design Tokens no utilitzats i patrons duplicats ✅ COMPLETADA (2026-05-23, branca `refactor/css-design-system`)
+
+**Problema:** El projecte definia design tokens semàntics però els components feien bypass amb valors hex directes. El `tailwind.config.js` era vestigial (format v3 amb Tailwind v4).
+
+**Resolució aplicada (branca `refactor/css-design-system`):**
+
+#### CSS-1: Design tokens migrats — ✅ COMPLETAT
+- 130 ocurrències hex substituïdes per tokens semàntics across 20 fitxers
+- Nova nomenclatura a `@theme`: `primary`, `success`, `warning`, `danger`, `danger-dark`, `background`, `foreground`
+- Mapa: `[#1E3A8A]`→`primary`, `[#0F172A]`→`foreground`, `[#22C55E]`→`success`, `[#EF4444]`→`danger`, `[#DC2626]`→`danger-dark`, `[#F59E0B]`→`warning`, `[#F8FAFC]`→`background`
+- Variants d'opacitat i shadows migrades: `shadow-blue-900/10`→`shadow-primary/10`, `shadow-green-900/10`→`shadow-success/10`, etc.
+- Zero valors hex residus en components (excloent `CustomIcons.ts` que usa inline styles per Leaflet)
+
+#### CSS-2: `tailwind.config.js` eliminat — ✅ COMPLETAT
+- Fitxer eliminat. `globals.css/@theme` és ara la font única de veritat
+- Build verificat sense el config v3 — Tailwind v4 llegeix `@theme` directament
+
+#### CSS-3: Patrons duplicats — PENDENT (post-beta)
+- Card, Spinner, ModalOverlay, FormInput continuen com a patrons repetits amb tokens nets
+- Decidit: no crear components shared ara per evitar scope creep
+
+#### CSS-4: `CustomIcons.ts` keyframes moguts — ✅ COMPLETAT
+- `@keyframes map-pulse` i `@keyframes map-pulse-offline` moguts a `globals.css`
+- `.custom-map-icon` reset mogut a `globals.css`
+- `<style>` blocks eliminats de `CustomIcons.ts`
+- Colors inline actualitzats: `secondary`→`success`, `offline`→`warning` (noms semàntics)
+
+#### CSS-5: `PWAErrorBoundary` alineat — ✅ COMPLETAT
+- `bg-blue-600` → `bg-primary`, `text-gray-900` → `text-foreground`
+- `text-gray-600` → `text-slate-500`, `bg-gray-100`/`bg-gray-200` → `bg-slate-100`/`bg-slate-200`
+- Layout complet redissenyat: card amb border, shadow, rounded-xl (coherent amb la resta de l'app)
+- Icona reduïda de `w-24 h-24` a `w-16 h-16`, color `text-danger`
+
+#### CSS-6: Shadow token `--shadow-soft` — MANTINGUT
+- Token disponible a `@theme` per ús futur. No eliminat.
+
+#### CSS-7: Z-index escala definida — ✅ COMPLETAT
+- Afegit a `globals.css`: `--z-drawer: 40`, `--z-modal: 50`, `--z-alert: 100`, `--z-sos: 200`
+- Tokens disponibles via `z-drawer`, `z-modal`, `z-alert`, `z-sos` a Tailwind
+
+#### CSS-8: `console.log` eliminat — ✅ COMPLETAT
+- `dashboard/page.tsx:139`: `console.log('View walk:', id)` → `(id) => handleWalkClick(id)`
+
+#### TODO-2: SOS Button Visual Stabilitat — ✅ COMPLETAT
+- `animate-pulse` eliminat de la fase `pressing` — botó ara sòlid sense oscil·lació
+- `min-h-[80px]` → `h-[80px] relative overflow-hidden` — alçada fixa, conté la barra de progrés
+- `focus:ring-4` → `focus-visible:ring-4` — ring només a teclat, no a touch mòbil
+- `transition-all duration-300` eliminat — canvi d'estat instantani
+- Text d'ajuda sempre renderitzat amb `opacity-0`/`opacity-100` — zero layout shift
+- Barra de progrés `sos-hold-progress` afegida a `globals.css`: `scaleX(0)→scaleX(1)` en 3s linear, `bg-white/30`, GPU-accelerat
+- Botó mai canvia de mida, posició, ni pulsa
+
+---
 
 ### 4.4 So SOS — test d'usuari
 - [ ] Test d'usuari amb resposta emocional al so substituït (chime càlid vs alarm)

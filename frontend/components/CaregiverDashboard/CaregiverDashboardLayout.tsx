@@ -20,7 +20,7 @@ export default function CaregiverDashboardLayout({
   inviteModal,
 }: CaregiverDashboardLayoutProps) {
   return (
-    <div className="w-full flex flex-col md:flex-row gap-6 p-4 md:p-6 bg-[#F8FAFC] min-h-screen">
+    <div className="w-full flex flex-col md:flex-row gap-6 p-4 md:p-6 bg-background min-h-screen">
       <div className="flex-grow order-1 md:order-1 h-[60vh] md:h-auto">
         {mapSection}
       </div>

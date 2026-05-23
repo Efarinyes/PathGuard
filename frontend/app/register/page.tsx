@@ -36,28 +36,28 @@ export default function RegisterPage() {
 
   if (showCode && activationCode) {
     return (
-      <main className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6">
+      <main className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <div className="max-w-md w-full text-center">
-          <div className="w-20 h-20 bg-[#22C55E] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-900/20">
+          <div className="w-20 h-20 bg-success rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-success/20">
             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 6L9 17l-5-5" />
             </svg>
           </div>
 
-          <h1 className="text-3xl font-bold text-[#0F172A] mb-3">Entorn creat!</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-3">Entorn creat!</h1>
           <p className="text-slate-500 text-base mb-8">
             Comparteix aquest codi amb la persona que portarà el dispositiu per activar-lo.
           </p>
 
-          <div className="bg-white border-2 border-[#1E3A8A]/20 rounded-2xl p-6 mb-8">
+          <div className="bg-white border-2 border-primary/20 rounded-2xl p-6 mb-8">
             <p className="text-sm text-slate-500 font-medium mb-2">Codi d&apos;activació</p>
-            <p className="text-4xl font-black text-[#1E3A8A] tracking-[0.3em]">{activationCode}</p>
+            <p className="text-4xl font-black text-primary tracking-[0.3em]">{activationCode}</p>
           </div>
 
           <div className="space-y-3">
             <button
               onClick={handleGoToCaregiver}
-              className="w-full py-4 px-6 bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-900/10"
+              className="w-full py-4 px-6 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-primary/10"
             >
               Anar al dashboard del cuidador
             </button>
@@ -72,7 +72,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <RegistrationForm onRegisterSuccess={handleRegisterSuccess} />
       </div>

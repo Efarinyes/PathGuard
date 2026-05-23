@@ -149,12 +149,12 @@ export default function PatientWalkController() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-between p-6 pt-16 pb-12">
+    <main className="min-h-screen bg-background flex flex-col items-center justify-between p-6 pt-16 pb-12">
 
       {/* Status Label — calm, non-alarming */}
       <div className="flex flex-col items-center gap-3">
         <div className="flex items-center gap-2">
-          <span className={`h-2.5 w-2.5 rounded-full ${isWalking ? 'bg-[#22C55E]' : 'bg-slate-300'}`} />
+          <span className={`h-2.5 w-2.5 rounded-full ${isWalking ? 'bg-success' : 'bg-slate-300'}`} />
           <p className="text-slate-500 text-base font-medium tracking-wide">
             {isWalking ? 'Passeig en curs' : 'Preparat per sortir'}
           </p>
@@ -163,7 +163,7 @@ export default function PatientWalkController() {
 
       {/* Central Message — H1, maximum legibility */}
       <div className="text-center px-4">
-        <h1 className="text-4xl font-bold text-[#0F172A] leading-tight">
+        <h1 className="text-4xl font-bold text-foreground leading-tight">
           {isWalking
             ? 'Bon passeig!'
             : 'Quan vulguis sortir,\nprem el botó.'}
@@ -176,7 +176,7 @@ export default function PatientWalkController() {
           <button
             onClick={handleStartWalk}
             disabled={isLoading}
-            className="w-full min-h-[64px] bg-[#22C55E] hover:bg-[#22C55E]/90 active:scale-[0.98] text-white font-bold text-xl rounded-2xl shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-[#22C55E]/30"
+            className="w-full min-h-[64px] bg-success hover:bg-success/90 active:scale-[0.98] text-white font-bold text-xl rounded-2xl shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-success/30"
           >
             {isLoading ? '...' : 'Comença a passejar'}
           </button>
@@ -184,7 +184,7 @@ export default function PatientWalkController() {
           <button
             onClick={handleStopWalk}
             disabled={isLoading}
-            className="w-full min-h-[64px] bg-[#EF4444] hover:bg-[#EF4444]/90 active:scale-[0.98] text-white font-bold text-xl rounded-2xl shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-[#EF4444]/30"
+            className="w-full min-h-[64px] bg-danger hover:bg-danger/90 active:scale-[0.98] text-white font-bold text-xl rounded-2xl shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-danger/30"
           >
             {isLoading ? '...' : 'Parem!'}
           </button>

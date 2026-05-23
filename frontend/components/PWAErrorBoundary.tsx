@@ -40,11 +40,11 @@ export class PWAErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex min-h-screen flex-col items-center justify-center p-6 bg-gradient-to-b from-blue-50 to-white">
-          <div className="text-center max-w-md">
+        <div className="flex min-h-screen flex-col items-center justify-center p-6 bg-background">
+          <div className="text-center max-w-md bg-white rounded-xl border border-slate-200 shadow-sm p-8">
             <div className="mb-6">
               <svg
-                className="w-24 h-24 mx-auto text-red-500"
+                className="w-16 h-16 mx-auto text-danger"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -58,25 +58,25 @@ export class PWAErrorBoundary extends Component<Props, State> {
               </svg>
             </div>
 
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            <h1 className="text-2xl font-bold text-foreground mb-4">
               ERROR: {this.state.error?.name || "Error"}
             </h1>
 
-            <p className="text-base text-gray-600 mb-6">
+            <p className="text-base text-slate-500 mb-6">
               {this.state.error?.message || "S'ha produït un error inesperat."}
             </p>
 
             <div className="space-y-3">
               <button
                 onClick={this.handleRetry}
-                className="block w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="block w-full px-6 py-3 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors"
               >
                 Tornar a intentar
               </button>
 
               <a
                 href="/offline"
-                className="block w-full px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors text-center"
+                className="block w-full px-6 py-3 bg-slate-100 text-slate-600 font-medium rounded-xl hover:bg-slate-200 transition-colors text-center"
               >
                 Veure pàgina fora de línia
               </a>

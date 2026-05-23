@@ -39,10 +39,10 @@ export default function OwnerMenuDrawer({
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100/50">
-          <h3 className="text-[#0F172A] font-bold text-base">Opcions</h3>
+          <h3 className="text-foreground font-bold text-base">Opcions</h3>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-[#0F172A] hover:bg-slate-100/50 rounded-lg transition-colors"
+            className="p-2 text-slate-400 hover:text-foreground hover:bg-slate-100/50 rounded-lg transition-colors"
             aria-label="Tancar menú"
           >
             <X size={20} />
@@ -55,8 +55,8 @@ export default function OwnerMenuDrawer({
             onClick={() => onNavigate('/caregiver')}
             className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-colors ${
               isOnDashboard
-                ? 'text-[#0F172A] hover:bg-slate-50'
-                : 'text-[#1E3A8A] font-semibold bg-blue-50/50'
+                ? 'text-foreground hover:bg-slate-50'
+                : 'text-primary font-semibold bg-blue-50/50'
             }`}
           >
             <MapPin size={18} />
@@ -67,8 +67,8 @@ export default function OwnerMenuDrawer({
             onClick={() => onNavigate('/caregiver/dashboard')}
             className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-colors ${
               !isOnDashboard
-                ? 'text-[#0F172A] hover:bg-slate-50'
-                : 'text-[#1E3A8A] font-semibold bg-blue-50/50'
+                ? 'text-foreground hover:bg-slate-50'
+                : 'text-primary font-semibold bg-blue-50/50'
             }`}
           >
             <MapPin size={18} />

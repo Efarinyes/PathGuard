@@ -55,12 +55,12 @@ export default function CaregiverAnalytics({
       <div className={`${isExtraInfoOpen ? 'block' : 'hidden'} transition-all duration-300`}>
         {analytics && (
           <div className="mt-6">
-            <h3 className="text-[#0F172A] font-bold text-lg mb-4 ml-1">Resum d'activitat</h3>
+            <h3 className="text-foreground font-bold text-lg mb-4 ml-1">Resum d'activitat</h3>
             <div className="grid grid-cols-1 gap-4">
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
                 <div>
                   <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Durada mitjana</p>
-                  <p className="text-xl font-black text-[#0F172A]">{analytics.avg_duration_minutes} min</p>
+                  <p className="text-xl font-black text-foreground">{analytics.avg_duration_minutes} min</p>
                 </div>
                 <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
