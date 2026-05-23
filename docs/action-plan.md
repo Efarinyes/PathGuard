@@ -157,14 +157,14 @@
 
 ## TODO — Descoberts durant verificació de la Fase 4.3
 
-### TODO-1: SOS Toggle Real-Time
+### TODO-1: SOS Toggle Real-Time — PENDENT, a revisar
 **Problema:** Quan l'owner activa SOS des del dashboard (`/caregiver/dashboard`), `/patient` no mostra el botó SOS fins que l'usuari refresca la pàgina.
 **Causa:** `PatientWalkController` consulta `sos_enabled` un cop al mount via `patientService.getPatientStatus()`. No hi ha mecanisme de revalidació en temps real.
-**Comportament actual (acceptable per a beta):** El pacient veurà el botó SOS quan torni a accedir a la PWA (re-login o refresh).
-**Comportament desitjat (post-beta):** Actualització en temps real via WebSocket. El backend enviaria un event `sos_config_changed`; `useLivePatientLocation` escoltaria i actualitzaria `sosEnabled` via `setSosEnabled`.
-**Impacte:** UX/Seguretat — en escenari d'emergència real, el familiar pot no tenir el botó disponible immediatament si l'owner acaba d'activar-lo.
-**Estimació:** 2-3h
-**Prioritat:** Post-beta (no bloquejant per a llançament)
+**Comportament actual (acceptable):** L'owner decideix activar SOS per motius aliens a l'app. Quan el familiar torna a sortir a fer una volta i arrenca l'app, la funcionalitat ja estarà disponible. Aquest flux és coherent amb la filosofia de PathGuard (passejos curts, cuidador vigila però no controla en temps real).
+**Comportament desitjat (si cal en el futur):** Actualització en temps real via WebSocket. El backend enviaria un event `sos_config_changed`; `useLivePatientLocation` escoltaria i actualitzaria `sosEnabled` via `setSosEnabled`.
+**Decisió:** No implementar ara. El flux actual és acceptable i coherent amb la filosofia del producte. Si es necessita dinàmica en el futur, es replantejarà.
+**Estimació:** 2-3h (si s'implementa)
+**Prioritat:** Baixa — a revisar si el producte ho demana
 
 ### TODO-2: SOS Button Visual Stabilitat — PENDENT d'implementar
 **Problema:** El botó SOS canvia de dimensions/visual durant el mantenyiment (press-and-hold). El FIX anterior (canvi de `transition-all` a `transition-colors`, eliminació d'`active:scale-[0.98]`) no resol el problema completament. Es detecten 5 causes arrel:
