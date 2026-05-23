@@ -316,6 +316,7 @@ Before making ANY change:
 | CSS Design System | ✅ Completed | `refactor/css-design-system` (merged to develop) |
 | 4.4 — SOS User Test | ⏳ Pending | — |
 | 4.5 — i18n | ⏳ Pending | — |
+| 5 — Beta Deploy (Vercel + ngrok) | ⏳ Pending | — |
 
 **Completed in this session (v4.3.0):**
 - CSS-1: 130+ hex colors migrated to semantic tokens across 20 files

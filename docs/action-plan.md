@@ -229,6 +229,81 @@
 
 ---
 
+## Fase 5 — Desplegament Beta (Vercel + ngrok)
+
+**Objectiu:** Desplejar PathGuard a Internet per fer proves reals amb dos dispositius (mòbil + ordinador).
+
+**Arquitectura Beta:**
+```
+Mòbil (PWA) ──HTTPS──▶ Vercel (frontend)
+                         │
+                         │ fetch() + WebSocket (wss://)
+                         ▼
+                    ngrok tunnel (HTTPS/WSS)
+                         │
+                         ▼
+                  Local Mac (backend uvicorn + SQLite)
+```
+
+### 5.1 Blockers — corregits abans de desplegar
+
+- [ ] **B1: CORS permet domini Vercel** — Afegir `https://pathguard.vercel.app` (i variants de preview) a `ALLOWED_ORIGINS` al `backend/app/main.py`. Fer que `FRONTEND_URL` env var sigui l'origen principal.
+- [ ] **B2: Env vars del frontend per producció** — Set `NEXT_PUBLIC_API_URL=https://<ngrok-domain>/api/v1` i `NEXT_PUBLIC_WS_URL=wss://<ngrok-domain>/api/v1/ws/` a Vercel dashboard. Els fallbacks a `localhost` només serveixen per dev local.
+- [ ] **B3: Backend FRONTEND_URL** — Set `FRONTEND_URL=https://pathguard.vercel.app` al `backend/.env` (o via env var quan s'engegui uvicorn).
+- [ ] **B4: Neteja fitxers SW stale a `public/`** — Eliminar `pathguard-sw 2.js` fins a `pathguard-sw 9.js`, `workbox-c8ab336a.js`. La PWA els regenera al build. Actualitzar `.gitignore` per bloquejar `pathguard-sw*.js` amb espais.
+
+### 5.2 Fixes recomanats (abans de Beta, no bloquejants)
+
+- [ ] **F1: Pàgina `/offline` inexistent** — `PWAErrorBoundary` enllaça a `/offline` però no hi ha `app/offline/page.tsx`. Crear-la o treure l'enllaç.
+- [ ] **F2: `console.log`/`console.debug` en 4 hooks** — `useWebSocket.ts` (5), `useLocationTracking.ts` (3), `useOfflineRecovery.ts` (2), `swRegistration.tsx` (2). Violació de la Golden Rule. Eliminar o substituir per `logger`.
+- [ ] **F3: `viewport` deprecariat** — `export const viewport = {}` a `app/layout.tsx` → migrar a `export function generateViewport()` per Next.js 16.
+
+### 5.3 Passos de desplegament
+
+**Backend (local + ngrok):**
+1. `rm backend/pathguard.db && python backend/init_db.py` — BD neta
+2. Editar `backend/.env`: `FRONTEND_URL=https://pathguard.vercel.app` + `SECRET_KEY=<nou-key-segur>`
+3. `cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+4. `ngrok http 8000 --domain <domini-fixe>` — obté URL pública HTTPS/WSS
+5. Verificar: `https://<ngrok-domain>/docs` mostra Swagger
+
+**Frontend (Vercel):**
+1. Push a `develop` o `main` — Vercel desplega automàticament
+2. Al Vercel dashboard: set env vars `NEXT_PUBLIC_API_URL` i `NEXT_PUBLIC_WS_URL` amb les URLs ngrok
+3. Verificar: `https://pathguard.vercel.app` carrega la landing page
+4. Verificar: Service Worker es registra (DevTools → Application → Service Workers)
+
+**Post-desplegament CORS:**
+- Si Vercel assigna un domini de preview (ex: `pathguard-git-feat-xxx.vercel.app`), afegir-lo temporalment a `ALLOWED_ORIGINS`
+- Alternative: fer que `ALLOWED_ORIGINS` llegeixi un patró `*.vercel.app` per previews (no recomanat per producció, acceptable per Beta)
+
+### 5.4 Checklist de verificació Beta
+
+- [ ] Backend engega sense errors via ngrok (Swagger accessible)
+- [ ] Frontend carrega a Vercel (landing page, registre, login)
+- [ ] CORS no bloqueja cap request (check DevTools Network, zero 403/405)
+- [ ] WebSocket connecta des de Vercel → ngrok → backend (check DevTools Network, status 101)
+- [ ] PWA instal·lable al mòbil (HTTPS via Vercel, SW registrat)
+- [ ] `POST /auth/register` retorna `activation_code`
+- [ ] Registre → codi → activació → `/patient` end-to-end des de mòbil
+- [ ] Cuidador fa login → veu dashboard amb pacient connectat
+- [ ] Passeig real GPS: iniciar → caminar → veure posició temps real → aturar
+- [ ] SOS: mantenir 3s → chime se sent al cuidador → modal → confirmar recepció
+- [ ] Pèrdua de cobertura: mostrar estat transitori → recuperar
+- [ ] Owner dashboard: toggle SOS, codi activació, històric passejades
+- [ ] Service Worker no cacheja API calls (NetworkOnly)
+- [ ] Zero `console.log` a producció (check DevTools Console, només errors legítims)
+
+### 5.5 Pegats coneguts per a proves reals
+
+- **ngrok canvia d'URL** si no tens domini fixe → cal actualitzar env vars a Vercel i CORS al backend cada restart. Recomanat: reservar domini fixe amb compte ngrok verificat (gratuït).
+- **iOS Safari:** GPS funciona millor si la PWA està "Added to Home Screen"
+- **WebSocket:** 10 test de timing fallen (preexistent, no afecta proves reals)
+- **Bateria:** monitorització eliminada (incompatible amb Safari)
+- **CORS:** `allow_credentials=True` NO funciona amb `allow_origins=["*"]` — cal especificar l'origen exacte del frontend Vercel
+
+---
+
 ## Visió futura (fora d'scope actual)
 
 **Predicció d'ubicació amb ML:** Un cop hi hagi dades suficients de passejades reals, es pot explorar un model de machine learning per predir la ubicació probable del pacient en cas de pèrdua o incidència. Això és un producte dins d'un producte (model entrenat amb dades de trajectòria, predicció espacial, escenari d'UX definit) i requereix: (1) dataset de passejades reals, (2) model entrenat i validat, (3) una UX que integrï la predicció de manera calm i no alarmant. No entra a l'action-plan actual — és una idea per a una versió avançada futura.
