@@ -52,9 +52,9 @@ export default function NotificationBanner({
 
   // Determine the subtle semantic dot color based on the PathGuard design system
   const dotColorClass = {
-    info: 'bg-[#1E3A8A]',      // Primary blue
-    success: 'bg-[#22C55E]',   // Secondary green
-    warning: 'bg-[#F59E0B]',   // Amber warning
+    info: 'bg-primary',      // Primary blue
+    success: 'bg-success',   // Secondary green
+    warning: 'bg-warning',   // Amber warning
   }[type];
 
   const positionClasses = position === 'top' ? 'top-6' : 'bottom-6';
@@ -70,7 +70,7 @@ export default function NotificationBanner({
         <span className={`h-2 w-2 rounded-full ${dotColorClass}`} />
         
         {/* Crisp, clean typography */}
-        <span className="text-[#0F172A] font-medium text-sm tracking-wide">
+        <span className="text-foreground font-medium text-sm tracking-wide">
           {message}
         </span>
       </div>

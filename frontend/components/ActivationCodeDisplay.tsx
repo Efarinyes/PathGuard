@@ -42,7 +42,7 @@ export default function ActivationCodeDisplay({ token }: ActivationCodeDisplayPr
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="w-6 h-6 border-2 border-[#1E3A8A] border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -86,7 +86,7 @@ export default function ActivationCodeDisplay({ token }: ActivationCodeDisplayPr
         <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-3">
           Codi d&apos;activació
         </p>
-        <p className="text-4xl md:text-5xl font-black text-[#1E3A8A] tracking-[0.3em] font-mono">
+        <p className="text-4xl md:text-5xl font-black text-primary tracking-[0.3em] font-mono">
           {state.code}
         </p>
       </div>
@@ -102,7 +102,7 @@ export default function ActivationCodeDisplay({ token }: ActivationCodeDisplayPr
         disabled={isRegenerating || !state.isUsed}
         className={`w-full py-3 px-4 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 border ${
           state.isUsed
-            ? 'bg-[#1E3A8A] text-white hover:bg-[#1E3A8A]/90 border-transparent shadow-sm'
+            ? 'bg-primary text-white hover:bg-primary/90 border-transparent shadow-sm'
             : 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed'
         }`}
       >

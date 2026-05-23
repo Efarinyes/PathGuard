@@ -12,7 +12,7 @@ export default function CaregiverPage() {
   // 🔑 Auth gate
   if (!userToken) {
     return (
-      <main className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-6">
+      <main className="min-h-screen bg-background flex items-center justify-center p-6">
         <LoginForm onLoginSuccess={(token) => setUserSession(token)} />
       </main>
     );

@@ -64,7 +64,7 @@ export default function InviteCaregiverModal({ isOpen, onClose, groupName }: Inv
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
         {/* Header */}
-        <div className="bg-[#1E3A8A] px-6 py-4">
+        <div className="bg-primary px-6 py-4">
           <h3 className="text-white font-bold text-lg">Convida un nou cuidador</h3>
           <p className="text-blue-200 text-sm mt-1">Comparteix el codi perquè pugui unir-se al grup</p>
         </div>
@@ -88,7 +88,7 @@ export default function InviteCaregiverModal({ isOpen, onClose, groupName }: Inv
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                     placeholder="cuidador@exemple.com"
                     disabled={isLoading}
                   />
@@ -112,7 +112,7 @@ export default function InviteCaregiverModal({ isOpen, onClose, groupName }: Inv
                   <button
                     type="submit"
                     disabled={isLoading || !email}
-                    className="flex-1 px-4 py-2 bg-[#1E3A8A] text-white font-bold rounded-lg hover:bg-[#1E3A8A]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? 'Generant...' : 'Generar codi'}
                   </button>
@@ -135,7 +135,7 @@ export default function InviteCaregiverModal({ isOpen, onClose, groupName }: Inv
                   Codi d'invitació
                 </label>
                 <div className="flex gap-2">
-                  <div className="flex-1 px-4 py-3 bg-slate-100 rounded-lg font-mono text-2xl tracking-widest text-center text-[#1E3A8A] font-bold">
+                  <div className="flex-1 px-4 py-3 bg-slate-100 rounded-lg font-mono text-2xl tracking-widest text-center text-primary font-bold">
                     {invitationCode}
                   </div>
                   <button
@@ -159,7 +159,7 @@ export default function InviteCaregiverModal({ isOpen, onClose, groupName }: Inv
 
               <button
                 onClick={handleClose}
-                className="w-full px-4 py-2 bg-[#1E3A8A] text-white font-bold rounded-lg hover:bg-[#1E3A8A]/90 transition-colors"
+                className="w-full px-4 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Tancar
               </button>

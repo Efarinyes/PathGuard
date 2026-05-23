@@ -22,12 +22,12 @@ export default function PatientStatusCard({
 }: PatientStatusCardProps) {
   const getStatusColor = () => {
     if (!isConnected || !isActive) return 'bg-slate-400';
-    return isPatientConnected ? 'bg-[#22C55E]' : 'bg-[#F59E0B]';
+    return isPatientConnected ? 'bg-success' : 'bg-warning';
   };
 
   const getStatusPingColor = () => {
     if (!isConnected || !isActive) return 'bg-slate-400';
-    return isPatientConnected ? 'bg-[#22C55E]' : 'bg-[#F59E0B]';
+    return isPatientConnected ? 'bg-success' : 'bg-warning';
   };
 
   const getStatusText = () => {
@@ -54,7 +54,7 @@ export default function PatientStatusCard({
 
       <div>
         <p className="text-sm text-slate-500 font-medium mb-1">Última actualització</p>
-        <p className="text-[#0F172A] font-semibold">
+        <p className="text-foreground font-semibold">
           {currentLocation ? timeAgo : '---'}
         </p>
       </div>
@@ -62,7 +62,7 @@ export default function PatientStatusCard({
       {currentLocation && (
         <div>
           <p className="text-sm text-slate-500 font-medium mb-1">Punts de ruta</p>
-          <p className="text-[#0F172A] font-semibold">{routeHistory.length}</p>
+          <p className="text-foreground font-semibold">{routeHistory.length}</p>
         </div>
       )}
     </div>

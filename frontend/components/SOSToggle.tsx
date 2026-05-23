@@ -32,7 +32,7 @@ export default function SOSToggle({ token, initialEnabled }: SOSToggleProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[#0F172A] font-semibold">
+          <p className="text-foreground font-semibold">
             {isEnabled ? 'SOS activat' : 'SOS desactivat'}
           </p>
           <p className="text-slate-500 text-sm mt-0.5">
@@ -45,8 +45,8 @@ export default function SOSToggle({ token, initialEnabled }: SOSToggleProps) {
         <button
           onClick={handleToggle}
           disabled={isLoading}
-          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:ring-offset-2 ${
-            isEnabled ? 'bg-[#22C55E]' : 'bg-slate-300'
+          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+            isEnabled ? 'bg-success' : 'bg-slate-300'
           } ${isLoading ? 'opacity-60 cursor-wait' : ''}`}
           role="switch"
           aria-checked={isEnabled}

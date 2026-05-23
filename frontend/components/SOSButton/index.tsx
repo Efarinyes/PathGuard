@@ -96,15 +96,15 @@ export default function SOSButton({ deviceToken, patientName }: SOSButtonProps) 
   };
 
   const getButtonClasses = () => {
-    const base = 'w-full min-h-[80px] rounded-2xl shadow-lg flex items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-4';
+const base = 'w-full h-[80px] relative overflow-hidden rounded-2xl shadow-lg focus:outline-none focus-visible:ring-4 flex items-center justify-center';
 
     switch (phase) {
       case 'pressing':
-        return `${base} bg-[#DC2626] animate-pulse focus:ring-[#DC2626]/40`;
+        return `${base} bg-danger-dark focus-visible:ring-danger-dark/40`;
       case 'confirming':
-        return `${base} bg-[#22C55E] focus:ring-[#22C55E]/40`;
+        return `${base} bg-success focus-visible:ring-success/40`;
       default:
-        return `${base} bg-[#EF4444] hover:bg-[#EF4444]/90 focus:ring-[#EF4444]/30`;
+return `${base} bg-danger hover:bg-danger/90 focus-visible:ring-danger/30`;
     }
   };
 
@@ -127,13 +127,18 @@ export default function SOSButton({ deviceToken, patientName }: SOSButtonProps) 
           </svg>
           <span className="text-xs font-semibold">Ajuda</span>
         </div>
+
+        {phase === 'pressing' && (
+          <div
+            className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/30 origin-left"
+            style={{ animation: 'sos-hold-progress 3s linear forwards' }}
+          />
+        )}
       </button>
 
-      {phase === 'idle' && !notificationMessage && (
-        <p className="text-center text-xs text-slate-400 mt-2">
-          Mantén premut per enviar ajuda
-        </p>
-      )}
+      <p className={`text-center text-xs text-slate-400 mt-2 transition-opacity duration-200 ${phase === 'idle' && !notificationMessage ? 'opacity-100' : 'opacity-0'}`}>
+        Mantén premut per enviar ajuda
+      </p>
 
       {notificationMessage && (
         <NotificationBanner

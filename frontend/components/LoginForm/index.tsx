@@ -94,7 +94,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
   return (
     <div className="w-full max-w-sm mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-slate-200">
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight">Benvingut/da</h1>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Benvingut/da</h1>
         <p className="text-slate-500 mt-2 text-sm">Introdueix les teves dades per continuar.</p>
       </div>
 
@@ -104,7 +104,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
           onClick={() => { setMode('password'); setError(null); setValidatedCode(null); setInvitationCode(''); }}
           className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
             mode === 'password'
-              ? 'bg-white text-[#0F172A] shadow-sm'
+              ? 'bg-white text-foreground shadow-sm'
               : 'text-slate-500 hover:text-slate-700'
           }`}
         >
@@ -116,7 +116,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
           onClick={() => { setMode('invitation'); setError(null); setValidatedCode(null); setEmail(''); }}
           className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
             mode === 'invitation'
-              ? 'bg-white text-[#0F172A] shadow-sm'
+              ? 'bg-white text-foreground shadow-sm'
               : 'text-slate-500 hover:text-slate-700'
           }`}
         >
@@ -128,7 +128,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
         {error && (
-          <div className="flex items-center gap-2 w-full p-3 bg-red-50 border border-red-100 rounded-lg text-[#EF4444] text-sm">
+          <div className="flex items-center gap-2 w-full p-3 bg-red-50 border border-red-100 rounded-lg text-danger text-sm">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             {error}
           </div>
@@ -143,7 +143,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
 
         {mode === 'invitation' && (
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="invitationCode" className="text-sm font-semibold text-[#0F172A] ml-1">
+            <label htmlFor="invitationCode" className="text-sm font-semibold text-foreground ml-1">
               Codi d&apos;invitació
             </label>
             <input
@@ -153,7 +153,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
               maxLength={6}
               value={invitationCode}
               onChange={(e) => setInvitationCode(e.target.value.toUpperCase())}
-              className="w-full px-4 py-3 rounded-xl bg-[#F8FAFC] border border-slate-200 text-[#0F172A] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all uppercase tracking-widest text-center font-mono text-lg"
+              className="w-full px-4 py-3 rounded-xl bg-background border border-slate-200 text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all uppercase tracking-widest text-center font-mono text-lg"
               placeholder="XXXXXX"
             />
           </div>
@@ -161,7 +161,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
 
         {mode === 'password' && (
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="email" className="text-sm font-semibold text-[#0F172A] ml-1">
+            <label htmlFor="email" className="text-sm font-semibold text-foreground ml-1">
               Correu electrònic
             </label>
             <input
@@ -170,14 +170,14 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-[#F8FAFC] border border-slate-200 text-[#0F172A] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all"
+              className="w-full px-4 py-3 rounded-xl bg-background border border-slate-200 text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               placeholder="correu@exemple.com"
             />
           </div>
         )}
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="password" className="text-sm font-semibold text-[#0F172A] ml-1 flex items-center gap-2">
+          <label htmlFor="password" className="text-sm font-semibold text-foreground ml-1 flex items-center gap-2">
             <Lock className="w-3.5 h-3.5 text-slate-400" />
             Contrasenya
           </label>
@@ -187,7 +187,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-[#F8FAFC] border border-slate-200 text-[#0F172A] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-transparent transition-all"
+            className="w-full px-4 py-3 rounded-xl bg-background border border-slate-200 text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
             placeholder="••••••••"
           />
         </div>
@@ -195,7 +195,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
         <button
           type="submit"
           disabled={isLoading || (mode === 'invitation' && invitationCode.length !== 6)}
-          className="w-full mt-2 bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white font-semibold py-3.5 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E3A8A] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="w-full mt-2 bg-primary hover:bg-primary/90 text-white font-semibold py-3.5 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {isLoading ? 'Iniciant sessió...' : 'Iniciar sessió'}
         </button>

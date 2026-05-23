@@ -157,19 +157,69 @@
 
 ## TODO — Descoberts durant verificació de la Fase 4.3
 
-### TODO-1: SOS Toggle Real-Time
+### TODO-1: SOS Toggle Real-Time — PENDENT, a revisar
 **Problema:** Quan l'owner activa SOS des del dashboard (`/caregiver/dashboard`), `/patient` no mostra el botó SOS fins que l'usuari refresca la pàgina.
 **Causa:** `PatientWalkController` consulta `sos_enabled` un cop al mount via `patientService.getPatientStatus()`. No hi ha mecanisme de revalidació en temps real.
-**Comportament actual (acceptable per a beta):** El pacient veurà el botó SOS quan torni a accedir a la PWA (re-login o refresh).
-**Comportament desitjat (post-beta):** Actualització en temps real via WebSocket. El backend enviaria un event `sos_config_changed`; `useLivePatientLocation` escoltaria i actualitzaria `sosEnabled` via `setSosEnabled`.
-**Impacte:** UX/Seguretat — en escenari d'emergència real, el familiar pot no tenir el botó disponible immediatament si l'owner acaba d'activar-lo.
-**Estimació:** 2-3h
-**Prioritat:** Post-beta (no bloquejant per a llançament)
+**Comportament actual (acceptable):** L'owner decideix activar SOS per motius aliens a l'app. Quan el familiar torna a sortir a fer una volta i arrenca l'app, la funcionalitat ja estarà disponible. Aquest flux és coherent amb la filosofia de PathGuard (passejos curts, cuidador vigila però no controla en temps real).
+**Decisió:** No implementar ara. El flux actual és acceptable i coherent amb la filosofia del producte. Si es necessita dinàmica en el futur, es replantejarà.
+**Estimació:** 2-3h (si s'implementa)
+**Prioritat:** Baixa — a revisar si el producte ho demana
 
-### TODO-2: SOS Button Visual Stabilitat (FIX aplicat 2026-05-22)
-**Problema:** El botó SOS canviava de dimensions/visual quan es premia (`active:scale-[0.98]` + `transition-all`) provocant que el dit sortís de l'àrea en mòbil.
-**Fix:** Canviat `transition-all duration-300` per `transition-colors duration-200`. Eliminat `active:scale-[0.98]`. El botó ara roman estable visualment durant el hold.
-**Fitxer:** `frontend/components/SOSButton/index.tsx`
+### TODO-2: SOS Button Visual Stabilitat — ✅ COMPLETAT (2026-05-23, branca `refactor/css-design-system`)
+**Problema:** El botó SOS canviava de dimensions/visual durant el mantenyiment (press-and-hold). 5 causes arrel identificades.
+**Solució aplicada:**
+- `min-h-[80px]` → `h-[80px] relative overflow-hidden` (alçada fixa, conté la barra de progrés)
+- `animate-pulse` eliminat de la fase `pressing`
+- `focus:ring-4` → `focus-visible:ring-4` (ring només a teclat, no a touch mòbil)
+- `transition-colors duration-200` eliminat — canvi d'estat instantani
+- Text d'ajuda sempre renderitzat amb `opacity-0`/`opacity-100` — zero layout shift
+- Barra de progrés `sos-hold-progress` afegida a `globals.css`: `scaleX(0)→scaleX(1)` en 3s linear
+- Botó mai canvia de mida, posició, ni pulsa
+
+### TODO-3: Deute tècnic CSS — Design Tokens no utilitzats i patrons duplicats ✅ COMPLETADA (2026-05-23, branca `refactor/css-design-system`)
+
+**Problema:** El projecte definia design tokens semàntics però els components feien bypass amb valors hex directes. El `tailwind.config.js` era vestigial (format v3 amb Tailwind v4).
+
+**Resolució aplicada (branca `refactor/css-design-system`):**
+
+#### CSS-1: Design tokens migrats — ✅ COMPLETAT
+- 130 ocurrències hex substituïdes per tokens semàntics across 20 fitxers
+- Nova nomenclatura a `@theme`: `primary`, `success`, `warning`, `danger`, `danger-dark`, `background`, `foreground`
+- Mapa: `[#1E3A8A]`→`primary`, `[#0F172A]`→`foreground`, `[#22C55E]`→`success`, `[#EF4444]`→`danger`, `[#DC2626]`→`danger-dark`, `[#F59E0B]`→`warning`, `[#F8FAFC]`→`background`
+- Variants d'opacitat i shadows migrades: `shadow-blue-900/10`→`shadow-primary/10`, `shadow-green-900/10`→`shadow-success/10`, etc.
+- Zero valors hex residus en components (excloent `CustomIcons.ts` que usa inline styles per Leaflet)
+
+#### CSS-2: `tailwind.config.js` eliminat — ✅ COMPLETAT
+- Fitxer eliminat. `globals.css/@theme` és ara la font única de veritat
+- Build verificat sense el config v3 — Tailwind v4 llegeix `@theme` directament
+
+#### CSS-3: Patrons duplicats — PENDENT (post-beta)
+- Card, Spinner, ModalOverlay, FormInput continuen com a patrons repetits amb tokens nets
+- Decidit: no crear components shared ara per evitar scope creep
+
+#### CSS-4: `CustomIcons.ts` keyframes moguts — ✅ COMPLETAT
+- `@keyframes map-pulse` i `@keyframes map-pulse-offline` moguts a `globals.css`
+- `.custom-map-icon` reset mogut a `globals.css`
+- `<style>` blocks eliminats de `CustomIcons.ts`
+- Colors inline actualitzats: `secondary`→`success`, `offline`→`warning` (noms semàntics)
+
+#### CSS-5: `PWAErrorBoundary` alineat — ✅ COMPLETAT
+- `bg-blue-600` → `bg-primary`, `text-gray-900` → `text-foreground`
+- `text-gray-600` → `text-slate-500`, `bg-gray-100`/`bg-gray-200` → `bg-slate-100`/`bg-slate-200`
+- Layout complet redissenyat: card amb border, shadow, rounded-xl (coherent amb la resta de l'app)
+- Icona reduïda de `w-24 h-24` a `w-16 h-16`, color `text-danger`
+
+#### CSS-6: Shadow token `--shadow-soft` — MANTINGUT
+- Token disponible a `@theme` per ús futur. No eliminat.
+
+#### CSS-7: Z-index escala definida — ✅ COMPLETAT
+- Afegit a `globals.css`: `--z-drawer: 40`, `--z-modal: 50`, `--z-alert: 100`, `--z-sos: 200`
+- Tokens disponibles via `z-drawer`, `z-modal`, `z-alert`, `z-sos` a Tailwind
+
+#### CSS-8: `console.log` eliminat — ✅ COMPLETAT
+- `dashboard/page.tsx:139`: `console.log('View walk:', id)` → `(id) => handleWalkClick(id)`
+
+---
 
 ### 4.4 So SOS — test d'usuari
 - [ ] Test d'usuari amb resposta emocional al so substituït (chime càlid vs alarm)

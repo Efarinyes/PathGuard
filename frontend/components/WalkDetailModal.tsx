@@ -11,7 +11,7 @@ const DynamicCaregiverMap = dynamic(() => import('@/components/CaregiverMap'), {
   loading: () => (
     <div className="w-full h-full min-h-[300px] rounded-xl flex items-center justify-center bg-slate-50 border border-slate-200">
       <div className="flex flex-col items-center text-slate-400">
-        <div className="w-8 h-8 border-2 border-[#1E3A8A] border-t-transparent rounded-full animate-spin mb-2" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2" />
         <span className="text-sm font-medium">Carregant el mapa...</span>
       </div>
     </div>
@@ -68,7 +68,7 @@ export default function WalkDetailModal({ isOpen, onClose, walk, token }: WalkDe
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
           <div>
-            <h3 className="text-[#0F172A] font-bold text-lg">Detall del passeig</h3>
+            <h3 className="text-foreground font-bold text-lg">Detall del passeig</h3>
             <p className="text-slate-500 text-sm">
               {formatDate(walk.start_time)} · {formatTime(walk.start_time)}
               {walk.end_time && ` → ${formatTime(walk.end_time)}`}
@@ -76,7 +76,7 @@ export default function WalkDetailModal({ isOpen, onClose, walk, token }: WalkDe
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-[#0F172A] hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-2 text-slate-400 hover:text-foreground hover:bg-slate-100 rounded-lg transition-colors"
             aria-label="Tancar"
           >
             <X size={20} />
@@ -87,7 +87,7 @@ export default function WalkDetailModal({ isOpen, onClose, walk, token }: WalkDe
         <div className="flex-1 overflow-auto p-4">
           {isLoading && (
             <div className="flex items-center justify-center h-64">
-              <div className="w-8 h-8 border-2 border-[#1E3A8A] border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           )}
 
@@ -115,11 +115,11 @@ export default function WalkDetailModal({ isOpen, onClose, walk, token }: WalkDe
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
                   <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Punts de ruta</p>
-                  <p className="text-xl font-black text-[#0F172A]">{locations.length}</p>
+                  <p className="text-xl font-black text-foreground">{locations.length}</p>
                 </div>
                 <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
                   <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Durada</p>
-                  <p className="text-xl font-black text-[#0F172A]">
+                  <p className="text-xl font-black text-foreground">
                     {Math.floor(walk.duration_seconds / 60)} min
                   </p>
                 </div>

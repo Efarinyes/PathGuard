@@ -5,14 +5,14 @@ import { Shield, Users, Heart, Smartphone } from 'lucide-react';
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <main className="min-h-screen bg-background flex flex-col">
       <div className="flex-1 flex flex-col items-center justify-center p-8">
         <div className="max-w-md w-full text-center">
-          <div className="w-20 h-20 bg-[#1E3A8A] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-900/20">
+          <div className="w-20 h-20 bg-primary rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/20">
             <Shield className="text-white" size={40} />
           </div>
           
-          <h1 className="text-4xl font-bold text-[#0F172A] mb-3 tracking-tight">
+          <h1 className="text-4xl font-bold text-foreground mb-3 tracking-tight">
             PathGuard
           </h1>
           
@@ -23,7 +23,7 @@ export default function Home() {
           <div className="space-y-4">
             <Link
               href="/register"
-              className="flex items-center justify-center gap-3 w-full py-4 px-6 bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-900/10"
+              className="flex items-center justify-center gap-3 w-full py-4 px-6 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-primary/10"
             >
               <Heart className="w-5 h-5" />
               Crear entorn familiar
@@ -31,7 +31,7 @@ export default function Home() {
             
             <Link
               href="/activate"
-              className="flex items-center justify-center gap-3 w-full py-4 px-6 bg-[#22C55E] hover:bg-[#22C55E]/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-green-900/10"
+              className="flex items-center justify-center gap-3 w-full py-4 px-6 bg-success hover:bg-success/90 text-white font-bold rounded-xl transition-all shadow-lg shadow-success/10"
             >
               <Smartphone className="w-5 h-5" />
               Activar dispositiu
@@ -39,7 +39,7 @@ export default function Home() {
 
             <Link
               href="/caregiver"
-              className="flex items-center justify-center gap-3 w-full py-4 px-6 bg-white border-2 border-slate-200 hover:border-[#1E3A8A]/30 text-[#0F172A] font-bold rounded-xl transition-all"
+              className="flex items-center justify-center gap-3 w-full py-4 px-6 bg-white border-2 border-slate-200 hover:border-primary/30 text-foreground font-bold rounded-xl transition-all"
             >
               <Users className="w-5 h-5" />
               Accedir com a cuidador

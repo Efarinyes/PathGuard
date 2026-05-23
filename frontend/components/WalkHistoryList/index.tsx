@@ -47,7 +47,7 @@ export default function WalkHistoryList({ walks, onWalkClick }: WalkHistoryListP
               onClick={() => onWalkClick(walk.id)}
               className="group hover:bg-slate-50/80 cursor-pointer transition-colors"
             >
-              <td className="py-3 px-2 text-sm font-semibold text-[#0F172A]">
+              <td className="py-3 px-2 text-sm font-semibold text-foreground">
                 {formatDate(walk.start_time)}
               </td>
               <td className="py-3 px-2 text-sm text-slate-600">
