@@ -27,6 +27,127 @@ Mòbil (PWA) ──HTTPS──▶ Vercel (frontend)
 
 ---
 
+## Alternativa a ngrok — Render (backend al núvol gratis)
+
+Render és un servei de hosting gratuït que permet desplegar el backend de PathGuard (FastAPI + WebSocket + SQLite) sense necessitat de tenir el teu ordinador encès ni ngrok corrent.
+
+**Arquitectura alternativa:**
+```
+Mòbil (PWA) ──HTTPS──▶ Vercel (frontend)
+                         │
+                         │ fetch() + WebSocket (wss://)
+                         ▼
+                   Render (backend FastAPI + SQLite)
+```
+
+**Avantatges:**
+- No cal tenir l'ordinador encès
+- URL fixa (no com ngrok que canvia si no tens domini reservat)
+- WebSocket natiu (Render el suporta sense configuració extra)
+- Zero configuració de xarxa/tunnels
+
+**Limitacions del free tier:**
+| Aspecte | Comportament | Impacte |
+|---------|-------------|---------|
+| Spin-down | 15 min d'inactivitat → s'atura | Tarda 15-30s en reescalfar-se. Solució: cron-job.org fent ping cada 10 min |
+| SQLite | S'esborra en cada restart/redeploy | Cal tornar a registrar-se. Solució: PostgreSQL de pagament ($7/mes) |
+| RAM | 512 MB | Suficient per proves beta |
+| Ample de banda | 100 GB/mes | Suficient per proves |
+
+### 0.1 Preparar el codi per Render
+
+Crear `backend/requirements.txt` (ja existeix al repo):
+
+```txt
+fastapi==0.136.0
+uvicorn[standard]==0.44.0
+pydantic==2.13.2
+pydantic-settings==2.13.1
+SQLAlchemy==2.0.49
+python-jose[cryptography]==3.5.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.26
+email-validator==2.3.0
+websockets==16.0
+python-dotenv==1.2.2
+```
+
+Crear `backend/runtime.txt` (ja existeix al repo):
+
+```
+python-3.11.11
+```
+
+Render llegirà aquests fitxers automàticament i instal·larà les dependències.
+
+### 0.2 Desplegar backend a Render
+
+1. Ves a https://dashboard.render.com → **New Web Service**
+2. Connecta el compte de GitHub i selecciona el repo `PathGuard`
+3. Configura el servei:
+   | Camp | Valor |
+   |------|-------|
+   | **Root Directory** | `backend` |
+   | **Runtime** | Python 3 |
+   | **Build Command** | `pip install -r requirements.txt` |
+   | **Start Command** | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+   | **Plan** | Free |
+4. Clica **Create Web Service**
+
+### 0.3 Configurar variables d'entorn a Render
+
+Al dashboard de Render → Environment (o durant la creació del servei):
+
+| Variable | Valor |
+|----------|-------|
+| `SECRET_KEY` | Genera'n una amb `openssl rand -hex 32` |
+| `FRONTEND_URL` | `https://path-guard-orpin.vercel.app` |
+| `ADDITIONAL_CORS_ORIGINS` | `https://path-guard-orpin.vercel.app` |
+| `ENVIRONMENT` | `production` |
+
+**Important:** `FRONTEND_URL` ha de ser el teu domini Vercel exacte.
+
+### 0.4 Actualitzar Vercel
+
+Al Vercel dashboard → **Settings → Environment Variables**:
+
+| Variable | Valor |
+|----------|-------|
+| `NEXT_PUBLIC_API_URL` | `https://NOM_DEL_SERVEI.onrender.com/api/v1` |
+| `NEXT_PUBLIC_WS_URL` | `wss://NOM_DEL_SERVEI.onrender.com/api/v1/ws/` |
+
+Substitueix `NOM_DEL_SERVEI` pel nom que vas posar a Render (ex: `pathguard-backend`).
+
+Després d'actualitzar les env vars, redeploya el frontend a Vercel.
+
+### 0.5 Verificar que tot funciona
+
+```bash
+# Prova bàsica
+curl -s https://NOM_DEL_SERVEI.onrender.com/api/v1/
+# → {"detail":"Not Found"}  (correcte)
+
+# Swagger UI
+curl -s https://NOM_DEL_SERVEI.onrender.com/docs
+# → HTML visible
+
+# CORS
+curl -s -H "Origin: https://path-guard-orpin.vercel.app" \
+  -D - https://NOM_DEL_SERVEI.onrender.com/api/v1/auth/me 2>&1 | grep -i access-control
+# → access-control-allow-origin: https://path-guard-orpin.vercel.app
+```
+
+### 0.6 Opcional: evitar spin-down amb cron-job
+
+El free tier de Render s'atura després de 15 minuts sense activitat. Per mantenir-lo despert durant les proves:
+
+1. Ves a https://cron-job.org (gratuït)
+2. Crea un cron job que faci GET a `https://NOM_DEL_SERVEI.onrender.com` cada 10 minuts
+
+Això mantindrà el servei actiu mentre estiguis fent proves.
+
+---
+
 ## Pas 1 — Instal·lar i configurar ngrok
 
 ### 1.1 Instal·lar ngrok
