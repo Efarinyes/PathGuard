@@ -1,11 +1,11 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 class RegisterRequest(BaseModel):
     patient_name: str
     group_name: Optional[str] = None
     email: EmailStr
-    password: str
+    password: str = Field(..., max_length=72)
     sos_enabled: bool = False
 
 class RegisterResponse(BaseModel):
@@ -32,7 +32,7 @@ class GenerateInvitationResponse(BaseModel):
 
 class AcceptInvitationRequest(BaseModel):
     code: str
-    password: str
+    password: str = Field(..., max_length=72)
 
 class AcceptInvitationResponse(BaseModel):
     access_token: str
