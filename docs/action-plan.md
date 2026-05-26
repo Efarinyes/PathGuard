@@ -247,16 +247,17 @@ Mòbil (PWA) ──HTTPS──▶ Vercel (frontend)
 
 ### 5.1 Blockers — corregits abans de desplegar
 
-- [ ] **B1: CORS permet domini Vercel** — Afegir `https://pathguard.vercel.app` (i variants de preview) a `ALLOWED_ORIGINS` al `backend/app/main.py`. Fer que `FRONTEND_URL` env var sigui l'origen principal.
+- [x] **B1: CORS permet domini Vercel** — Afegit `ADDITIONAL_CORS_ORIGINS` a `settings.py` i lògica al `main.py` per afegir orígens addicionals des d'env var. `FRONTEND_URL` ja era l'origen principal.
 - [ ] **B2: Env vars del frontend per producció** — Set `NEXT_PUBLIC_API_URL=https://<ngrok-domain>/api/v1` i `NEXT_PUBLIC_WS_URL=wss://<ngrok-domain>/api/v1/ws/` a Vercel dashboard. Els fallbacks a `localhost` només serveixen per dev local.
-- [ ] **B3: Backend FRONTEND_URL** — Set `FRONTEND_URL=https://pathguard.vercel.app` al `backend/.env` (o via env var quan s'engegui uvicorn).
-- [ ] **B4: Neteja fitxers SW stale a `public/`** — Eliminar `pathguard-sw 2.js` fins a `pathguard-sw 9.js`, `workbox-c8ab336a.js`. La PWA els regenera al build. Actualitzar `.gitignore` per bloquejar `pathguard-sw*.js` amb espais.
+- [ ] **B3: Backend FRONTEND_URL** — Set `FRONTEND_URL=https://pathguard.vercel.app` i `ADDITIONAL_CORS_ORIGINS=https://pathguard.vercel.app,https://<ngrok-domain>` al `backend/.env` (o via env var quan s'engegui uvicorn).
+- [x] **B4: Neteja fitxers SW stale a `public/`** — Eliminats 9 fitxers, `.gitignore` actualitzat.
 
 ### 5.2 Fixes recomanats (abans de Beta, no bloquejants)
 
-- [ ] **F1: Pàgina `/offline` inexistent** — `PWAErrorBoundary` enllaça a `/offline` però no hi ha `app/offline/page.tsx`. Crear-la o treure l'enllaç.
-- [ ] **F2: `console.log`/`console.debug` en 4 hooks** — `useWebSocket.ts` (5), `useLocationTracking.ts` (3), `useOfflineRecovery.ts` (2), `swRegistration.tsx` (2). Violació de la Golden Rule. Eliminar o substituir per `logger`.
-- [ ] **F3: `viewport` deprecariat** — `export const viewport = {}` a `app/layout.tsx` → migrar a `export function generateViewport()` per Next.js 16.
+- [x] **F1: Pàgina `/offline` inexistent** — Enllaç eliminat del `PWAErrorBoundary`, directori buit esborrat.
+- [x] **F2: `console.log`/`console.debug` en 4 hooks** — 12 console statements eliminats: `useWebSocket.ts` (5), `useLocationTracking.ts` (3), `useOfflineRecovery.ts` (2), `swRegistration.tsx` (2).
+- [x] **F3: `viewport` deprecariat** — Importat tipus `Viewport` de Next.js, tipat l'export com a `Viewport`.
+- [x] **BUG offline/online visibility** — 5 bugs corregits: WebSocketDisconnect handler ara emet `patient_offline`, `isPatientConnected` per defecte `false`, snapshot inclou `patient_status`, notificació falsa de recuperació eliminada, `patient_online` emès immediatament al connectar.
 
 ### 5.3 Passos de desplegament
 
