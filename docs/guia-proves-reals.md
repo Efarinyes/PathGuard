@@ -113,10 +113,10 @@ Al Vercel dashboard → **Settings → Environment Variables**:
 
 | Variable | Valor |
 |----------|-------|
-| `NEXT_PUBLIC_API_URL` | `https://NOM_DEL_SERVEI.onrender.com/api/v1` |
-| `NEXT_PUBLIC_WS_URL` | `wss://NOM_DEL_SERVEI.onrender.com/api/v1/ws/` |
+| `NEXT_PUBLIC_API_URL` | `https://pathguard-backend.onrender.com/api/v1` |
+| `NEXT_PUBLIC_WS_URL` | `wss://pathguard-backend.onrender.com/api/v1/ws/` |
 
-Substitueix `NOM_DEL_SERVEI` pel nom que vas posar a Render (ex: `pathguard-backend`).
+Si vas posar un nom diferent a Render, substitueix `pathguard-backend` pel nom del teu servei.
 
 Després d'actualitzar les env vars, redeploya el frontend a Vercel.
 
@@ -124,16 +124,16 @@ Després d'actualitzar les env vars, redeploya el frontend a Vercel.
 
 ```bash
 # Prova bàsica
-curl -s https://NOM_DEL_SERVEI.onrender.com/api/v1/
+curl -s https://pathguard-backend.onrender.com/api/v1/
 # → {"detail":"Not Found"}  (correcte)
 
 # Swagger UI
-curl -s https://NOM_DEL_SERVEI.onrender.com/docs
+curl -s https://pathguard-backend.onrender.com/docs
 # → HTML visible
 
 # CORS
 curl -s -H "Origin: https://path-guard-orpin.vercel.app" \
-  -D - https://NOM_DEL_SERVEI.onrender.com/api/v1/auth/me 2>&1 | grep -i access-control
+  -D - https://pathguard-backend.onrender.com/api/v1/auth/me 2>&1 | grep -i access-control
 # → access-control-allow-origin: https://path-guard-orpin.vercel.app
 ```
 
@@ -142,7 +142,7 @@ curl -s -H "Origin: https://path-guard-orpin.vercel.app" \
 El free tier de Render s'atura després de 15 minuts sense activitat. Per mantenir-lo despert durant les proves:
 
 1. Ves a https://cron-job.org (gratuït)
-2. Crea un cron job que faci GET a `https://NOM_DEL_SERVEI.onrender.com` cada 10 minuts
+2. Crea un cron job que faci GET a `https://pathguard-backend.onrender.com` cada 10 minuts
 
 Això mantindrà el servei actiu mentre estiguis fent proves.
 
