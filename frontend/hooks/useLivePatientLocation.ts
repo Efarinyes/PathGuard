@@ -8,6 +8,7 @@ import { WalkEventProcessor, WalkState, WalkAction } from '../lib/WalkEventProce
 export interface UseLivePatientLocationReturn extends WalkState {
   isConnected: boolean;
   isPatientConnected: boolean;
+  hasReceivedStatus: boolean;
   isLoading: boolean;
   watchersCount: number;
   latestSosData: { patient_id: number; walk_id: number | null; sos_count: number; timestamp: string } | null;
@@ -31,10 +32,11 @@ export function useLivePatientLocation(
     { currentLocation: null, routeHistory: initialHistory, isActive: false }
   );
 
-  const [isPatientConnected, setIsPatientConnected] = useState(true);
+  const [isPatientConnected, setIsPatientConnected] = useState(false);
   const [watchersCount, setWatchersCount] = useState(0);
   const [latestSosData, setLatestSosData] = useState<{ patient_id: number; walk_id: number | null; sos_count: number; timestamp: string } | null>(null);
   const lastProcessedSosCount = useRef<number>(0);
+  const hasReceivedStatus = useRef(false);
 
   // 1. Snapshot Recovery: Fetch active walk state (REST Initial Load)
   async function rehydrateState(isReconnect = false) {
@@ -110,6 +112,10 @@ export function useLivePatientLocation(
         if (typeof classified.payload.watchers_count === 'number') {
           setWatchersCount(classified.payload.watchers_count);
         }
+        if (typeof classified.payload.patient_status === 'string') {
+          setIsPatientConnected(classified.payload.patient_status === 'online');
+          hasReceivedStatus.current = true;
+        }
         break;
       }
 
@@ -125,11 +131,13 @@ export function useLivePatientLocation(
 
       case 'patient_online': {
         setIsPatientConnected(true);
+        hasReceivedStatus.current = true;
         break;
       }
 
       case 'patient_offline': {
         setIsPatientConnected(false);
+        hasReceivedStatus.current = true;
         break;
       }
 
@@ -169,6 +177,7 @@ export function useLivePatientLocation(
     ...walkState,
     isConnected,
     isPatientConnected,
+    hasReceivedStatus: hasReceivedStatus.current,
     isLoading,
     watchersCount,
     latestSosData,

@@ -18,7 +18,7 @@ import CaregiverDashboardLayout from './CaregiverDashboardLayout';
 export default function CaregiverDashboard() {
   const { userToken } = useAppState();
   const locationHook = useLivePatientLocation();
-  const { currentLocation, routeHistory, isConnected, isPatientConnected, isLoading, isActive, latestSosData } = locationHook;
+  const { currentLocation, routeHistory, isConnected, isPatientConnected, hasReceivedStatus, isLoading, isActive, latestSosData } = locationHook;
   const { showAlert } = useSOSAlert();
   const [timeAgo, setTimeAgo] = useState<string>('Esperant dades...');
   const [notification, setNotification] = useState<{ message: string, type: 'info' | 'warning' } | null>(null);
@@ -46,14 +46,14 @@ export default function CaregiverDashboard() {
   }, [currentLocation]);
 
   useEffect(() => {
-    if (isLoading || !isActive) return;
+    if (isLoading || !isActive || !hasReceivedStatus) return;
 
     if (!isPatientConnected) {
       setNotification({ message: 'El familiar ha perdut la cobertura', type: 'warning' });
     } else {
       setNotification({ message: 'El familiar ha recuperat la cobertura', type: 'info' });
     }
-  }, [isPatientConnected, isActive, isLoading]);
+  }, [isPatientConnected, isActive, isLoading, hasReceivedStatus]);
 
   const renderMapSection = () => {
     if (isActive && routeHistory.length > 0) {

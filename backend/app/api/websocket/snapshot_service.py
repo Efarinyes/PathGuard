@@ -29,6 +29,7 @@ class SnapshotService:
             "type": "snapshot",
             "group_id": group_id,
             "watchers_count": watchers_count,
+            "patient_status": self.connection_manager.get_patient_status(group_id),
             "server_timestamp": format_timestamp_utc(datetime.now(timezone.utc)),
             "active_walk": None
         }

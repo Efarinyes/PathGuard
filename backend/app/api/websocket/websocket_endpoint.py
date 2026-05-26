@@ -37,18 +37,31 @@ async def websocket_endpoint(
         await connection_manager.broadcast_watchers_update(group_id)
         await snapshot_service.send_snapshot(websocket, db, group_id)
 
+    if role == "patient":
+        if connection_manager.get_patient_status(group_id) != "online":
+            connection_manager.set_patient_online(group_id)
+            await connection_manager.broadcast_to_group(group_id, {"type": "patient_online"})
+
     try:
         if role == "patient":
             await _handle_patient_loop(websocket, group_id)
         else:
             await websocket.receive_text()
     except WebSocketDisconnect as e:
-        # Code 1005 = normal client close (no status code received), not an error
         if e.code == 1005:
             logger.info("Connection closed normally for %s in group %s", role, group_id)
         else:
             logger.warning("WebSocket disconnect for %s in group %s: code=%s", role, group_id, e.code)
         connection_manager.disconnect(websocket, group_id, role)
+
+        if role == "caregiver":
+            await connection_manager.broadcast_watchers_update(group_id)
+
+        if role == "patient":
+            if not connection_manager.patient_connections.get(group_id):
+                if connection_manager.get_patient_status(group_id) == "online":
+                    connection_manager.set_patient_offline(group_id)
+                    await connection_manager.broadcast_to_group(group_id, {"type": "patient_offline"})
     except Exception as e:
         logger.error("Unexpected error for %s in group %s: %s", role, group_id, str(e))
         connection_manager.disconnect(websocket, group_id, role)
