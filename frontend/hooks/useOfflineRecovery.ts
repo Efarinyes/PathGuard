@@ -12,13 +12,11 @@ export function useOfflineRecovery() {
     if (typeof window === 'undefined') return;
 
     const handleOnline = () => {
-      console.log("[useOfflineRecovery] Network online, triggering sync.");
       locationService.syncQueuedPoints();
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        console.log("[useOfflineRecovery] App foregrounded, triggering sync.");
         locationService.syncQueuedPoints();
       }
     };

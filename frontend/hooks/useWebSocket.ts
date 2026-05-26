@@ -74,13 +74,11 @@ export function useWebSocket<T = unknown>(
           if (!isMounted.current) return;
           setIsConnected(true);
           reconnectAttempt.current = 0;
-          console.debug('[WS] Connected to location stream.');
         };
 
         socket.onmessage = (event) => {
           if (!isMounted.current) return;
           try {
-            console.debug(`[WS] Received: ${event.data}`);
             const data: T = JSON.parse(event.data);
             processMessage(data);
           } catch {
@@ -112,7 +110,6 @@ export function useWebSocket<T = unknown>(
 
       const delay = Math.min(WS_RECONNECT_BASE_DELAY_MS * Math.pow(2, reconnectAttempt.current), WS_RECONNECT_MAX_DELAY_MS);
       reconnectAttempt.current += 1;
-      console.debug(`[WS] Reconnecting in ${delay}ms (attempt ${reconnectAttempt.current})`);
       reconnectTimeout.current = setTimeout(connect, delay);
     }
 
@@ -120,7 +117,6 @@ export function useWebSocket<T = unknown>(
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && enabled) {
-        console.debug('[WS] App visible, checking connection...');
         reconnectAttempt.current = 0;
         connect();
       }
@@ -128,7 +124,6 @@ export function useWebSocket<T = unknown>(
 
     const handleOnline = () => {
       if (enabled) {
-        console.debug('[WS] Network online, reconnecting...');
         reconnectAttempt.current = 0;
         connect();
       }

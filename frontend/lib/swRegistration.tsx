@@ -16,10 +16,8 @@ const SW_SCRIPT = `
       }
       if (shouldRegister) {
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/pathguard-sw.js').then(function(registration) {
-            console.debug('SW registered:', registration.scope);
-          }, function(err) {
-            console.debug('SW registration failed:', err);
+          navigator.serviceWorker.register('/pathguard-sw.js').then(function() {
+          }, function() {
           });
         });
       }

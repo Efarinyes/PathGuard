@@ -64,6 +64,12 @@ ALLOWED_ORIGINS = [
     "http://localhost:3001",
 ]
 
+if settings.ADDITIONAL_CORS_ORIGINS:
+    for origin in settings.ADDITIONAL_CORS_ORIGINS.split(","):
+        origin = origin.strip()
+        if origin and origin not in ALLOWED_ORIGINS:
+            ALLOWED_ORIGINS.append(origin)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,

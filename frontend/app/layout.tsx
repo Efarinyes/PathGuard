@@ -4,7 +4,7 @@ import { RoleGuard } from "@/components/RoleGuard";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { PWAErrorBoundary } from "@/components/PWAErrorBoundary";
 import ServiceWorkerRegistration from "@/lib/swRegistration";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport = {
+export const viewport: Viewport = {
   themeColor: "#1E3A8A",
   width: "device-width",
   initialScale: 1,

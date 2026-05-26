@@ -14,7 +14,11 @@ class Settings(BaseSettings):
     
     # Environment config
     FRONTEND_URL: str = "http://localhost:3000"
-    
+
+    # Additional CORS origins for production (comma-separated)
+    # Example: "https://pathguard.vercel.app,https://pathguard-git-feat-xxx.vercel.app"
+    ADDITIONAL_CORS_ORIGINS: str = ""
+
     # Database
     # Development: sqlite:///./pathguard.db (default, no server needed)
     # Production: postgresql://user:pass@host:5432/db

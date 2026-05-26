@@ -91,14 +91,11 @@ export const useLocationTracking = () => {
 
     watchId.current = navigator.geolocation.watchPosition(
       (position) => {
-        console.log(`[GEO] watchPosition fired: ${position.coords.latitude}, ${position.coords.longitude}`);
         latestPositionRef.current = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         };
-        // Initial point
         if (!lastSentPositionRef.current) {
-          console.log('[GEO] Processing initial point');
           processLocation();
         }
       },
@@ -127,8 +124,6 @@ export const useLocationTracking = () => {
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "visible" && isTrackingRef.current) {
-        console.log("[GEO] App returned to foreground, verifying tracking state...");
-        // Re-sync the processing cycle in case timeout was suspended
         processLocation();
         
         // If watchId was somehow lost, restart it

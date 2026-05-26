@@ -9,6 +9,7 @@ frontend/node_modules/
 frontend/.next/
 frontend/public/workbox-*.js
 frontend/public/pathguard-sw*.js
+frontend/public/pathguard-sw *.js
 frontend/.env
 frontend/.env.local
 .DS_Store
