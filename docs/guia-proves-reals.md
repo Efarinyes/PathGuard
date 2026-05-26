@@ -105,7 +105,7 @@ Al dashboard de Render → Environment (o durant la creació del servei):
 | `ADDITIONAL_CORS_ORIGINS` | `https://path-guard-orpin.vercel.app` |
 | `ENVIRONMENT` | `production` |
 
-**Important:** `FRONTEND_URL` ha de ser el teu domini Vercel exacte.
+**Important:** `FRONTEND_URL` ha de ser el teu domini Vercel exacte. Si Vercel genera URLs de preview (ex: `path-guard-git-main-eduard-farinyes-projects.vercel.app`), afegeix-les també a `ADDITIONAL_CORS_ORIGINS` separades per comes.
 
 ### 0.4 Actualitzar Vercel
 
@@ -113,10 +113,10 @@ Al Vercel dashboard → **Settings → Environment Variables**:
 
 | Variable | Valor |
 |----------|-------|
-| `NEXT_PUBLIC_API_URL` | `https://pathguard-backend.onrender.com/api/v1` |
-| `NEXT_PUBLIC_WS_URL` | `wss://pathguard-backend.onrender.com/api/v1/ws/` |
+| `NEXT_PUBLIC_API_URL` | `https://pathguard-sjxy.onrender.com/api/v1` |
+| `NEXT_PUBLIC_WS_URL` | `wss://pathguard-sjxy.onrender.com/api/v1/ws/` |
 
-Si vas posar un nom diferent a Render, substitueix `pathguard-backend` pel nom del teu servei.
+Si vas posar un nom diferent a Render, substitueix `pathguard-sjxy` pel nom del teu servei.
 
 Després d'actualitzar les env vars, redeploya el frontend a Vercel.
 
@@ -124,16 +124,16 @@ Després d'actualitzar les env vars, redeploya el frontend a Vercel.
 
 ```bash
 # Prova bàsica
-curl -s https://pathguard-backend.onrender.com/api/v1/
+curl -s https://pathguard-sjxy.onrender.com/api/v1/
 # → {"detail":"Not Found"}  (correcte)
 
 # Swagger UI
-curl -s https://pathguard-backend.onrender.com/docs
+curl -s https://pathguard-sjxy.onrender.com/docs
 # → HTML visible
 
 # CORS
 curl -s -H "Origin: https://path-guard-orpin.vercel.app" \
-  -D - https://pathguard-backend.onrender.com/api/v1/auth/me 2>&1 | grep -i access-control
+  -D - https://pathguard-sjxy.onrender.com/api/v1/auth/me 2>&1 | grep -i access-control
 # → access-control-allow-origin: https://path-guard-orpin.vercel.app
 ```
 
@@ -142,7 +142,7 @@ curl -s -H "Origin: https://path-guard-orpin.vercel.app" \
 El free tier de Render s'atura després de 15 minuts sense activitat. Per mantenir-lo despert durant les proves:
 
 1. Ves a https://cron-job.org (gratuït)
-2. Crea un cron job que faci GET a `https://pathguard-backend.onrender.com` cada 10 minuts
+2. Crea un cron job que faci GET a `https://pathguard-sjxy.onrender.com` cada 10 minuts
 
 Això mantindrà el servei actiu mentre estiguis fent proves.
 
