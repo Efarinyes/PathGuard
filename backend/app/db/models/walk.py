@@ -7,8 +7,8 @@ class Walk(Base):
     Walk model to track patient sessions.
     """
     id = Column(Integer, primary_key=True, index=True)
-    start_time = Column(DateTime)
-    end_time = Column(DateTime, nullable=True)
+    start_time = Column(DateTime(timezone=True))
+    end_time = Column(DateTime(timezone=True), nullable=True)
     active = Column(Boolean, default=True)
     initiated_by_type = Column(String(50), nullable=False)
     initiated_by_id = Column(Integer, nullable=True)

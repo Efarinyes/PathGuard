@@ -38,67 +38,55 @@ Cada fase es desenvolupa en una branca `fix/` o `feat/`, es mergeja a `develop`,
 main ── develop ── fix/ o feat/ (cada fase)
 ```
 
-Branca de seguretat: `safety/pre-bcrypt-fix` (ja creada)
+Branca de seguretat: `safety/pre-bcrypt-fix` — ❌ ESBORRADA (era un experiment no fusionat)
 
 ---
 
-## Fase B — Distància de passeig (Punt 3) — ⏳ AJORNADA (post-beta)
+## Fase B — Distància de passeig (Punt 3) — ❌ CANCEL·LADA (31/05/2026)
 
-**Problema:** La columna distància a l'historial de passejades sempre mostra `--`. El backend mai calcula ni emmagatzema la distància recorreguda.
+**Problema original:** La columna distància a l'historial de passejades sempre mostra `--`. El backend mai calcula ni emmagatzema la distància recorreguda.
 
-**Decisió (31/05/2026):** **Ajornada.** La distància recorreguda no respon a una necessitat real del cuidador. El que importa és: va sortir? (historial), quant de temps? (durada), per on va anar? (mapa), a quines hores acostuma a sortir? (analítiques). La distància és una mètrica esportiva, no de tranquil·litat familiar.
+**Decisió (31/05/2026):** **Cancel·lada definitivament.** La distància recorreguda no respon a una necessitat real del cuidador. El que importa és: va sortir? (historial), quant de temps? (durada), per on va anar? (mapa), a quines hores acostuma a sortir? (analítiques). La distància és una mètrica esportiva, no de tranquil·litat familiar.
 
-**Queda documentada per si es vol implementar en el futur.** La funció Haversine al frontend (`frontend/lib/gpsUtils.ts`) i la interfície `WalkHistoryItem.distance_meters?` al frontend ja estan preparades.
-
-### B.1 (futur) Afegir columna `distance_meters` al model Walk
-
-**Arxiu:** `backend/app/db/models/walk.py`
-**Canvi:** `distance_meters = Column(Float, nullable=True)`
-
-### B.2 (futur) Calcular distància en `stop_walk()`
-
-**Arxiu:** `backend/app/services/walk_service.py`
-**Canvi:** Al mètode `stop_walk()`, recorre els punts GPS ordenats cronològicament i suma distàncies Haversine acumulades.
-
-### B.3 (futur) Incloure `distance_meters` a la resposta de `GET /walks/`
-
-**Arxiu:** `backend/app/services/walk_service.py`
-**Canvi:** Afegir `distance_meters` al diccionari de retorn de `read_walks()`.
-
-### B.4 (futur) Tests
-
-- Test d'integració: iniciar passeig → enviar 2+ punts GPS → aturar → verificar `distance_meters > 0`
-- Test unitari: funció Haversine amb coordenades conegudes (ex: 1km entre punts)
-
-**Branca:** `feat/walk-distance`
-**Estimació:** 2-3 hores
-**Risc:** Baix
+**Canvis aplicats:**
+- Columna "Distància" eliminada de `WalkHistoryList/index.tsx`
+- `distance_meters` eliminat de la interfície `WalkHistoryItem` (`walkService.ts` i `WalkHistoryList/index.tsx`)
+- La funció Haversine a `frontend/lib/gpsUtils.ts` es manté per si es necessita en el futur
 
 ---
 
-## Fase C + D — Reorganització completa del dashboard owner (Punts 4 i 5) — Substituït per pla de reorganització
+## Fase C + D — Reorganització completa del dashboard owner (Punts 4 i 5) — ✅ COMPLETADA (31/05/2026)
 
-**A partir del 31/05/2026, les Fases C i D originals queden substituïdes per un pla únic de reorganització del dashboard owner.**
+**Implementat a la branca:** `feat/dashboard-reorganization` (mergejat a `develop` i `main`)
+**Commit:** `557ff3c`
 
-**Document de referència:** `docs/REORGANITZACIO-DASHBOARD-OWNER.md`
+### Resum dels canvis
 
-### Decisió
+| Ruta | Abans | Després |
+|------|-------|---------|
+| `/caregiver` | Mapa + estat + historial | Mapa + estat *només* |
+| `/caregiver/dashboard` | SOS + codi + historial + analytics | SOS + codi + **afegir cuidador** *només* |
+| `/caregiver/activity` | ❌ No existia | **NOVA:** historial + analytics sense acordió |
 
-En lloc de fer petits ajustos (C: unificar històric, D: separar config d'estadístiques), es redissenya l'arquitectura de navegació del dashboard owner amb **tres seccions al drawer**:
+### Fitxers modificats (10) + creat (1)
 
-| # | Secció | Ruta | Contingut |
-|---|--------|------|-----------|
-| 1 | **Monitorització** | `/caregiver` | Mapa + estat en viu. Sense "afegir cuidador" ni "punts de ruta". |
-| 2 | **Configuració del grup** | `/caregiver/dashboard` | SOS toggle, codi activació, afegir cuidador. Sense historial ni analytics. |
-| 3 | **Activitat** (NOVA) | `/caregiver/activity` | Historial de passejos, analytics (durada, hores, freqüència), punts de ruta. |
+| Fitxer | Canvi |
+|--------|-------|
+| `CustomIcons.ts` | Punt actual `success` (verd) + 20px; punt offline 20px |
+| `PatientStatusCard.tsx` | Treure "Punts de ruta" |
+| `CaregiverHeader.tsx` | Títol per prop, sense botó "Afegir cuidador" |
+| `OwnerMenuDrawer.tsx` | 3 opcions: `MapPin`, `Sliders`, `BarChart3` |
+| `CaregiverDashboardLayout.tsx` | Sense `inviteModal` |
+| `CaregiverDashboard/index.tsx` | Sense `InviteCaregiverModal` |
+| `CaregiverAnalytics.tsx` | Sense acordió, sempre visible |
+| `dashboard/page.tsx` | Només SOS + codi + cuidadors |
+| `WalkHistoryList/index.tsx` | Columna Distància eliminada |
+| `walkService.ts` | `distance_meters` eliminat del tipus |
+| **Nou:** `activity/page.tsx` | Historial + analytics, protegit per owner |
 
-### Canvis al mapa
-
-El punt de posició actual al mapa passa de `primary` (blau) a `success` (verd) i més gran, per distingir visualment "on és ara" de "per on ha passat".
-
-**Branca:** `refactor/reorganitzacio-dashboard`
-**Estimació:** 2-3 hores
-**Risc:** Baix-Mitjà
+**Build:** ✅ `npm run build --webpack` correcte
+**Tests:** ✅ 108 passed / 6 skipped
+**Desplegat a Vercel des de `main`**
 
 ---
 
@@ -188,14 +176,16 @@ Cada migració **preserva la interfície dels hooks existents** perquè el codi 
 
 ---
 
-## Criteris d'èxit de la beta estable
+## Criteris d'èxit de la beta estable — Progrés
 
-1. Un cuidador pot veure l'historial de passejades amb ruta al mapa, durada i horaris habituals
-2. El dashboard d'owner mostra clarament la configuració del dispositiu (SOS, codi d'activació) separada de la informació d'activitat (historial, gràfiques)
-3. El pacient pot passejar amb el mòbil a la butxaca (pantalla apagada) sense que el cuidador rebi falsos `offline`, gràcies a Capacitor
-4. El cuidador rep l'alerta SOS si té el dashboard obert (PWA al mòbil o escriptori)
-5. Les dades de passeig persisteixen als restarts del servidor (PostgreSQL)
-6. El cuidador pot consultar la base de dades (via endpoint admin o client SQL)
+| # | Criteri | Fase | Estat |
+|---|---------|------|-------|
+| 1 | Cuidador veu historial amb ruta al mapa, durada i horaris | C+D | ✅ |
+| 2 | Dashboard separa configuració d'activitat | C+D | ✅ |
+| 3 | GPS en background sense falsos offline (Capacitor) | E | ⏳ |
+| 4 | Cuidador rep SOS si té el dashboard obert | — | ✅ (ja funciona) |
+| 5 | Dades persisteixen entre restarts (PostgreSQL) | G | ⏳ |
+| 6 | Consulta externa de la BD | G | ⏳ |
 
 ---
 
@@ -248,109 +238,30 @@ La ruta tindrà menys punts (30s en lloc de 5s), però la **traça general és i
 
 ---
 
-## Fase G — Migració a PostgreSQL (Punts 3, 5 i 8)
+## Fase G — Migració a PostgreSQL (Punts 3, 5 i 8) — ⏳ PENDENT
+
+**Document de referència:** `docs/FASE-G-POSTGRESQL-MIGRATION.md` (pla detallat)
 
 **Problema:** SQLite a Render no persisteix entre restarts i no es pot consultar externament. El cuidador/owner no pot accedir a les dades per veure analítiques, historials o detectar patrons.
 
-**Objectiu:** Migrar la base de dades a PostgreSQL gestionat per Supabase (gratuït) o directament a Render ($7/mes).
-
-### G.1 Escollir proveïdor
-
-| Opció | Preu | PostgreSQL | Consultable externament? | Latència |
-|-------|------|-----------|-------------------------|----------|
-| **Supabase** | Gratuït | 500 MB | ✅ Table Editor al dashboard | ~10ms des de Render |
-| **Render PostgreSQL** | $7/mes | 1 GB | ❌ No via client extern | ~1ms (mateix datacenter) |
-
-**Recomanació per a la beta:** **Supabase** (gratuït, consultable via Table Editor, suficient per 3-5 grups).
-
-### G.2 Passos de migració a Supabase
-
-**G.2.1 Crear projecte a Supabase**
-
-1. Ves a https://supabase.com → Sign up → New project
-2. Copia la **Connection string (URI)** de Settings → Database
-
-**G.2.2 Actualitzar configuració del backend**
-
-**Arxiu:** `backend/.env` (local) o Environment Variables a Render
-
-```env
-DATABASE_URL=postgresql://postgres:xxxx@xxxx.supabase.co:5432/postgres
-```
-
-**G.2.3 Verificar que SQLAlchemy funciona amb PostgreSQL**
-
-No cal canviar codi: `Base.metadata.create_all()` funciona igual amb PostgreSQL. El model `Walk` ja usa `Column(Float)` per `distance_meters` — compatible.
-
-**Possibles incompatibilitats a revisar:**
-
-- `DateTime` columnes: PostgreSQL espera `timezone=True` explícit. Revisar `start_time` i `end_time` a `Walk` i `timestamp` a `Location`.
-- `String(36)` per `device_token`: compatible.
-- `Boolean` default: PostgreSQL requereix `server_default` o default a Python. Revisar `Walk.active`, `Patient.activation_code_used`.
-
-**G.2.4 Migrar dades (opcional)**
-
-Per passar les dades de SQLite a PostgreSQL:
-
-```bash
-# Dump SQLite
-sqlite3 pathguard.db .dump > dump.sql
-# Editar dump: eliminar línies incompatibles (BEGIN/COMMIT, PRAGMA, etc.)
-# Importar a Supabase via psql
-psql $DATABASE_URL < dump_clean.sql
-```
-
-O simplement començar de zero (la BD és buida després de cada restart de Render).
-
-### G.3 Consultar la base de dades
-
-Amb Supabase, el Table Editor al dashboard permet:
-- Veure totes les taules (User, Patient, Group, Walk, Location)
-- Filtrar per columnes (ex: `active=True` per veure passeigs actius)
-- Exportar a CSV per analitzar fora
-
-**Alternativa:** Eina local tipus TablePlus o DBeaver connectant al Supabase PostgreSQL via SSL.
-
-### G.4 Tests
-
-- Test d'integració: connexió a PostgreSQL, crear taules, insertar i llegir un walk
-- Test de regressió: tot el conjunt de tests (152 tests) ha de passar amb PostgreSQL
+**Objectiu:** Migrar la base de dades a PostgreSQL gestionat per Supabase (gratuït).
 
 **Branca:** `feat/postgresql-migration`
-**Estimació:** 1-2 dies (inclou creació del compte Supabase, configuració, tests de regressió)
-**Risc:** Mitjà — pot requerir ajustos menors a les columnes DateTime i Boolean
-
-### G.5 Flux d'arquitectura final (beta)
-
-```
-Vercel (frontend PWA /patient + /caregiver)
-  │
-  ├── fetch/WS → Render (FastAPI + WebSocket)
-  │                      │
-  │                      └── connect → Supabase PostgreSQL
-  │
-  └── Contacte directe (el frontend no canvia)
-
-El cuidador/owner consulta dades via:
-  - GET /api/v1/walks/ (historial)
-  - GET /api/v1/analytics/ (estadístiques)
-  - Supabase Table Editor (opcional, per debug)
-```
+**Estimació:** 1-2 dies
+**Risc:** Mitjà
 
 ---
 
 ## Resum del pla complet
 
-| Fase | Què | Punts de les proves | Estimació | Branca | Risc |
-|------|-----|---------------------|-----------|--------|------|
-| **B** | Distància de passeig | 3 | 2-3h | `feat/walk-distance` | ⏳ Ajornada |
-| **C+D** | Reorganitzar dashboard owner + mapa | 4, 5 | 2-3h | `refactor/reorganitzacio-dashboard` | Baix-Mitjà |
-| **E** | Capacitor per /patient | 1, 2, 6 | 3-5 dies | `feat/capacitor-patient-app` | Alt |
-| **F** | Lògica adaptativa GPS | 7 | 30 min | `feat/gps-adaptive-logic` | Molt baix |
-| **G** | Migració a PostgreSQL | 8 | 1-2 dies | `feat/postgresql-migration` | Mitjà |
+| Fase | Què | Punts de les proves | Estimació | Branca | Risc | Estat |
+|------|-----|---------------------|-----------|--------|------|-------|
+| **F** | Lògica adaptativa GPS | 7 | 30 min | `feat/gps-adaptive-logic` | Molt baix | ✅ |
+| **C+D** | Reorganitzar dashboard owner + mapa | 4, 5 | 2-3h | `feat/dashboard-reorganization` | Baix-Mitjà | ✅ |
+| **G** | Migració a PostgreSQL | 8 | 1-2 dies | `feat/postgresql-migration` | Mitjà | ⏳ |
+| **E** | Capacitor per /patient | 1, 2, 6 | 3-5 dies | `feat/capacitor-patient-app` | Alt | ⏳ |
+| **B** | Distància de passeig | 3 | — | — | — | ❌ Cancel·lada |
 
-**Ordre recomanat:** ✅F → C+D → G → E
+**Ordre d'execució:** ✅F → ✅C+D → **G → E** (ara)
 
-(F completada. B ajornada a post-beta. C+D substitueix les fases originals per la reorganització del dashboard. G (PostgreSQL) abans de E (Capacitor) per tenir dades persistents quan comencin les proves reals amb Capacitor.)
-
-**Nota sobre analytics:** El backend ja exposa `GET /analytics/` amb `avg_duration_minutes`, `common_start_hours` (top 3) i `walk_frequency` (7 dies). La informació d'horaris habituals **ja existeix** a l'API — la nova pàgina d'activitat la mostrarà sense acordió.
+**Nota sobre B:** Cancel·lada per decisió de producte. La columna distància i `distance_meters` han estat eliminats de la UI i del tipus frontend.

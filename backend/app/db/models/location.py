@@ -10,7 +10,7 @@ class Location(Base):
     walk_id = Column(Integer, ForeignKey("walk.id"), nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime(timezone=True), nullable=False)
     client_id = Column(String(50), unique=True, index=True, nullable=True) # UUID for deduplication
     is_recovered = Column(Boolean, default=False)  # True if synced offline during recovery
     

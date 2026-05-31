@@ -1,7 +1,10 @@
-# Reorganització del Dashboard Owner
+# Reorganització del Dashboard Owner ✅ COMPLETADA (31/05/2026)
 
 **Basada en la decisió del 31 de maig de 2026.**
 **Alineada amb la filosofia PathGuard:** *calm, discreta, fiable — familiar, no clínica, no invasiva.*
+**Commit:** `557ff3c` — mergejat a `develop` i `main` el 31/05/2026.
+
+**Tots els canvis d'aquest document estan implementats i desplegats a producció.**
 
 ---
 

@@ -43,7 +43,7 @@ The system consists of:
 - A **caregiver dashboard** (`/caregiver`) that monitors the patient in real-time via WebSocket
 - An **owner dashboard** (`/caregiver/dashboard`) for group configuration (SOS toggle, activation codes, walk history)
 
-**Current phase:** Post-beta (Phase 4.3 + CSS Design System completed)
+**Current phase:** Fase G — PostgreSQL migration (plan completed)
 
 ---
 
@@ -83,12 +83,11 @@ PathGuard-project/
 │   ├── hooks/                  # React hooks
 │   ├── services/               # API service layer
 │   ├── lib/                    # Utilities, constants
-│   └── tests/                  # Vitest suite (94 passing)
+│   └── tests/                  # Vitest suite (108 passing)
 ├── docs/                       # Project documentation
 │   ├── action-plan.md          # MASTER PLAN — read this first
-│   ├── phase4-detailed-plan.md # Detailed Phase 4 breakdown
 │   ├── guia-proves-reals.md    # Real-world testing guide
-│   └── safari-battery-api-removal.md
+│   └── FASE-G-POSTGRESQL-MIGRATION.md
 ├── .audit_archive/             # Product and technical audit reports
 │   ├── product_audit.md
 │   └── technical_audit.md
@@ -108,6 +107,8 @@ PathGuard-project/
 | **`.audit_archive/product_audit.md`** | 7 product deviations (PD-1–PD-7) and 3 product risks (PR-1–PR-3). All verified aligned. |
 | **`.audit_archive/technical_audit.md`** | 3 architectural risks (AR-1–AR-3), 3 tech debt items (TD-1–TD-3), SOLID violations. |
 | **`docs/guia-proves-reals.md`** | Real-world testing scenarios (registration, walk lifecycle, SOS, invite). |
+| **`docs/FASE-G-POSTGRESQL-MIGRATION.md`** | Detailed PostgreSQL migration plan (G.1–G.7). |
+| **`docs/FASE-G-POSTGRESQL-MIGRATION.md`** | Detailed PostgreSQL migration plan (G.1–G.7). |
 | **`frontend/AGENTS.md`** | Next.js-specific rules for this codebase (breaking changes from standard Next.js). |
 | **`backend/app/main.py`** | Router registration — the entry point for understanding backend API structure. |
 
@@ -251,7 +252,7 @@ All design tokens are defined in `frontend/app/globals.css` via `@theme`. **No `
 ## 7. Architectural Decisions & Constraints
 
 ### Decisions Already Made
-1. **SQLite for beta** — PostgreSQL migration deferred to post-beta
+1. **PostgreSQL for production, SQLite for local dev** — Dual DB strategy via `DATABASE_URL`. Tests remain SQLite in-memory.
 2. **i18n deferred to post-beta** — 165 Catalan strings hardcoded, no translation infrastructure yet. Strategy: cookie-based detection + manual override (see `docs/action-plan.md` 4.5)
 3. **No battery monitoring** — Completely removed (not patched) due to Safari/iOS unfixable API incompatibility
 4. **Owner-only walk details** — `GET /walks/{id}/locations` requires `is_owner` (implemented in 4.1.2)
@@ -312,7 +313,7 @@ Before making ANY change:
 
 ---
 
-## 10. Current Phase Status (as of 2026-05-23)
+## 10. Current Phase Status (as of 2026-05-31)
 
 | Phase | Status | Branch |
 |---|---|---|
@@ -323,22 +324,27 @@ Before making ANY change:
 | 4.2 — Backend Architecture | ✅ Completed | `refactor/phase4-architecture` (merged to develop) |
 | 4.3 — Frontend Architecture | ✅ Completed | `refactor/phase4-frontend-architecture` (merged to develop) |
 | CSS Design System | ✅ Completed | `refactor/css-design-system` (merged to develop) |
+| F — GPS Adaptive Logic | ✅ Completed | `feat/gps-adaptive-logic` (merged to develop) |
+| C+D — Dashboard Reorganization | ✅ Completed | `feat/dashboard-reorganization` (merged to develop) |
+| G — PostgreSQL Migration | ⏳ In progress | `feat/postgresql-migration` (plan ready) |
+| E — Capacitor /patient | ⏳ Blocked (needs Xcode) | — |
+| B — Walk distance | ❌ Cancelled | — |
 | 4.4 — SOS User Test | ⏳ Pending | — |
 | 4.5 — i18n | ⏳ Pending | — |
-| 5 — Beta Deploy (Vercel + ngrok) | ⏳ Pending | — |
+| 5 — Beta Deploy (Vercel + Render) | ⏳ Pending | — |
 
-**Completed in this session (v4.3.0):**
-- CSS-1: 130+ hex colors migrated to semantic tokens across 20 files
-- CSS-2: Vestigial `tailwind.config.js` removed. Tailwind v4 `@theme` is the single source of truth
-- CSS-4: CustomIcons.ts keyframes moved to `globals.css`
-- CSS-5: PWAErrorBoundary aligned with design system
-- CSS-7: Z-index scale defined (`z-drawer`, `z-modal`, `z-alert`, `z-sos`)
-- CSS-8: `console.log` removed from production code
-- TODO-2: SOS button visual stability fixed (progress bar, fixed height, focus-visible, no pulse)
+**Completed in v2.6.0-beta.1:**
+- F (GPS intervals relaxed 2s→15s, 5s→30s, 15s→2min, 10m→30m)
+- C+D (dashboard: 3 routes — monitoring/config/activity; map green current dot 20px; analytics always visible)
+- B cancelled (distance column removed from frontend, `distance_meters` type removed)
+- `safety/pre-bcrypt-fix` branch deleted (unmerged experiment)
+- Semver unified: tags match `package.json`
 
-**Pending TODOs (see `docs/action-plan.md`):**
-- TODO-1: SOS Toggle Real-Time — PENDING, a revisar. Flux actual acceptable segons filosofia PathGuard.
-- CSS-3: Patrons duplicats (Card, Spinner, ModalOverlay, FormInput) — PENDING post-beta
+**Pending TODOs:**
+- G — PostgreSQL migration (plan in `docs/FASE-G-POSTGRESQL-MIGRATION.md`)
+- E — Capacitor for /patient (blocked on Xcode)
+- TODO-1: SOS Toggle Real-Time — flux actual acceptable
+- CSS-3: Duplicated patterns (Card, Spinner, ModalOverlay, FormInput) — post-beta
 
 ---
 

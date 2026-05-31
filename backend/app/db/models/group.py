@@ -12,7 +12,7 @@ class Group(Base):
     name = Column(String, nullable=False)
 
     owner_id = Column(Integer, nullable=True, index=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     sos_enabled = Column(Boolean, default=False, nullable=False)
     sos_count = Column(Integer, default=0, nullable=False)
