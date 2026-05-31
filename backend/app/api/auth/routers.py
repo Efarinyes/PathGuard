@@ -1,5 +1,5 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -8,7 +8,7 @@ from app.api import deps
 from app.api.auth import services as auth_services
 from app.api.auth import schemas as auth_schemas
 from app.api.users.models import User
-from app.db.models.patient import Patient
+from app.db.models.patient import Patient, _hash_code, _new_activation_code, ACTIVATION_CODE_EXPIRY_HOURS
 from app.core.config.settings import settings
 from app.core.security.auth import create_access_token
 from app.services.registration_service import registration_service
@@ -173,7 +173,8 @@ def activate_device(
     Returns the device_token and patient_id for the patient's device to store.
     """
     code = data.code.strip().upper()
-    patient = db.query(Patient).filter(Patient.activation_code == code).first()
+    hashed = _hash_code(code)
+    patient = db.query(Patient).filter(Patient.activation_code_hash == hashed).first()
 
     if not patient:
         raise HTTPException(
@@ -186,6 +187,16 @@ def activate_device(
             status_code=status.HTTP_410_GONE,
             detail="Activation code already used"
         )
+
+    expires_at = patient.activation_code_expires_at
+    if expires_at:
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if expires_at < datetime.now(timezone.utc):
+            raise HTTPException(
+                status_code=status.HTTP_410_GONE,
+                detail="Activation code has expired"
+            )
 
     patient.activation_code_used = True
     db.commit()
@@ -206,6 +217,10 @@ def get_activation_code(
     """
     Get or regenerate the activation code for the patient in the current user's group.
     Only the group owner can access this endpoint.
+    Regenerates the code if:
+      - activation_code_hash is NULL (migrated patient without hashed code)
+      - the code has expired
+      - the code has been used
     """
     if not current_user.is_owner:
         raise HTTPException(
@@ -221,14 +236,31 @@ def get_activation_code(
             detail="No patient found in this group"
         )
 
-    if patient.activation_code_used:
-        from app.db.models.patient import _generate_activation_code
-        patient.activation_code = _generate_activation_code()
+    now = datetime.now(timezone.utc)
+    expires_at = patient.activation_code_expires_at
+    is_expired = False
+    if expires_at:
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        is_expired = expires_at < now
+
+    should_regenerate = (
+        patient.activation_code_hash is None
+        or patient.activation_code_used
+        or is_expired
+    )
+
+    if should_regenerate:
+        plain_code, hashed_code, expires_at = _new_activation_code()
+        patient.activation_code = plain_code
+        patient.activation_code_hash = hashed_code
         patient.activation_code_used = False
+        patient.activation_code_expires_at = expires_at
         db.commit()
         db.refresh(patient)
 
     return {
         "activation_code": patient.activation_code,
-        "is_used": patient.activation_code_used
+        "is_used": patient.activation_code_used,
+        "expires_at": patient.activation_code_expires_at.isoformat() if patient.activation_code_expires_at else None
     }

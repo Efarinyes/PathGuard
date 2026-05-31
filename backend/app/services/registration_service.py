@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config.settings import settings
 from app.core.security.auth import create_access_token
 from app.core.security.password import hash_password
-from app.db.models.patient import Patient
+from app.db.models.patient import Patient, _new_activation_code
 from app.api.users.models import User
 from app.db.models.group import Group
 
@@ -40,9 +40,13 @@ class RegistrationService:
         db.refresh(new_group)
         
         # 3. Create Patient
+        plain_code, hashed_code, expires_at = _new_activation_code()
         new_patient = Patient(
             name=patient_name,
             device_token=str(uuid.uuid4()),
+            activation_code=plain_code,
+            activation_code_hash=hashed_code,
+            activation_code_expires_at=expires_at,
             group_id=new_group.id
         )
         db.add(new_patient)

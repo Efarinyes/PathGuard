@@ -59,3 +59,4 @@ class ActivateDeviceResponse(BaseModel):
 class ActivationCodeResponse(BaseModel):
     activation_code: str
     is_used: bool
+    expires_at: str | None = None

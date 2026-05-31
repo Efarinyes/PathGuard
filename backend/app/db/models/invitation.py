@@ -9,7 +9,7 @@ class InvitationCode(Base):
     __tablename__ = "invitation_code"
 
     id = Column(Integer, primary_key=True, index=True)
-    code = Column(String(6), unique=True, index=True, nullable=False)
+    code = Column(String(64), unique=True, index=True, nullable=False)
     email = Column(String, nullable=False)
     group_id = Column(Integer, ForeignKey("family_group.id"), nullable=False)
     used = Column(Boolean, default=False, nullable=False)
