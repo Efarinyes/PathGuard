@@ -7,7 +7,6 @@ export interface WalkHistoryItem {
   end_time?: string | null;
   active: boolean;
   duration_seconds: number;
-  distance_meters?: number;
 }
 
 export interface ActiveWalkSnapshot {

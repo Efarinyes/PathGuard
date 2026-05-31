@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import CaregiverMap from '../CaregiverMap';
 import NotificationBanner from '../NotificationBanner';
-import InviteCaregiverModal from '../InviteCaregiverModal';
 import SOSAlertModal from '../SOSAlertModal';
 import { useLivePatientLocation } from '@/hooks/useLivePatientLocation';
 import { useSOSAlert } from '@/hooks/useSOSAlert';
@@ -22,7 +21,6 @@ export default function CaregiverDashboard() {
   const { showAlert } = useSOSAlert();
   const [timeAgo, setTimeAgo] = useState<string>('Esperant dades...');
   const [notification, setNotification] = useState<{ message: string, type: 'info' | 'warning' } | null>(null);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   const { patientName, isOwner, groupName } = useOwnerData(userToken);
 
@@ -76,7 +74,7 @@ export default function CaregiverDashboard() {
             patientName={patientName}
             isOwner={isOwner}
             groupName={groupName}
-            onInviteClick={() => setIsInviteModalOpen(true)}
+            title="Estat del passeig"
           />
         }
         mapSection={
@@ -97,15 +95,7 @@ export default function CaregiverDashboard() {
             isActive={isActive}
             isPatientConnected={isPatientConnected}
             currentLocation={currentLocation}
-            routeHistory={routeHistory}
             timeAgo={timeAgo}
-          />
-        }
-        inviteModal={
-          <InviteCaregiverModal
-            isOpen={isInviteModalOpen}
-            onClose={() => setIsInviteModalOpen(false)}
-            groupName={groupName}
           />
         }
       />
