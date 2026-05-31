@@ -27,13 +27,13 @@ export const PulseDotIcon = L.divIcon({
   html: `
     <div style="
       position: relative;
-      width: 14px;
-      height: 14px;
+      width: 24px;
+      height: 24px;
     ">
       <div style="
         position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background-color: ${COLORS.primary};
+        inset: -2px;
+        background-color: ${COLORS.success};
         border-radius: 50%;
         animation: map-pulse 2s infinite ease-out;
         opacity: 0.5;
@@ -41,15 +41,15 @@ export const PulseDotIcon = L.divIcon({
       <div style="
         position: absolute;
         top: 2px; left: 2px; right: 2px; bottom: 2px;
-        background-color: ${COLORS.primary};
+        background-color: ${COLORS.success};
         border-radius: 50%;
         border: 2px solid white;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       "></div>
     </div>
   `,
-  iconSize: [20, 20],
-  iconAnchor: [10, 10],
+  iconSize: [28, 28],
+  iconAnchor: [14, 14],
 });
 
 export const OfflinePulseDotIcon = L.divIcon({
@@ -57,12 +57,12 @@ export const OfflinePulseDotIcon = L.divIcon({
   html: `
     <div style="
       position: relative;
-      width: 14px;
-      height: 14px;
+      width: 24px;
+      height: 24px;
     ">
       <div style="
         position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
+        inset: -2px;
         background-color: ${COLORS.warning};
         border-radius: 50%;
         animation: map-pulse-offline 2s infinite ease-out;
@@ -74,10 +74,10 @@ export const OfflinePulseDotIcon = L.divIcon({
         background-color: ${COLORS.warning};
         border-radius: 50%;
         border: 2px solid white;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       "></div>
     </div>
   `,
-  iconSize: [20, 20],
-  iconAnchor: [10, 10],
+  iconSize: [28, 28],
+  iconAnchor: [14, 14],
 });

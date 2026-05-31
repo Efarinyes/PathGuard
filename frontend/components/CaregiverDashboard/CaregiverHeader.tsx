@@ -3,17 +3,17 @@
 import React, { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAppState } from '@/hooks/useAppState';
-import { Menu, UserPlus, LogOut } from 'lucide-react';
+import { Menu, LogOut } from 'lucide-react';
 import OwnerMenuDrawer from '@/components/OwnerMenuDrawer';
 
 interface CaregiverHeaderProps {
   patientName: string;
   isOwner: boolean;
   groupName: string;
-  onInviteClick: () => void;
+  title: string;
 }
 
-export default function CaregiverHeader({ patientName, isOwner, groupName, onInviteClick }: CaregiverHeaderProps) {
+export default function CaregiverHeader({ patientName, isOwner, groupName, title }: CaregiverHeaderProps) {
   const { clearUserSession } = useAppState();
   const router = useRouter();
   const pathname = usePathname();
@@ -26,15 +26,11 @@ export default function CaregiverHeader({ patientName, isOwner, groupName, onInv
     }, 300);
   };
 
-  const isOnDashboard = pathname === '/caregiver/dashboard';
-
   return (
     <>
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <h2 className="text-foreground font-bold text-xl mb-1">
-            {isOnDashboard ? 'Configuració del grup' : 'Estat del passeig'}
-          </h2>
+          <h2 className="text-foreground font-bold text-xl mb-1">{title}</h2>
         </div>
         {isOwner && (
           <button
@@ -46,16 +42,6 @@ export default function CaregiverHeader({ patientName, isOwner, groupName, onInv
           </button>
         )}
       </div>
-
-      {isOwner && !isOnDashboard && (
-        <button
-          onClick={onInviteClick}
-          className="w-full py-3 px-4 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-sm rounded-lg transition-all flex items-center justify-center gap-2 border border-primary/20 mt-2"
-        >
-          <UserPlus size={16} />
-          Afegir nou cuidador
-        </button>
-      )}
 
       <div className="h-px bg-slate-100 w-full mt-2" />
 
@@ -71,7 +57,7 @@ export default function CaregiverHeader({ patientName, isOwner, groupName, onInv
       <OwnerMenuDrawer
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
-        isOnDashboard={isOnDashboard}
+        activeRoute={pathname}
         onNavigate={handleNavigate}
         onLogout={() => {
           setIsMenuOpen(false);

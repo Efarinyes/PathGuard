@@ -8,7 +8,6 @@ interface PatientStatusCardProps {
   isActive: boolean;
   isPatientConnected: boolean;
   currentLocation: { timestamp: string } | null;
-  routeHistory: unknown[];
   timeAgo: string;
 }
 
@@ -17,7 +16,6 @@ export default function PatientStatusCard({
   isActive,
   isPatientConnected,
   currentLocation,
-  routeHistory,
   timeAgo,
 }: PatientStatusCardProps) {
   const getStatusColor = () => {
@@ -59,12 +57,6 @@ export default function PatientStatusCard({
         </p>
       </div>
 
-      {currentLocation && (
-        <div>
-          <p className="text-sm text-slate-500 font-medium mb-1">Punts de ruta</p>
-          <p className="text-foreground font-semibold">{routeHistory.length}</p>
-        </div>
-      )}
     </div>
   );
 }

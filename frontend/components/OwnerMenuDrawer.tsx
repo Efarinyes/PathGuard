@@ -1,12 +1,18 @@
 'use client';
 
 import React from 'react';
-import { MapPin, LogOut, X } from 'lucide-react';
+import { MapPin, Sliders, BarChart3, LogOut, X } from 'lucide-react';
+
+interface MenuItem {
+  label: string;
+  path: string;
+  icon: React.ReactNode;
+}
 
 interface OwnerMenuDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  isOnDashboard: boolean;
+  activeRoute: string;
   onNavigate: (path: string) => void;
   onLogout: () => void;
 }
@@ -14,10 +20,15 @@ interface OwnerMenuDrawerProps {
 export default function OwnerMenuDrawer({
   isOpen,
   onClose,
-  isOnDashboard,
+  activeRoute,
   onNavigate,
   onLogout,
 }: OwnerMenuDrawerProps) {
+  const items: MenuItem[] = [
+    { label: 'Monitorització', path: '/caregiver', icon: <MapPin size={18} /> },
+    { label: 'Configuració del grup', path: '/caregiver/dashboard', icon: <Sliders size={18} /> },
+    { label: 'Activitat', path: '/caregiver/activity', icon: <BarChart3 size={18} /> },
+  ];
   return (
     <div
       className={`fixed inset-0 z-50 transition-all duration-300 ease-out ${
@@ -51,29 +62,23 @@ export default function OwnerMenuDrawer({
 
         {/* Menu items */}
         <nav className="flex-1 p-2 space-y-1">
-          <button
-            onClick={() => onNavigate('/caregiver')}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-colors ${
-              isOnDashboard
-                ? 'text-foreground hover:bg-slate-50'
-                : 'text-primary font-semibold bg-blue-50/50'
-            }`}
-          >
-            <MapPin size={18} />
-            Monitorització
-          </button>
-
-          <button
-            onClick={() => onNavigate('/caregiver/dashboard')}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-colors ${
-              !isOnDashboard
-                ? 'text-foreground hover:bg-slate-50'
-                : 'text-primary font-semibold bg-blue-50/50'
-            }`}
-          >
-            <MapPin size={18} />
-            Configuració del grup
-          </button>
+          {items.map((item) => {
+            const isActive = activeRoute === item.path;
+            return (
+              <button
+                key={item.path}
+                onClick={() => onNavigate(item.path)}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-colors ${
+                  isActive
+                    ? 'text-primary font-semibold bg-blue-50/50'
+                    : 'text-foreground hover:bg-slate-50'
+                }`}
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            );
+          })}
         </nav>
 
         {/* Footer */}

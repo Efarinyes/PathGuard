@@ -9,7 +9,6 @@ export interface WalkHistoryItem {
   end_time?: string | null;
   active: boolean;
   duration_seconds: number;
-  distance_meters?: number;
 }
 
 export interface WalkHistoryListProps {
@@ -37,7 +36,6 @@ export default function WalkHistoryList({ walks, onWalkClick }: WalkHistoryListP
             <th className="py-3 px-2">Inici</th>
             <th className="py-3 px-2">Final</th>
             <th className="py-3 px-2 text-center">Durada</th>
-            <th className="py-3 px-2 text-center">Distància</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
@@ -58,9 +56,6 @@ export default function WalkHistoryList({ walks, onWalkClick }: WalkHistoryListP
               </td>
               <td className="py-3 px-2 text-sm text-slate-600 text-center font-medium">
                 {walk.active ? '--' : formatDuration(walk.duration_seconds)}
-              </td>
-              <td className="py-3 px-2 text-sm text-slate-500 text-center">
-                {walk.distance_meters ? `${(walk.distance_meters / 1000).toFixed(1)} km` : '--'}
               </td>
             </tr>
           ))}

@@ -8,7 +8,6 @@ interface CaregiverDashboardLayoutProps {
   statusCard: ReactNode;
   analyticsSection?: ReactNode;
   walkHistory?: ReactNode;
-  inviteModal: ReactNode;
 }
 
 export default function CaregiverDashboardLayout({
@@ -17,7 +16,6 @@ export default function CaregiverDashboardLayout({
   statusCard,
   analyticsSection,
   walkHistory,
-  inviteModal,
 }: CaregiverDashboardLayoutProps) {
   return (
     <div className="w-full flex flex-col md:flex-row gap-6 p-4 md:p-6 bg-background min-h-screen">
@@ -31,8 +29,6 @@ export default function CaregiverDashboardLayout({
         {analyticsSection}
         {walkHistory}
       </div>
-
-      {inviteModal}
     </div>
   );
 }

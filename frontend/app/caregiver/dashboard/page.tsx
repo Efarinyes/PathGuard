@@ -4,15 +4,11 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppState } from '@/hooks/useAppState';
 import { useOwnerData } from '@/hooks/useOwnerData';
-import { useCaregiverAnalytics } from '@/hooks/useCaregiverAnalytics';
 import LoginForm from '@/components/LoginForm';
 import CaregiverHeader from '@/components/CaregiverDashboard/CaregiverHeader';
 import ActivationCodeDisplay from '@/components/ActivationCodeDisplay';
 import SOSToggle from '@/components/SOSToggle';
-import CaregiverAnalytics from '@/components/CaregiverDashboard/CaregiverAnalytics';
-import CaregiverWalkHistory from '@/components/CaregiverDashboard/CaregiverWalkHistory';
-import WalkDetailModal from '@/components/WalkDetailModal';
-import { WalkHistoryItem } from '@/services/walkService';
+import InviteCaregiverModal from '@/components/InviteCaregiverModal';
 
 export default function OwnerDashboardPage() {
   const { userToken } = useAppState();
@@ -20,18 +16,7 @@ export default function OwnerDashboardPage() {
   const { patientName, isOwner, groupName, sosEnabled, isLoading } = useOwnerData(userToken);
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [showActivationCode, setShowActivationCode] = useState(false);
-  const [selectedWalk, setSelectedWalk] = useState<WalkHistoryItem | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-
-  const { walks, analytics } = useCaregiverAnalytics(userToken, false);
-
-  const handleWalkClick = (walkId: number) => {
-    const walk = walks.find(w => w.id === walkId) || null;
-    setSelectedWalk(walk);
-    setIsDetailModalOpen(true);
-  };
 
   // Auth gate
   if (!userToken) {
@@ -67,7 +52,7 @@ export default function OwnerDashboardPage() {
           patientName={patientName}
           isOwner={isOwner}
           groupName={groupName}
-          onInviteClick={() => setIsInviteModalOpen(true)}
+          title="Configuració del grup"
         />
       </div>
 
@@ -115,40 +100,29 @@ export default function OwnerDashboardPage() {
           </div>
         </section>
 
-        {/* 4.1.2: Historial de passejades */}
+        {/* Cuidadors — afegir cuidador */}
         <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-            <h2 className="text-foreground font-bold text-base">Historial de passejades</h2>
+            <h2 className="text-foreground font-bold text-base">Cuidadors</h2>
           </div>
-          <div className="p-2">
-            <CaregiverWalkHistory walks={walks} onWalkClick={handleWalkClick} />
-          </div>
-        </section>
-
-        {/* 4.1.5: CaregiverAnalytics (opt-in) */}
-        <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-            <h2 className="text-foreground font-bold text-base">Informació d'activitat</h2>
-          </div>
-          <div className="p-4">
-            <CaregiverAnalytics
-              analytics={analytics}
-              walks={walks}
-              isExtraInfoOpen={isAnalyticsOpen}
-              onToggleInfo={() => setIsAnalyticsOpen(!isAnalyticsOpen)}
-              onWalkClick={(id) => handleWalkClick(id)}
-            />
+          <div className="p-6">
+            <button
+              onClick={() => setIsInviteModalOpen(true)}
+              className="w-full py-3 px-4 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-sm rounded-lg transition-all flex items-center justify-center gap-2 border border-primary/20"
+            >
+              Afegir nou cuidador
+            </button>
           </div>
         </section>
       </main>
 
-      {/* Modal de detall del passeig */}
-      <WalkDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        walk={selectedWalk}
-        token={userToken || ''}
-      />
+      {isInviteModalOpen && (
+        <InviteCaregiverModal
+          isOpen={isInviteModalOpen}
+          onClose={() => setIsInviteModalOpen(false)}
+          groupName={groupName}
+        />
+      )}
     </div>
   );
 }
