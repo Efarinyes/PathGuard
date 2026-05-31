@@ -42,28 +42,30 @@ Branca de seguretat: `safety/pre-bcrypt-fix` (ja creada)
 
 ---
 
-## Fase B — Distància de passeig (Punt 3)
+## Fase B — Distància de passeig (Punt 3) — ⏳ AJORNADA (post-beta)
 
 **Problema:** La columna distància a l'historial de passejades sempre mostra `--`. El backend mai calcula ni emmagatzema la distància recorreguda.
 
-**Decisió:** Calcular-la. La funció Haversine ja existeix (`frontend/lib/gpsUtils.ts`). No guardarem miniatures ni imatges — les dades GPS permeten dibuixar la ruta sense ocupar espai innecessari.
+**Decisió (31/05/2026):** **Ajornada.** La distància recorreguda no respon a una necessitat real del cuidador. El que importa és: va sortir? (historial), quant de temps? (durada), per on va anar? (mapa), a quines hores acostuma a sortir? (analítiques). La distància és una mètrica esportiva, no de tranquil·litat familiar.
 
-### B.1 Afegir columna `distance_meters` al model Walk
+**Queda documentada per si es vol implementar en el futur.** La funció Haversine al frontend (`frontend/lib/gpsUtils.ts`) i la interfície `WalkHistoryItem.distance_meters?` al frontend ja estan preparades.
+
+### B.1 (futur) Afegir columna `distance_meters` al model Walk
 
 **Arxiu:** `backend/app/db/models/walk.py`
 **Canvi:** `distance_meters = Column(Float, nullable=True)`
 
-### B.2 Calcular distància en `stop_walk()`
+### B.2 (futur) Calcular distància en `stop_walk()`
 
 **Arxiu:** `backend/app/services/walk_service.py`
 **Canvi:** Al mètode `stop_walk()`, recorre els punts GPS ordenats cronològicament i suma distàncies Haversine acumulades.
 
-### B.3 Incloure `distance_meters` a la resposta de `GET /walks/`
+### B.3 (futur) Incloure `distance_meters` a la resposta de `GET /walks/`
 
 **Arxiu:** `backend/app/services/walk_service.py`
 **Canvi:** Afegir `distance_meters` al diccionari de retorn de `read_walks()`.
 
-### B.4 Tests
+### B.4 (futur) Tests
 
 - Test d'integració: iniciar passeig → enviar 2+ punts GPS → aturar → verificar `distance_meters > 0`
 - Test unitari: funció Haversine amb coordenades conegudes (ex: 1km entre punts)
@@ -74,50 +76,29 @@ Branca de seguretat: `safety/pre-bcrypt-fix` (ja creada)
 
 ---
 
-## Fase C — Simplificar navegació del dashboard owner (Punt 4)
+## Fase C + D — Reorganització completa del dashboard owner (Punts 4 i 5) — Substituït per pla de reorganització
 
-**Problema:** L'historial de passejades apareix a dos llocs: directe a "Historial de passejades" i dins "Informació d'activitat → Veure historial de passejos". Confon i duplica.
+**A partir del 31/05/2026, les Fases C i D originals queden substituïdes per un pla únic de reorganització del dashboard owner.**
 
-### C.1 Unificar en un sol punt d'entrada
+**Document de referència:** `docs/REORGANITZACIO-DASHBOARD-OWNER.md`
 
-Eliminar "Informació d'activitat → Veure historial de passejos". Mantenir només l'accés directe sota "Historial de passejades".
+### Decisió
 
-**Arxius:** `frontend/components/OwnerDashboard/` o on es renderitzi la secció duplicada.
+En lloc de fer petits ajustos (C: unificar històric, D: separar config d'estadístiques), es redissenya l'arquitectura de navegació del dashboard owner amb **tres seccions al drawer**:
 
-### C.2 Tests
+| # | Secció | Ruta | Contingut |
+|---|--------|------|-----------|
+| 1 | **Monitorització** | `/caregiver` | Mapa + estat en viu. Sense "afegir cuidador" ni "punts de ruta". |
+| 2 | **Configuració del grup** | `/caregiver/dashboard` | SOS toggle, codi activació, afegir cuidador. Sense historial ni analytics. |
+| 3 | **Activitat** (NOVA) | `/caregiver/activity` | Historial de passejos, analytics (durada, hores, freqüència), punts de ruta. |
 
-Render test del dashboard d'owner per verificar que no trenca res.
+### Canvis al mapa
 
-**Branca:** `refactor/unify-walk-history`
-**Estimació:** 30 minuts
-**Risc:** Baix
+El punt de posició actual al mapa passa de `primary` (blau) a `success` (verd) i més gran, per distingir visualment "on és ara" de "per on ha passat".
 
----
-
-## Fase D — Separar configuració de /patient de les estadístiques (Punt 5)
-
-**Problema:** Al dashboard d'owner, el toggle SOS + codi d'activació estan barrejats amb analítiques i gràfiques.
-
-### D.1 Reorganitzar el dashboard owner
-
-Crear dues seccions:
-
-| Secció | Contingut | Visibilitat |
-|--------|-----------|-------------|
-| **Configuració del dispositiu** | Toggle SOS, codi d'activació, nom del pacient | Sempre visible |
-| **Informació d'activitat** | Historial de passejades, analítiques, gràfiques | Accordion / col·lapsable |
-
-**Filosofia PathGuard:** La configuració és acció (toggle, regenerar codi). La informació és consulta (historial, tendències). Separar-les evita soroll i respecta la privacitat del pacient: el cuidador/owner consulta l'historial per tranquil·litzar-se, no per monitoritzar.
-
-**Arxius:** `frontend/components/CaregiverDashboard/`
-
-### D.2 Tests
-
-Render test del dashboard reorganitzat.
-
-**Branca:** `refactor/dashboard-sections`
-**Estimació:** 1-2 hores
-**Risc:** Mitjà
+**Branca:** `refactor/reorganitzacio-dashboard`
+**Estimació:** 2-3 hores
+**Risc:** Baix-Mitjà
 
 ---
 
@@ -209,7 +190,7 @@ Cada migració **preserva la interfície dels hooks existents** perquè el codi 
 
 ## Criteris d'èxit de la beta estable
 
-1. Un cuidador pot veure l'historial de passejades amb distància i ruta al mapa
+1. Un cuidador pot veure l'historial de passejades amb ruta al mapa, durada i horaris habituals
 2. El dashboard d'owner mostra clarament la configuració del dispositiu (SOS, codi d'activació) separada de la informació d'activitat (historial, gràfiques)
 3. El pacient pot passejar amb el mòbil a la butxaca (pantalla apagada) sense que el cuidador rebi falsos `offline`, gràcies a Capacitor
 4. El cuidador rep l'alerta SOS si té el dashboard obert (PWA al mòbil o escriptori)
@@ -362,13 +343,14 @@ El cuidador/owner consulta dades via:
 
 | Fase | Què | Punts de les proves | Estimació | Branca | Risc |
 |------|-----|---------------------|-----------|--------|------|
-| **B** | Distància de passeig | 3 | 2-3h | `feat/walk-distance` | Baix |
-| **C** | Unificar historial | 4 | 30 min | `refactor/unify-walk-history` | Baix |
-| **D** | Separar config d'estadístiques | 5 | 1-2h | `refactor/dashboard-sections` | Mitjà |
+| **B** | Distància de passeig | 3 | 2-3h | `feat/walk-distance` | ⏳ Ajornada |
+| **C+D** | Reorganitzar dashboard owner + mapa | 4, 5 | 2-3h | `refactor/reorganitzacio-dashboard` | Baix-Mitjà |
 | **E** | Capacitor per /patient | 1, 2, 6 | 3-5 dies | `feat/capacitor-patient-app` | Alt |
 | **F** | Lògica adaptativa GPS | 7 | 30 min | `feat/gps-adaptive-logic` | Molt baix |
 | **G** | Migració a PostgreSQL | 8 | 1-2 dies | `feat/postgresql-migration` | Mitjà |
 
-**Ordre recomanat:** F → B → C → D → G → E
+**Ordre recomanat:** ✅F → C+D → G → E
 
-(F és el més ràpid i impactant. G (PostgreSQL) abans de E (Capacitor) per tenir dades persistents quan comencin les proves reals amb Capacitor.)
+(F completada. B ajornada a post-beta. C+D substitueix les fases originals per la reorganització del dashboard. G (PostgreSQL) abans de E (Capacitor) per tenir dades persistents quan comencin les proves reals amb Capacitor.)
+
+**Nota sobre analytics:** El backend ja exposa `GET /analytics/` amb `avg_duration_minutes`, `common_start_hours` (top 3) i `walk_frequency` (7 dies). La informació d'horaris habituals **ja existeix** a l'API — la nova pàgina d'activitat la mostrarà sense acordió.
