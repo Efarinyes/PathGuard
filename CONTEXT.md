@@ -1,6 +1,6 @@
 # PathGuard — Project Context
 
-**Last updated:** 2026-05-23  
+**Last updated:** 2026-05-31  
 **Purpose:** Global context document for any AI agent or human developer working on the PathGuard project. Read this before making any changes.
 
 ---
@@ -123,6 +123,15 @@ develop (never commit directly)
 ```
 
 **Rule:** Never commit to `main` or `develop` directly. Always work in a feature branch.
+- **Exceptions:** Only the user may decide to commit directly to `main` (for Vercel deploys).
+- AI agents must never commit, push, merge, or stage files unless explicitly instructed by the user.
+
+### Git Discipline (Zero Accidents Policy)
+- **No experiments.** Every git command must have a clear, predictable outcome.
+- **No blind staging.** Never use `git add -A` or `git add .` without knowing exactly what is staged. Always `git status` and `git diff --stat` before committing.
+- **Branch model:** `main` (production) ← `develop` (integration) ← `feat/*` or `fix/*` (work branches). The user decides whether a branch is pushed to remote or stays local.
+- **Untracking files:** To stop tracking a file that should be gitignored, use `git rm --cached <file>`. Do NOT use `git mv` to move files into a gitignored directory — this stages them in the new location and bypasses `.gitignore`.
+- **Tags & releases:** Every meaningful milestone gets a lightweight tag (`git tag vX.Y.Z`) and a GitHub Release with changelog. Tags follow semantic versioning (semver) and match `package.json`.
 
 ### Before Committing
 1. **Backend tests:** `cd backend && micromamba activate tracker-env && python -m pytest tests/ -v`
