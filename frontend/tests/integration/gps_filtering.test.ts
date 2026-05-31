@@ -60,14 +60,14 @@ describe('GPS Filtering & Adaptive Sampling Integration', () => {
     // currentPosition should NOT have updated
     expect(result.current.currentPosition).toEqual({ latitude: 41.0, longitude: 2.0 });
 
-    // 4. Move > 8 meters (approx 15m)
+    // 4. Move > 30 meters (approx 33m — above GPS_MIN_DISTANCE_M)
     act(() => {
-      successCallback({ coords: { latitude: 41.00015, longitude: 2.00015 } });
-      vi.advanceTimersByTime(20000);
+      successCallback({ coords: { latitude: 41.0003, longitude: 2.0003 } });
+      vi.advanceTimersByTime(30000); // Must exceed GPS_INTERVAL_NORMAL_MS (30s)
     });
 
     // currentPosition SHOULD have updated
-    expect(result.current.currentPosition).toEqual({ latitude: 41.00015, longitude: 2.00015 });
+    expect(result.current.currentPosition).toEqual({ latitude: 41.0003, longitude: 2.0003 });
   });
 
   it('Scenario: Adaptive Sampling Interval adjustment', async () => {

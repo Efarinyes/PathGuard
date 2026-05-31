@@ -48,13 +48,13 @@ describe('useLocationTracking - Haversine Filtering & Adaptive Sampling', () => 
     // Should still show initial position (filtered)
     expect(result.current.currentPosition).toEqual({ latitude: 41.0, longitude: 2.0 });
 
-    // 3. Large movement (approx 15 meters)
+    // 3. Large movement (approx 33 meters — above GPS_MIN_DISTANCE_M)
     act(() => {
-      successCallback({ coords: { latitude: 41.00015, longitude: 2.00015 } });
-      vi.advanceTimersByTime(20000); // Wait long enough for any interval
+      successCallback({ coords: { latitude: 41.0003, longitude: 2.0003 } });
+      vi.advanceTimersByTime(30000); // Must exceed GPS_INTERVAL_NORMAL_MS (30s)
     });
 
-    expect(result.current.currentPosition).toEqual({ latitude: 41.00015, longitude: 2.00015 });
+    expect(result.current.currentPosition).toEqual({ latitude: 41.0003, longitude: 2.0003 });
   });
 
   it('Scenario 2: Adaptive Sampling - Slows down when idle', async () => {

@@ -15,11 +15,11 @@ export const WS_RECONNECT_BASE_DELAY_MS = 1000;
 export const WS_RECONNECT_MAX_DELAY_MS = 10000;
 
 // GPS / Location tracking constants
-export const GPS_MIN_DISTANCE_M = 10;
+export const GPS_MIN_DISTANCE_M = 30;
 export const GPS_SPEED_IDLE_THRESHOLD_M_MIN = 5;
-export const GPS_INTERVAL_IDLE_MS = 15000;
-export const GPS_INTERVAL_NORMAL_MS = 5000;
-export const GPS_INTERVAL_FAST_MS = 2000;
+export const GPS_INTERVAL_IDLE_MS = 120000;
+export const GPS_INTERVAL_NORMAL_MS = 30000;
+export const GPS_INTERVAL_FAST_MS = 15000;
 export const GPS_TIMEOUT_MS = 15000;
 export const GPS_RETRY_DELAY_MS = 5000;
 
