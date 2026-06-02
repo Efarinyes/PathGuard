@@ -184,8 +184,8 @@ Cada migració **preserva la interfície dels hooks existents** perquè el codi 
 | 2 | Dashboard separa configuració d'activitat | C+D | ✅ |
 | 3 | GPS en background sense falsos offline (Capacitor) | E | ⏳ |
 | 4 | Cuidador rep SOS si té el dashboard obert | — | ✅ (ja funciona) |
-| 5 | Dades persisteixen entre restarts (PostgreSQL) | G | ⏳ |
-| 6 | Consulta externa de la BD | G | ⏳ |
+| 5 | Dades persisteixen entre restarts (PostgreSQL) | G | ✅ |
+| 6 | Consulta externa de la BD | G | ✅ |
 
 ---
 
@@ -238,17 +238,54 @@ La ruta tindrà menys punts (30s en lloc de 5s), però la **traça general és i
 
 ---
 
-## Fase G — Migració a PostgreSQL (Punts 3, 5 i 8) — ⏳ PENDENT
+## Fase G — Migració a PostgreSQL (Punts 3, 5 i 8) — ✅ COMPLETADA (31/05/2026)
 
+**Implementat a la branca:** `feat/postgresql-migration` (mergiat a `develop` i `main`)
 **Document de referència:** `docs/FASE-G-POSTGRESQL-MIGRATION.md` (pla detallat)
 
-**Problema:** SQLite a Render no persisteix entre restarts i no es pot consultar externament. El cuidador/owner no pot accedir a les dades per veure analítiques, historials o detectar patrons.
+**Problema original:** SQLite a Render no persisteix entre restarts i no es pot consultar externament.
 
-**Objectiu:** Migrar la base de dades a PostgreSQL gestionat per Supabase (gratuït).
+**Solució aplicada:** PostgreSQL gestionat per Supabase (gratuït) amb connexió via Supavisor pooler (IPv4).
+
+### Resum dels canvis
+
+| Subfase | Què | Estat |
+|---------|-----|-------|
+| G.1 | `psycopg2-binary` a requirements | ✅ |
+| G.2 | `database.py` compatible (zero canvis) | ✅ |
+| G.3 | `DateTime(timezone=True)` a tots els models | ✅ |
+| G.4 | Supabase projecte creat a `cduokeaobbsdjnckuuxk` (eu-west-1) | ✅ |
+| G.5 | `DATABASE_URL` configurat a Render (pooler IPv4) | ✅ |
+| G.6 | Verificació de connexió + desplegament | ✅ |
+| G-extra | SHA-256 hashing + 2h expiry per codis d'activació | ✅ |
+
+### G-extra: SHA-256 hashing de codis d'activació i invitació
+
+**Motiu:** Emmagatzemar codis en text pla a la BD (com abans) exposava les dades a un potencial leak.
+
+**Canvis aplicats:**
+- `Patient.activation_code_hash`: SHA-256 del codi (no text pla)
+- `Patient.activation_code_expires_at`: 2h de validesa
+- `InvitationCode.code`: `String(6)` → `String(64)` per SHA-256
+- `POST /auth/activate-device`: lookup per hash, 410 si expirat
+- `GET /auth/patient/activation-code`: regenera si NULL/expirat/usat
+- `ActivationCodeResponse`: +`expires_at`
+
+**Tests:** ✅ 152 passats backend / 10 WS preexistents
+
+### Impacte arquitectònic
+
+| Aspecte | Abans | Després |
+|---------|-------|---------|
+| BD Producció | SQLite (Render disk) → perd dades al restart | PostgreSQL (Supabase) → persistent |
+| Connexió | Directa a SQLite | Supavisor pooler (IPv4, port 5432) |
+| URI pooler | — | `postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres` |
+| Dades locals | `pathguard.db` (SQLite, dev) | Es manté per dev local + tests |
+| SSL | No | `require` per pooler |
 
 **Branca:** `feat/postgresql-migration`
-**Estimació:** 1-2 dies
-**Risc:** Mitjà
+**Estimació:** 1-2 dies (complert)
+**Risc:** Mitjà (superat)
 
 ---
 
@@ -258,10 +295,98 @@ La ruta tindrà menys punts (30s en lloc de 5s), però la **traça general és i
 |------|-----|---------------------|-----------|--------|------|-------|
 | **F** | Lògica adaptativa GPS | 7 | 30 min | `feat/gps-adaptive-logic` | Molt baix | ✅ |
 | **C+D** | Reorganitzar dashboard owner + mapa | 4, 5 | 2-3h | `feat/dashboard-reorganization` | Baix-Mitjà | ✅ |
-| **G** | Migració a PostgreSQL | 8 | 1-2 dies | `feat/postgresql-migration` | Mitjà | ⏳ |
+| **G** | Migració a PostgreSQL | 8 | 1-2 dies | `feat/postgresql-migration` | Mitjà | ✅ |
 | **E** | Capacitor per /patient | 1, 2, 6 | 3-5 dies | `feat/capacitor-patient-app` | Alt | ⏳ |
 | **B** | Distància de passeig | 3 | — | — | — | ❌ Cancel·lada |
 
-**Ordre d'execució:** ✅F → ✅C+D → **G → E** (ara)
+**Ordre d'execució:** ✅F → ✅C+D → ✅G → **E** (ara)
 
 **Nota sobre B:** Cancel·lada per decisió de producte. La columna distància i `distance_meters` han estat eliminats de la UI i del tipus frontend.
+
+---
+
+## Pendents de decidir — Nous temes sorgits durant la revisió (01/06/2026)
+
+### Tema 1: `full_name` del cuidador — ✅ DECIDIT
+
+**Problema:** La columna `full_name` al model `User` (`backend/app/api/users/models.py`) sempre és `NULL`. El registre no recull el nom del cuidador en cap moment.
+
+**Decisió:** Opció A — un sol camp `full_name` (no dividir en `first_name` + `last_name`). Motiu:
+- Ja existeix a la BD — zero migració
+- Evita problemes amb cognoms compostos catalans/castellans
+- PathGuard no fa cartes formals ni factures
+- Al formulari: "El teu nom complet (Cuidador)"
+
+**Pendent d'implementar:**
+- [ ] `RegisterRequest.full_name: str` (Pydantic schema)
+- [ ] `register_family(..., full_name)` → `User(full_name=full_name)`
+- [ ] Camp al `RegistrationForm` (frontend)
+- [ ] `LoginResponse` pot incloure `full_name` per mostrar-lo al header
+
+### Tema 2: Landing page ampliada (explicació + privacitat) — ✅ DECISIÓ DE CONCEPTE
+
+**Problema:** La landing page actual (`/`) només mostra 3 botons. No hi ha explicació del projecte ni informació de privacitat. Cap esment a cookies (no n'hi ha) ni consentiment.
+
+**Decisió:** Ampliar la landing page amb seccions en lloc de crear pàgines separades. Estructura proposada:
+
+#### Secció 1 — Hero (sense canvis)
+Títol + 3 CTAs: Crear entorn, Activar dispositiu, Accedir com a cuidador.
+
+#### Secció 2 — Com funciona
+4 icones horitzontals (a mòbil: 2x2): Crea l'entorn → Activa dispositiu → Segueix la ruta → SOS si cal. Text breu explicatiu.
+
+#### Secció 3 — Privacitat i dades
+Targetes informatives amb icones:
+- **Ubicació:** Només durant el passeig
+- **Correu:** Per al registre
+- **Seguretat:** Servidors a Europa
+- **Drets:** Baixa total de dades
+
+Text de fons: *"No emmagatzemem dades quan no hi ha un passeig actiu. No compartim informació amb tercers. Pots sol·licitar l'eliminació de totes les dades en qualsevol moment."*
+
+#### Secció 4 — Què NO és PathGuard
+```
+❌ No és vigilància 24/7
+❌ No és un dispositiu mèdic
+❌ No venem ni compartim dades
+❌ El control sempre és del familiar: només ell pot iniciar 
+   i aturar un passeig. El cuidador no pot reactivar-lo.
+❌ No hi ha tracking quan el familiar no està de passeig
+```
+
+**Filosofia:** PathGuard és una eina de tranquil·litat, no de control.
+
+#### Secció 5 — CTAs (repetició opcional al final)
+
+**Consentiment al registre:** Enllaç visible a la landing page + confirmació implícita al fer clic a "Crear entorn". Sense banner de cookies (no n'hi ha).
+
+**Pendent de validar:**
+- [ ] L'estructura i seccions agraden al product owner
+- [ ] La secció "Què NO és" té el to adequat
+- [ ] Confirmació al registre: checkbox o consentiment implícit?
+
+### Tema 3: WalkDetailModal — ⏳ EN REVISIÓ
+
+**Problema:** El modal de detall del passeig (`WalkDetailModal.tsx`) mostra un mapa amb la ruta. Es va qüestionar si:
+- Genera imatges del mapa (NO — renderitza Leaflet dinàmic, client-side, 0KB emmagatzemats)
+- És redundante amb la llista d'historial (que ja mostra data, hora, durada)
+- Dona sensació de "massa control"
+
+**Decisió (01/06/2026):** Es manté l'opció actual (mapa dinàmic) per ara. Pendent de revisar en el futur:
+- Opció 1: Eliminar-lo (la llista d'historial ja dona la informació)
+- Opció 2: Mantenir-lo amb mapa (actual — per veure la ruta concreta de tant en tant)
+- Opció 3: Transformar-lo en una altra funcionalitat
+
+### Tema 4: i18n — ajornat (post-Beta)
+
+### Tema 5: Capa nativa (Capacitor /patient) — blocat (Xcode pendent)
+
+### Què cal per tornar a engegar
+
+1. Concretar el disseny de la landing page (maqueta visual real)
+2. Decidir si es vol checkbox de consentiment al registre o consentiment implícit
+3. Implementar `full_name` al registre (frontend + backend)
+4. Implementar landing page ampliada
+5. Reprendre Fase E (Capacitor) — instal·lar Xcode
+6. Decidir futur de WalkDetailModal (revisar més endavant)
+7. Completar Beta Deploy checklist

@@ -43,7 +43,7 @@ The system consists of:
 - A **caregiver dashboard** (`/caregiver`) that monitors the patient in real-time via WebSocket
 - An **owner dashboard** (`/caregiver/dashboard`) for group configuration (SOS toggle, activation codes, walk history)
 
-**Current phase:** Fase G — PostgreSQL migration (plan completed)
+**Current phase:** PostgreSQL operational (Fase G completed). Next: Beta Deploy or Capacitor /patient.
 
 ---
 
@@ -51,7 +51,7 @@ The system consists of:
 
 ```
 PathGuard-project/
-├── backend/                    # FastAPI + SQLAlchemy + SQLite
+├── backend/                    # FastAPI + SQLAlchemy (SQLite dev / PostgreSQL prod)
 │   ├── app/
 │   │   ├── api/
 │   │   │   ├── auth/           # Registration, login, activation codes
@@ -87,7 +87,8 @@ PathGuard-project/
 ├── docs/                       # Project documentation
 │   ├── action-plan.md          # MASTER PLAN — read this first
 │   ├── guia-proves-reals.md    # Real-world testing guide
-│   └── FASE-G-POSTGRESQL-MIGRATION.md
+│   ├── FASE-G-POSTGRESQL-MIGRATION.md
+│   └── safari-battery-api-removal.md
 ├── .audit_archive/             # Product and technical audit reports
 │   ├── product_audit.md
 │   └── technical_audit.md
@@ -108,7 +109,7 @@ PathGuard-project/
 | **`.audit_archive/technical_audit.md`** | 3 architectural risks (AR-1–AR-3), 3 tech debt items (TD-1–TD-3), SOLID violations. |
 | **`docs/guia-proves-reals.md`** | Real-world testing scenarios (registration, walk lifecycle, SOS, invite). |
 | **`docs/FASE-G-POSTGRESQL-MIGRATION.md`** | Detailed PostgreSQL migration plan (G.1–G.7). |
-| **`docs/FASE-G-POSTGRESQL-MIGRATION.md`** | Detailed PostgreSQL migration plan (G.1–G.7). |
+| **`docs/safari-battery-api-removal.md`** | Why battery monitoring was removed for Safari/iOS. |
 | **`frontend/AGENTS.md`** | Next.js-specific rules for this codebase (breaking changes from standard Next.js). |
 | **`backend/app/main.py`** | Router registration — the entry point for understanding backend API structure. |
 
@@ -155,7 +156,9 @@ develop (never commit directly)
 - **Virtual env:** micromamba at `/Users/eduardfarinyes/micromamba/envs/tracker-env/bin`
 - **Activation:** `cd backend && micromamba activate tracker-env`
 - **Test command:** `/Users/eduardfarinyes/micromamba/envs/tracker-env/bin/python -m pytest tests/ -v`
-- **Database:** SQLite (`backend/pathguard.db`, ~90KB with test data)
+- **Database:** Dual: SQLite for local dev (`backend/pathguard.db`), PostgreSQL via Supabase for production
+- **PostgreSQL URI (pooler):** `postgresql://postgres.cduokeaobbsdjnckuuxk:...@aws-0-eu-west-1.pooler.supabase.com:5432/postgres`
+- **Connection:** Supavisor session pooler (IPv4-compatible). Direct connection is IPv6-only.
 - **Framework:** FastAPI + SQLAlchemy (ORM) + Pydantic (schemas)
 
 ### Architecture Patterns
@@ -252,7 +255,7 @@ All design tokens are defined in `frontend/app/globals.css` via `@theme`. **No `
 ## 7. Architectural Decisions & Constraints
 
 ### Decisions Already Made
-1. **PostgreSQL for production, SQLite for local dev** — Dual DB strategy via `DATABASE_URL`. Tests remain SQLite in-memory.
+1. **PostgreSQL for production, SQLite for local dev** — Dual DB strategy via `DATABASE_URL`. Tests remain SQLite in-memory. Connection via Supavisor session pooler (IPv4, `aws-0-<region>.pooler.supabase.com`).
 2. **i18n deferred to post-beta** — 165 Catalan strings hardcoded, no translation infrastructure yet. Strategy: cookie-based detection + manual override (see `docs/action-plan.md` 4.5)
 3. **No battery monitoring** — Completely removed (not patched) due to Safari/iOS unfixable API incompatibility
 4. **Owner-only walk details** — `GET /walks/{id}/locations` requires `is_owner` (implemented in 4.1.2)
@@ -326,7 +329,7 @@ Before making ANY change:
 | CSS Design System | ✅ Completed | `refactor/css-design-system` (merged to develop) |
 | F — GPS Adaptive Logic | ✅ Completed | `feat/gps-adaptive-logic` (merged to develop) |
 | C+D — Dashboard Reorganization | ✅ Completed | `feat/dashboard-reorganization` (merged to develop) |
-| G — PostgreSQL Migration | ⏳ In progress | `feat/postgresql-migration` (plan ready) |
+| G — PostgreSQL Migration | ✅ Completed | `feat/postgresql-migration` (merged to develop) |
 | E — Capacitor /patient | ⏳ Blocked (needs Xcode) | — |
 | B — Walk distance | ❌ Cancelled | — |
 | 4.4 — SOS User Test | ⏳ Pending | — |
@@ -340,9 +343,19 @@ Before making ANY change:
 - `safety/pre-bcrypt-fix` branch deleted (unmerged experiment)
 - Semver unified: tags match `package.json`
 
+**Completed in v2.6.0-beta.2 (2026-05-31):**
+- G (PostgreSQL migration: Supabase project, pooler via Supavisor IPv4, `DateTime(timezone=True)` on all models, `psycopg2-binary` added)
+- G-extra (activation codes: SHA-256 hashing + 2h expiry; invitation codes: `String(6)`→`String(64)` for SHA-256)
+- Fase 5 architecture updated: Render + Supabase PostgreSQL (no longer ngrok + SQLite)
+
+**Snapshots:**
+- `release/v2.6.0-pwa-stable` (tag `v2.6.0-pwa-stable.0`) — Última versió PWA pura abans de la capa nativa. README detallat amb limitacions i roadmap.
+
 **Pending TODOs:**
-- G — PostgreSQL migration (plan in `docs/FASE-G-POSTGRESQL-MIGRATION.md`)
 - E — Capacitor for /patient (blocked on Xcode)
+- 4.4 — SOS User Test
+- 4.5 — i18n
+- 5 — Beta Deploy (checklist remaining items)
 - TODO-1: SOS Toggle Real-Time — flux actual acceptable
 - CSS-3: Duplicated patterns (Card, Spinner, ModalOverlay, FormInput) — post-beta
 

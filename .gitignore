@@ -17,3 +17,12 @@ frontend/.env.local
 
 # Audit Archive
 .audit_archive/
+
+# Personal docs (Xcode/Android setup guide)
+GUIA-INSTAL-LACIO-XCODE-ANDROID.md
+Guia instal·lació Xcode + Android Studio.rtf
+Guia instal·lació Xcode + Android Studio.pages
+*.pages
+
+# Android Studio project files
+.idea/

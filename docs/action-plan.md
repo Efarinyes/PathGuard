@@ -193,7 +193,46 @@
 - Fitxer eliminat. `globals.css/@theme` és ara la font única de veritat
 - Build verificat sense el config v3 — Tailwind v4 llegeix `@theme` directament
 
-#### CSS-3: Patrons duplicats — PENDENT (post-beta)
+---
+
+## Fase G — Migració a PostgreSQL ✅ COMPLETADA (2026-05-31, branca `feat/postgresql-migration`)
+
+**Document de referència:** `docs/FASE-G-POSTGRESQL-MIGRATION.md`
+
+### G.1 — Afegir driver PostgreSQL
+- [x] `psycopg2-binary==2.9.10` a `requirements.txt` — driver PostgreSQL per producció
+
+### G.2 — Revisar `database.py` per a PostgreSQL
+- [x] `check_same_thread` condicional — ja era compatible, zero canvis
+
+### G.3 — `DateTime(timezone=True)` a tots els models
+- [x] Walk, Location, Patient, Group, InvitationCode: tots els `DateTime` → `DateTime(timezone=True)`
+- [x] Backend tests: 152 passats / 10 WS preexistents (esperats)
+
+### G.4 — Crear projecte Supabase
+- [x] Projecte creat a Supabase (eu-west-1, ref: `cduokeaobbsdjnckuuxk`)
+- [x] Pooler hostname correcte: `aws-0-eu-west-1.pooler.supabase.com` (IPv4)
+
+### G.5 — Configurar `DATABASE_URL` a Render
+- [x] Variable d'entorn `DATABASE_URL` configurada amb la URI del pooler
+
+### G.6 — Verificar connexió i desplegament
+- [x] Login, registre, activació, invitació — tot funcionant a PostgreSQL
+
+### G.7 — Netejar `pathguard.db` (opcional)
+- [ ] Opcional — es pot esborrar per començar de zero en dev local
+
+### G-extra — SHA-256 hashing de codis d'activació i invitació
+- [x] `Patient.activation_code_hash` + `activation_code_expires_at` (2h expiry)
+- [x] `InvitationCode.code`: `String(6)` → `String(64)` per SHA-256
+- [x] `POST /activate-device`: lookup per hash, verifica expiració
+- [x] `GET /patient/activation-code`: regenera si hash NULL/expirat/usat
+- [x] `ActivationCodeResponse`: +`expires_at`
+- [x] Backend tests: 6/6 activació passen
+
+---
+
+## CSS-3: Patrons duplicats — PENDENT (post-beta)
 - Card, Spinner, ModalOverlay, FormInput continuen com a patrons repetits amb tokens nets
 - Decidit: no crear components shared ara per evitar scope creep
 
@@ -229,61 +268,60 @@
 
 ---
 
-## Fase 5 — Desplegament Beta (Vercel + ngrok)
+## Fase 5 — Desplegament Beta (Vercel + Render + Supabase)
 
-**Objectiu:** Desplejar PathGuard a Internet per fer proves reals amb dos dispositius (mòbil + ordinador).
+**Objectiu:** Desplegar PathGuard a Internet per fer proves reals amb dos dispositius (mòbil + ordinador).
 
-**Arquitectura Beta:**
+**Arquitectura Beta (actual):**
 ```
 Mòbil (PWA) ──HTTPS──▶ Vercel (frontend)
                          │
                          │ fetch() + WebSocket (wss://)
                          ▼
-                    ngrok tunnel (HTTPS/WSS)
+                    Render (FastAPI + WebSocket)
                          │
-                         ▼
-                  Local Mac (backend uvicorn + SQLite)
+                         └── connect → Supabase PostgreSQL (Supavisor pooler, IPv4)
 ```
 
-### 5.1 Blockers — corregits abans de desplegar
+### 5.1 Blockers — corregits
 
-- [x] **B1: CORS permet domini Vercel** — Afegit `ADDITIONAL_CORS_ORIGINS` a `settings.py` i lògica al `main.py` per afegir orígens addicionals des d'env var. `FRONTEND_URL` ja era l'origen principal.
-- [ ] **B2: Env vars del frontend per producció** — Set `NEXT_PUBLIC_API_URL=https://<ngrok-domain>/api/v1` i `NEXT_PUBLIC_WS_URL=wss://<ngrok-domain>/api/v1/ws/` a Vercel dashboard. Els fallbacks a `localhost` només serveixen per dev local.
-- [ ] **B3: Backend FRONTEND_URL** — Set `FRONTEND_URL=https://pathguard.vercel.app` i `ADDITIONAL_CORS_ORIGINS=https://pathguard.vercel.app,https://<ngrok-domain>` al `backend/.env` (o via env var quan s'engegui uvicorn).
+- [x] **B1: CORS permet domini Vercel** — `FRONTEND_URL` configurat a Render. Orígens permesos: frontend Vercel + localhost.
+- [x] **B2: Env vars del frontend per producció** — `NEXT_PUBLIC_API_URL` i `NEXT_PUBLIC_WS_URL` configurats a Vercel apuntant a Render.
+- [x] **B3: Backend FRONTEND_URL** — `FRONTEND_URL=https://path-guard-orpin.vercel.app` configurat a les env vars de Render.
 - [x] **B4: Neteja fitxers SW stale a `public/`** — Eliminats 9 fitxers, `.gitignore` actualitzat.
+- [x] **B5: Driver PostgreSQL** — `psycopg2-binary` afegit per connectar a Supabase des de Render.
+- [x] **B6: Base de dades persistent** — PostgreSQL a Supabase (les dades no es perden entre restarts).
 
 ### 5.2 Fixes recomanats (abans de Beta, no bloquejants)
 
 - [x] **F1: Pàgina `/offline` inexistent** — Enllaç eliminat del `PWAErrorBoundary`, directori buit esborrat.
-- [x] **F2: `console.log`/`console.debug` en 4 hooks** — 12 console statements eliminats: `useWebSocket.ts` (5), `useLocationTracking.ts` (3), `useOfflineRecovery.ts` (2), `swRegistration.tsx` (2).
+- [x] **F2: `console.log`/`console.debug` en 4 hooks** — 12 console statements eliminats.
 - [x] **F3: `viewport` deprecariat** — Importat tipus `Viewport` de Next.js, tipat l'export com a `Viewport`.
-- [x] **BUG offline/online visibility** — 5 bugs corregits: WebSocketDisconnect handler ara emet `patient_offline`, `isPatientConnected` per defecte `false`, snapshot inclou `patient_status`, notificació falsa de recuperació eliminada, `patient_online` emès immediatament al connectar.
+- [x] **BUG offline/online visibility** — 5 bugs corregits.
 
 ### 5.3 Passos de desplegament
 
-**Backend (local + ngrok):**
-1. `rm backend/pathguard.db && python backend/init_db.py` — BD neta
-2. Editar `backend/.env`: `FRONTEND_URL=https://pathguard.vercel.app` + `SECRET_KEY=<nou-key-segur>`
-3. `cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
-4. `ngrok http 8000 --domain <domini-fixe>` — obté URL pública HTTPS/WSS
-5. Verificar: `https://<ngrok-domain>/docs` mostra Swagger
+**Backend (Render + Supabase):**
+1. Render auto-deploy des de `main` (GitHub hook) — el backend s'actualitza sol
+2. Supabase PostgreSQL gestionat externament — dades persistents
+3. Verificar: `https://pathguard-sjxy.onrender.com/docs` mostra Swagger
 
 **Frontend (Vercel):**
-1. Push a `develop` o `main` — Vercel desplega automàticament
-2. Al Vercel dashboard: set env vars `NEXT_PUBLIC_API_URL` i `NEXT_PUBLIC_WS_URL` amb les URLs ngrok
-3. Verificar: `https://pathguard.vercel.app` carrega la landing page
+1. Vercel auto-deploy des de `main` — frontend actualitzat automàticament
+2. Env vars a Vercel: `NEXT_PUBLIC_API_URL=https://pathguard-sjxy.onrender.com/api/v1`, `NEXT_PUBLIC_WS_URL=wss://pathguard-sjxy.onrender.com/api/v1/ws/`
+3. Verificar: `https://path-guard-orpin.vercel.app` carrega la landing page
 4. Verificar: Service Worker es registra (DevTools → Application → Service Workers)
 
 **Post-desplegament CORS:**
-- Si Vercel assigna un domini de preview (ex: `pathguard-git-feat-xxx.vercel.app`), afegir-lo temporalment a `ALLOWED_ORIGINS`
-- Alternative: fer que `ALLOWED_ORIGINS` llegeixi un patró `*.vercel.app` per previews (no recomanat per producció, acceptable per Beta)
+- Si Vercel assigna un domini de preview (ex: `pathguard-git-feat-xxx.vercel.app`), afegir-lo temporalment a `ALLOWED_ORIGINS` via `ADDITIONAL_CORS_ORIGINS` a Render
+- `FRONTEND_URL` apunta al domini base de Vercel
 
 ### 5.4 Checklist de verificació Beta
 
-- [ ] Backend engega sense errors via ngrok (Swagger accessible)
+- [ ] Backend engega sense errors a Render (Swagger accessible)
 - [ ] Frontend carrega a Vercel (landing page, registre, login)
 - [ ] CORS no bloqueja cap request (check DevTools Network, zero 403/405)
-- [ ] WebSocket connecta des de Vercel → ngrok → backend (check DevTools Network, status 101)
+- [ ] WebSocket connecta des de Vercel → Render (check DevTools Network, status 101)
 - [ ] PWA instal·lable al mòbil (HTTPS via Vercel, SW registrat)
 - [ ] `POST /auth/register` retorna `activation_code`
 - [ ] Registre → codi → activació → `/patient` end-to-end des de mòbil
@@ -297,11 +335,12 @@ Mòbil (PWA) ──HTTPS──▶ Vercel (frontend)
 
 ### 5.5 Pegats coneguts per a proves reals
 
-- **ngrok canvia d'URL** si no tens domini fixe → cal actualitzar env vars a Vercel i CORS al backend cada restart. Recomanat: reservar domini fixe amb compte ngrok verificat (gratuït).
 - **iOS Safari:** GPS funciona millor si la PWA està "Added to Home Screen"
 - **WebSocket:** 10 test de timing fallen (preexistent, no afecta proves reals)
 - **Bateria:** monitorització eliminada (incompatible amb Safari)
 - **CORS:** `allow_credentials=True` NO funciona amb `allow_origins=["*"]` — cal especificar l'origen exacte del frontend Vercel
+- **Render cold start:** El backend pot tardar 15-30s a respondre si no ha rebut peticions durant un temps (Free Tier)
+- **Pooler Supavisor:** La connexió PostgreSQL passa per Supavisor (pooler IPv4). Directa és IPv6-only.
 
 ---
 

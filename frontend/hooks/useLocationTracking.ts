@@ -1,6 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { Capacitor } from "@capacitor/core";
+import { Geolocation } from "@capacitor/geolocation";
 import { getDistanceHaversine, estimateSpeed, Position } from "../lib/gpsUtils";
 import { GPS_MIN_DISTANCE_M, GPS_SPEED_IDLE_THRESHOLD_M_MIN, GPS_INTERVAL_IDLE_MS, GPS_INTERVAL_NORMAL_MS, GPS_INTERVAL_FAST_MS, GPS_TIMEOUT_MS, GPS_RETRY_DELAY_MS } from "@/lib/config";
+
+const isNative = Capacitor.isNativePlatform();
 
 export const useLocationTracking = () => {
   const [isTracking, setIsTracking] = useState(false);
@@ -8,7 +12,7 @@ export const useLocationTracking = () => {
   const [error, setError] = useState<string | null>(null);
 
   const isTrackingRef = useRef(false);
-  const watchId = useRef<number | null>(null);
+  const watchId = useRef<string | number | null>(null);
   const latestPositionRef = useRef<Position | null>(null);
   const lastSentPositionRef = useRef<Position | null>(null);
   const timeoutId = useRef<NodeJS.Timeout | null>(null);
@@ -18,7 +22,11 @@ export const useLocationTracking = () => {
     setIsTracking(false);
     isTrackingRef.current = false;
     if (watchId.current !== null) {
-      navigator.geolocation.clearWatch(watchId.current);
+      if (isNative) {
+        Geolocation.clearWatch({ id: watchId.current as string });
+      } else {
+        navigator.geolocation.clearWatch(watchId.current as number);
+      }
       watchId.current = null;
     }
     if (timeoutId.current) {
@@ -41,7 +49,7 @@ export const useLocationTracking = () => {
 
       if (speed < GPS_SPEED_IDLE_THRESHOLD_M_MIN) {
         nextInterval = GPS_INTERVAL_IDLE_MS;
-      } else if (speed > 100) { // Fast movement (>100m/min ~ 6km/h)
+      } else if (speed > 100) {
         nextInterval = GPS_INTERVAL_FAST_MS;
       }
     }
@@ -62,71 +70,99 @@ export const useLocationTracking = () => {
     const current = latestPositionRef.current;
     lastSampleTime.current = Date.now();
 
-    // ⚡ Haversine Filtering (Redundancy suppression)
     if (lastSentPositionRef.current) {
       const distance = getDistanceHaversine(lastSentPositionRef.current, current);
       if (distance < GPS_MIN_DISTANCE_M) {
-        // Suppress update but keep tracking local state
         scheduleNextSample();
         return;
       }
     }
 
-    // Update state & reference
     setCurrentPosition(current);
     lastSentPositionRef.current = current;
     scheduleNextSample();
   }, [scheduleNextSample]);
 
-  const startTracking = useCallback(() => {
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported.");
+  const onPositionUpdate = useCallback((lat: number, lng: number) => {
+    latestPositionRef.current = { latitude: lat, longitude: lng };
+    if (!lastSentPositionRef.current) {
+      processLocation();
+    }
+  }, [processLocation]);
+
+  const startTracking = useCallback(async () => {
+    setError(null);
+
+    if (isNative) {
+      const permResult = await Geolocation.checkPermissions();
+      if (permResult.location === "denied") {
+        const requestResult = await Geolocation.requestPermissions();
+        if (requestResult.location === "denied") {
+          setError("Permís d'ubicació denegat.");
+          return;
+        }
+      }
+    } else if (!navigator.geolocation) {
+      setError("GPS no disponible en aquest navegador.");
       return;
     }
 
-    setError(null);
     setIsTracking(true);
     isTrackingRef.current = true;
     lastSampleTime.current = Date.now();
 
-    watchId.current = navigator.geolocation.watchPosition(
-      (position) => {
-        latestPositionRef.current = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        };
-        if (!lastSentPositionRef.current) {
-          processLocation();
-        }
-      },
-      (err) => {
-        console.error(`[GEO] watchPosition error: ${err.message}. Retrying in 5s...`);
-        setError(`GPS Error: ${err.message}`);
-        
-        // Don't kill tracking on transient errors (e.g. timeout, signal loss)
-        // Only stop on permanent failures if desired, but for PWA we retry
-        if (watchId.current !== null) {
-          navigator.geolocation.clearWatch(watchId.current);
-          watchId.current = null;
-        }
-        setTimeout(() => {
-          if (isTrackingRef.current) startTracking();
-        }, GPS_RETRY_DELAY_MS);
-      },
-      { enableHighAccuracy: true, timeout: GPS_TIMEOUT_MS, maximumAge: 0 }
-    );
+    if (isNative) {
+      try {
+        const callbackId = await Geolocation.watchPosition(
+          { enableHighAccuracy: true, timeout: GPS_TIMEOUT_MS },
+          (position, err) => {
+            if (err) {
+              setError(`GPS Error: ${err.message}`);
+              if (watchId.current !== null) {
+                Geolocation.clearWatch({ id: watchId.current as string });
+                watchId.current = null;
+              }
+              setTimeout(() => {
+                if (isTrackingRef.current) startTracking();
+              }, GPS_RETRY_DELAY_MS);
+              return;
+            }
+            if (position) {
+              onPositionUpdate(position.latitude, position.longitude);
+            }
+          }
+        );
+        watchId.current = callbackId;
+      } catch {
+        setError("Error al iniciar el GPS natiu.");
+      }
+    } else {
+      const browserId = navigator.geolocation.watchPosition(
+        (pos) => {
+          onPositionUpdate(pos.coords.latitude, pos.coords.longitude);
+        },
+        (err) => {
+          setError(`GPS Error: ${err.message}`);
+          if (watchId.current !== null) {
+            navigator.geolocation.clearWatch(watchId.current as number);
+            watchId.current = null;
+          }
+          setTimeout(() => {
+            if (isTrackingRef.current) startTracking();
+          }, GPS_RETRY_DELAY_MS);
+        },
+        { enableHighAccuracy: true, timeout: GPS_TIMEOUT_MS }
+      );
+      watchId.current = browserId;
+    }
 
-    // Initial processing cycle
     scheduleNextSample();
-  }, [processLocation, stopTracking]);
+  }, [onPositionUpdate]);
 
-  // Handle app foregrounding: ensure tracking is still alive
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "visible" && isTrackingRef.current) {
         processLocation();
-        
-        // If watchId was somehow lost, restart it
         if (watchId.current === null) {
           startTracking();
         }
@@ -140,7 +176,6 @@ export const useLocationTracking = () => {
   useEffect(() => {
     return () => stopTracking();
   }, [stopTracking]);
-
 
   return { isTracking, currentPosition, error, startTracking, stopTracking };
 };
