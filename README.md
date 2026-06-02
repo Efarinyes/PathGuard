@@ -1,89 +1,170 @@
 # PathGuard
 
-Family safety app for real-time walk monitoring. Calm, discreet, reliable.
+> *Discreet real-time geolocation for caregivers and their dependents.*
+> *Calm, discreet, reliable — not clinical, not enterprise, not invasive.*
 
-## Philosophy
+**Version:** v2.6.0-pwa-stable.0
+**Status:** Pre-beta — fully functional PWA with known limitations.
 
-PathGuard helps caregivers watch over elderly relatives during walks. The product must feel warm, not clinical. It must be discrete, not invasive. It must be reliable, not overwhelming.
+---
 
-- **Calm**: The SOS sound is a warm chime, not a fire alarm. The patient screen has one button. No analytics noise during active monitoring.
-- **Discreet**: No watcher counts, no incident logs, no cumulative SOS counters. The caregiver knows their relative is safe — that's it.
-- **Reliable**: Offline-first sync, adaptive GPS, WebSocket rehydration. No pause monitoring button. If a walk is active, we are watching.
+## What is PathGuard?
 
-## Current Status
+PathGuard allows a caregiver to see the location of a family member (the "patient") during walks in real time. The patient carries a device with a simple screen: start walk, stop walk, SOS button. The caregiver sees the walk route on a map, receives SOS alerts, and can review walk history.
 
-**Pre-beta audit complete. Applying improvements before first external user.**
+It is designed to feel warm and familiar, not clinical or invasive. The patient controls when tracking starts and stops. The caregiver watches, but cannot activate tracking remotely.
 
-See `docs/action-plan.md` for the full improvement plan organized by phase:
-- **Phase 1**: Beta blockers (delete dead code, fix SOS sound, clean UI)
-- **Phase 2**: Patient activation flow (activation code instead of registration checkbox)
-- **Phase 3**: Pre-beta polish (language, dead code removal)
-- **Phase 4**: Post-beta (owner dashboard, architecture cleanup)
+---
 
-## Get Started
+## Current State — v2.6.0-pwa-stable
 
-### Prerequisites
+This release marks the last fully **PWA-based** version of PathGuard. Everything works as a Progressive Web App (installable on both iOS and Android via browser).
 
-- Python 3.11+
-- Node.js 18+
-- Micromamba/Conda (recommended for backend)
+### ✅ What works
 
-### Backend (FastAPI)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Family registration (owner + patient + group) | ✅ | Creates activation code for the patient device |
+| Device activation (`/activate`) | ✅ | Enter code on patient device to link it |
+| Walk lifecycle (start / stop) | ✅ | Patient controls when a walk begins and ends |
+| Real-time GPS tracking via WebSocket | ✅ | Caregiver sees route on the map in real time |
+| SOS alert (3s press-and-hold) | ✅ | Chime sounds on caregiver dashboard, modal with confirmation |
+| Caregiver monitoring dashboard | ✅ | Real-time map, patient status, SOS alert |
+| Owner dashboard (`/caregiver/dashboard`) | ✅ | SOS toggle, activation code, invitation code, caregiver list |
+| Walk history + analytics | ✅ | Duration, timeline, activity analytics |
+| PostgreSQL persistence | ✅ | Supabase managed DB — data survives restarts |
+| SHA-256 hashing for activation codes | ✅ | Codes stored hashed, 2h expiry |
+| Adaptive GPS intervals | ✅ | 15s walking / 30s normal / 2min idle (reduced battery usage) |
+| Drawer navigation (owner) | ✅ | 3-route navigation: monitoring, config, activity |
 
-```bash
-cd backend
-micromamba env create -f environment.yml
-micromamba activate tracker-env
-python init_db.py
-python -m uvicorn app.main:app --reload --port 8000
+### ❌ Known limitations (why native is needed)
+
+| Limitation | Root cause | Impact | Solution planned |
+|------------|-----------|--------|-----------------|
+| **False offline after backgrounding** | iOS PWA stops WebSocket + GPS when screen locks or app goes to background. After a few minutes, the backend declares `patient_offline` even though the patient is still walking. | Caregiver sees "offline" alerts during active walks. Breaks trust in the system. | **Native app** via Capacitor for `/patient` — GPS and WebSocket stay alive in background |
+| **No push notifications** | PWA cannot receive push events when browser is closed. | SOS is only received if caregiver has dashboard open. | Web Push API or native push (post-beta) |
+| **No GPS in background (iOS)** | Safari does not support the Geolocation API in background. | Route has gaps when phone is in pocket with screen off. | `@capacitor/geolocation` with background permissions |
+| **Battery monitoring removed** | Safari/iOS incompatible API. | Feature dropped completely. | Not planned to restore |
+
+---
+
+## Roadmap — Beyond PWA
+
+We are evolving `/patient` from a PWA to a **native app** (via Capacitor) while keeping `/caregiver` and all other routes as a PWA.
+
+```
+[Patient]                  [Caregiver]
+   │                           │
+   ▼                           ▼
+Capacitor app               PWA (unchanged)
+(native GPS + WS            (browser/smartphone/desktop)
+ in background)
+   │                           │
+   └─────── WebSocket ─────────┘
+               │
+               ▼
+        FastAPI backend
+               │
+               ▼
+        Supabase PostgreSQL
 ```
 
+| Step | What | When |
+|------|------|------|
+| ⏳ **E** | Capacitor for `/patient` (native GPS, persistent WS) | Next |
+| ⏳ **4.4** | SOS user test | After E |
+| ⏳ **5** | Beta deploy checklist | After 4.4 |
+| ⏳ **4.5** | i18n (Catalan, Spanish) | Post-beta |
+| 🔮 **Future** | Web Push notifications, Capacitor for caregiver | Post-beta |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend framework | Next.js 14 (App Router) + TypeScript |
+| Styling | Tailwind CSS v4 (`@theme` tokens) |
+| Map | Leaflet (SSR-disabled, dynamic import) |
+| Icons | Lucide React |
+| Backend | FastAPI (Python 3.11) |
+| ORM | SQLAlchemy |
+| Validation | Pydantic v2 |
+| Database | **SQLite** (local dev) / **PostgreSQL** via Supabase (production) |
+| Real-time | WebSockets (pub/sub event system) |
+| Auth | JWT (caregiver) + device token (patient) |
+| PWA | Service worker (Workbox via `@ducanh2912/next-pwa`) |
+| Hosting | **Vercel** (frontend) + **Render** (backend) + **Supabase** (DB) |
+
+---
+
+## Run Locally
+
+### Prerequisites
+- Python 3.11+
+- Node.js 18+
+- Micromamba / Conda (recommended for backend)
+
+### Backend
+```bash
+cd backend
+micromamba activate tracker-env
+python -m uvicorn app.main:app --reload --port 8000
+```
 API docs: `http://localhost:8000/docs`
 
-### Frontend (Next.js)
-
+### Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
 App: `http://localhost:3000`
 
-### E2E Tests (Playwright)
-
+### Tests
 ```bash
-cd frontend
-npx playwright test
+# Backend (152 passing, 10 pre-existing WS timing failures)
+cd backend && python -m pytest tests/ -v
+
+# Frontend (108 passing, 6 skipped)
+cd frontend && npm test
+
+# Build verification
+cd frontend && npm run build --webpack
 ```
 
-## Architecture
+### Environment Variables
 
-| Layer | Stack |
-|---|---|
-| Frontend | Next.js 15 (App Router), Tailwind CSS v4, Lucide Icons |
-| Backend | FastAPI, SQLAlchemy (SQLite dev / PostgreSQL prod), Pydantic v2 |
-| Real-time | WebSockets with pub/sub event system |
-| PWA | Service worker with offline-first sync (IndexedDB) |
-| State | Custom React hooks + LocalStorage persistence |
-
-## Core Flows
-
-**Registration**: Owner creates family group + patient + caregiver account. Receives an activation code for the patient device.
-
-**Patient activation**: Separate `/activate` route — enter the code, device is linked, land on the walk screen. One button.
-
-**Caregiver monitoring**: Real-time map, walk history, device status. Analytics available on-demand from owner dashboard only.
-
-## Battery Monitoring Compatibility
-
-- Supported: Android (Chrome, Edge), Desktop (Chrome, Edge, Brave)
-- Unsupported: iOS/iPadOS (all browsers), Desktop (Safari, Firefox)
-
-## References
-
-- `docs/action-plan.md` — Consolidated improvement plan with audit checkpoints
+| Variable | Where | Purpose |
+|----------|-------|---------|
+| `FRONTEND_URL` | Render / `.env` | CORS origin |
+| `SECRET_KEY` | Render / `.env` | JWT signing |
+| `DATABASE_URL` | Render / `.env` | PostgreSQL connection (omit for SQLite dev) |
+| `NEXT_PUBLIC_API_URL` | Vercel | Backend API URL |
+| `NEXT_PUBLIC_WS_URL` | Vercel | WebSocket URL |
 
 ---
 
-*Developed for the PathGuard Family Safety Project.*
+## Git Workflow
+
+```
+main ── develop ── feat/* or fix/* (work branches)
+```
+
+- **`main`** — Production. Deploys automatically to Vercel + Render.
+- **`develop`** — Integration branch. Feature branches merge here first.
+- **`release/*`** — Release snapshots. `release/v2.6.0-pwa-stable` is the last PWA-only version.
+
+---
+
+## References
+
+- `docs/action-plan.md` — Consolidated plan with phases, checkpoints, and pending items
+- `docs/PRIMERA-APROXIMACIO-CAP-A-BETA-ESTABLE.md` — Product roadmap and decisions
+- `docs/FASE-G-POSTGRESQL-MIGRATION.md` — PostgreSQL migration plan
+- `.audit_archive/product_audit.md` — Product audit deviations
+- `.audit_archive/technical_audit.md` — Technical audit risks
+
+---
+
+*PathGuard Family Safety Project — Developed for calm, discreet, reliable care.*
