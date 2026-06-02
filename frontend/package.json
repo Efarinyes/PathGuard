@@ -11,6 +11,10 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/ios": "^8.3.4",
     "@ducanh2912/next-pwa": "^10.2.9",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.8.0",
