@@ -8,24 +8,27 @@
 ## 1. Arquitectura General
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                     Redmi Note 13 (Android)                   │
-│                                                               │
-│  ┌────────────┐     ┌────────────────────┐     ┌──────────┐  │
-│  │  React App  │     │  LocationSync       │     │ Backend   │  │
-│  │  (WebView)  │◄───►│  Plugin (Kotlin)    │────►│(Render)   │  │
-│  │             │     │                     │     │           │  │
-│  │ foreground  │     │  foreground service │     │/api/v1/   │  │
-│  │ només       │     │  GPS natiu continu  │     │locations/ │  │
-│  └────────────┘     │  HTTP directe        │     │batch      │  │
-│                     └────────────────────┘     └──────────┘  │
-│                                ▲                              │
-│                     ┌──────────┴──────────┐                   │
-│                     │  FusedLocationClient │                   │
-│                     │  (Google Play Sv)    │                   │
-│                     └─────────────────────┘                   │
-└──────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────┐     ┌─────────────────────┐
+│  Dispositiu /patient (APK)          │     │  /caregiver (navegador)
+│  Redmi Note 13 (Android)            │     │  Chrome / Safari     │
+│                                     │     │                      │
+│  ┌────────────┐  ┌───────────────┐  │     │  Vue des de Vercel   │
+│  │ React App  │  │ LocationSync   │  │     │                      │
+│  │ (WebView)  │◄►│ Plugin (Kotlin)│──┼─────┼──► Backend (Render) │
+│  │            │  │               │  │     │  POST /locations/    │
+│  │ foreground │  │ foreground sv  │  │     │  batch               │
+│  │ només      │  │ GPS natiu     │  │     │                      │
+│  └────────────┘  │ HTTP directe   │  │     │                      │
+│                  └───────┬───────┘  │     └─────────────────────┘
+│                          │          │
+│                  ┌───────┴───────┐  │
+│                  │FusedLocation  │  │
+│                  │Client (Google)│  │
+│                  └───────────────┘  │
+└─────────────────────────────────────┘
 ```
+
+**Important:** L'APK només cal instal·lar-lo al **dispositiu del /patient** (el que fa els passeigs). El **/caregiver** (cuidador) accedeix des del navegador a `https://path-guard-orpin.vercel.app/caregiver` — no necessita APK ni plugins nadius. Vegeu la secció [12. Distribució i Desplegament](#12-distribució-i-desplegament).
 
 **Flux:**
 1. L'usuari inicia passeig des de React → JS crida `LocationSync.startTracking()`
@@ -328,6 +331,54 @@ dependencies {
 - [ ] En iniciar passeig, el GPS funciona en foreground
 - [ ] En background, les coordenades s'envien durant ~10 min
 - [ ] Passats els 10 min, iOS atura l'enviament (comportament esperat)
+
+---
+
+## 12. Distribució i Desplegament
+
+### Qui necessita l'APK?
+
+| Rol | Dispositiu | Necessita APK? | Com accedeix |
+|---|---|---|---|
+| **Patient** | Android (Redmi) amb app nativa | ✅ Sí | APK instal·lat al mòbil. La UI es carrega des de Vercel automàticament. |
+| **Caregiver** | Qualsevol (mòbil, tauleta, PC) | ❌ No | Navegador → `https://path-guard-orpin.vercel.app/caregiver` |
+
+L'APK només proporciona la "capesa nativa" (plugins Capacitor). **Tota la UI** (tant /patient com /caregiver) es serveix des de Vercel.
+
+### Quan cal desplegar a Vercel vs. generar APK nou
+
+| Canvi | Acció |
+|---|---|
+| Canvi a la UI del patient (React) | ✅ Desplegar a Vercel. Tots els dispositius ho reben automàticament. |
+| Canvi al plugin nadiu (LocationSync) | ✅ Generar APK nou + distribuir-lo als testers. |
+| Canvi a la UI del caregiver | ✅ Desplegar a Vercel. Al navegador es veu directament sense instal·lar res. |
+| Canvi al backend | ✅ Desplegar a Render. Tothom ho rep. |
+
+### Com distribuir l'APK a testers remots
+
+Per a testers que no poden connectar el dispositiu per USB:
+
+1. Al Mac, genera l'APK:
+   ```bash
+   cd frontend/android
+   ./gradlew assembleDebug
+   # L'APK es genera a:
+   # frontend/android/app/build/outputs/apk/debug/app-debug.apk
+   ```
+2. Puja l'APK a **Google Drive**.
+3. Comparteix l'enllaç amb el tester.
+4. El tester descarrega l'APK al seu mòbil.
+5. **Requisit al dispositiu tester:** Activar "Instal·lar apps d'origen desconegut" (a MIUI: *Configuració → Seguretat → Instal·lar apps desconegudes → Permetre al navegador/gestor de fitxers*).
+6. Obre l'APK → s'instal·la → l'app es carrega des de Vercel.
+
+### Provar múltiples grups simultàniament
+
+El mateix APK serveix per a tots els grups:
+
+1. **Dispositiu A** → s'activa amb codi del **Grup 1** → fa passeigs
+2. **Dispositiu B** → s'activa amb codi del **Grup 2** → fa passeigs
+3. Cada cuidador va al seu `/caregiver/dashboard` amb les seves credencials
+4. Les dades estan aïllades per `group_id` al backend — no es barregen
 
 ---
 
