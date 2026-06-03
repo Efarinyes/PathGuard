@@ -330,7 +330,7 @@ Before making ANY change:
 | F — GPS Adaptive Logic | ✅ Completed | `feat/gps-adaptive-logic` (merged to develop) |
 | C+D — Dashboard Reorganization | ✅ Completed | `feat/dashboard-reorganization` (merged to develop) |
 | G — PostgreSQL Migration | ✅ Completed | `feat/postgresql-migration` (merged to develop) |
-| E — Capacitor /patient | ⏳ Blocked (needs Xcode) | — |
+| E — Capacitor /patient | ⏳ In progress (plugin LocationSync creat, pendent de test) | `feat/capacitor-patient-app` |
 | B — Walk distance | ❌ Cancelled | — |
 | 4.4 — SOS User Test | ⏳ Pending | — |
 | 4.5 — i18n | ⏳ Pending | — |
@@ -352,7 +352,7 @@ Before making ANY change:
 - `release/v2.6.0-pwa-stable` (tag `v2.6.0-pwa-stable.0`) — Última versió PWA pura abans de la capa nativa. README detallat amb limitacions i roadmap.
 
 **Pending TODOs:**
-- E — Capacitor for /patient (blocked on Xcode)
+- E — Capacitor for /patient (LocationSync plugin creat + connectat, pendent de test al Redmi)
 - 4.4 — SOS User Test
 - 4.5 — i18n
 - 5 — Beta Deploy (checklist remaining items)
