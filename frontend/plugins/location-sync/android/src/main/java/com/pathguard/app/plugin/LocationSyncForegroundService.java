@@ -201,6 +201,7 @@ public class LocationSyncForegroundService extends Service {
             obj.addProperty("longitude", p.longitude);
             obj.addProperty("timestamp", p.timestamp);
             obj.addProperty("client_id", p.clientId);
+            obj.addProperty("walk_id", walkId);
             pointsArray.add(obj);
         }
 
@@ -209,7 +210,7 @@ public class LocationSyncForegroundService extends Service {
         body.addProperty("batch_id", UUID.randomUUID().toString());
         body.add("points", pointsArray);
 
-        String url = serverUrl.replaceAll("/$", "") + "/api/v1/locations/batch";
+        String url = serverUrl.replaceAll("/$", "") + "/locations/batch";
 
         Request request = new Request.Builder()
                 .url(url)
@@ -223,6 +224,10 @@ public class LocationSyncForegroundService extends Service {
             if (response.isSuccessful() || response.code() == 409) {
                 pointsSent += batch.size();
                 lastSentAt = isoFormatter.format(new Date());
+            } else {
+                for (LocationPoint p : batch) {
+                    buffer.add(p);
+                }
             }
             response.close();
         } catch (Exception e) {

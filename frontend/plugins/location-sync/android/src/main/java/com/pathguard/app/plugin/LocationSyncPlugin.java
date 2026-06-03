@@ -1,7 +1,10 @@
 package com.pathguard.app.plugin;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -24,6 +27,23 @@ public class LocationSyncPlugin extends Plugin {
         }
 
         Context context = getContext();
+
+        if (Build.VERSION.SDK_INT >= 34) {
+            boolean hasFine = context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            boolean hasCoarse = context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            if (!hasFine && !hasCoarse) {
+                call.reject("Permís d'ubicació no concedit. Cal ACCESS_FINE_LOCATION o ACCESS_COARSE_LOCATION.");
+                return;
+            }
+            if (Build.VERSION.SDK_INT >= 35) {
+                boolean hasFgsLocation = context.checkSelfPermission(Manifest.permission.FOREGROUND_SERVICE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+                if (!hasFgsLocation) {
+                    call.reject("Permís FOREGROUND_SERVICE_LOCATION no concedit.");
+                    return;
+                }
+            }
+        }
+
         Intent intent = new Intent(context, LocationSyncForegroundService.class);
         intent.setAction("START");
         intent.putExtra("serverUrl", serverUrl);

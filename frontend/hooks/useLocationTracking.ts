@@ -104,25 +104,8 @@ export const useLocationTracking = () => {
     setError(null);
 
     if (isNative) {
-      if (trackingConfig) {
-        try {
-          await LocationSync.startTracking({
-            serverUrl: API_BASE_URL,
-            deviceToken: trackingConfig.deviceToken,
-            walkId: trackingConfig.walkId,
-          });
-          watchId.current = "location-sync";
-          setIsTracking(true);
-          isTrackingRef.current = true;
-          return;
-        } catch {
-          setError("Error al iniciar el servei de localització nadiu.");
-          return;
-        }
-      }
-
       const permResult = await Geolocation.checkPermissions();
-      if (permResult.location === "denied") {
+      if (permResult.location === "denied" || permResult.location === "prompt") {
         const requestResult = await Geolocation.requestPermissions();
         if (requestResult.location === "denied") {
           setError("Permís d'ubicació denegat.");
@@ -132,6 +115,23 @@ export const useLocationTracking = () => {
     } else if (!navigator.geolocation) {
       setError("GPS no disponible en aquest navegador.");
       return;
+    }
+
+    if (isNative && trackingConfig) {
+      try {
+        await LocationSync.startTracking({
+          serverUrl: API_BASE_URL,
+          deviceToken: trackingConfig.deviceToken,
+          walkId: trackingConfig.walkId,
+        });
+        watchId.current = "location-sync";
+        setIsTracking(true);
+        isTrackingRef.current = true;
+        return;
+      } catch {
+        setError("Error al iniciar el servei de localització nadiu.");
+        return;
+      }
     }
 
     setIsTracking(true);
