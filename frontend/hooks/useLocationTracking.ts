@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Geolocation } from "@capacitor/geolocation";
+import LocationSync from "@/plugins/location-sync/src";
 import { getDistanceHaversine, estimateSpeed, Position } from "../lib/gpsUtils";
-import { GPS_MIN_DISTANCE_M, GPS_SPEED_IDLE_THRESHOLD_M_MIN, GPS_INTERVAL_IDLE_MS, GPS_INTERVAL_NORMAL_MS, GPS_INTERVAL_FAST_MS, GPS_TIMEOUT_MS, GPS_RETRY_DELAY_MS } from "@/lib/config";
+import { GPS_MIN_DISTANCE_M, GPS_SPEED_IDLE_THRESHOLD_M_MIN, GPS_INTERVAL_IDLE_MS, GPS_INTERVAL_NORMAL_MS, GPS_INTERVAL_FAST_MS, GPS_TIMEOUT_MS, GPS_RETRY_DELAY_MS, API_BASE_URL } from "@/lib/config";
 
 const isNative = Capacitor.isNativePlatform();
 
@@ -18,9 +19,18 @@ export const useLocationTracking = () => {
   const timeoutId = useRef<NodeJS.Timeout | null>(null);
   const lastSampleTime = useRef<number>(Date.now());
 
-  const stopTracking = useCallback(() => {
+  const stopTracking = useCallback(async () => {
     setIsTracking(false);
     isTrackingRef.current = false;
+
+    if (isNative) {
+      try {
+        await LocationSync.stopTracking();
+      } catch {
+        // Plugin pot no estar iniciat — ignorar
+      }
+    }
+
     if (watchId.current !== null) {
       if (isNative) {
         Geolocation.clearWatch({ id: watchId.current as string });
@@ -90,10 +100,27 @@ export const useLocationTracking = () => {
     }
   }, [processLocation]);
 
-  const startTracking = useCallback(async () => {
+  const startTracking = useCallback(async (trackingConfig?: { deviceToken: string; walkId: number }) => {
     setError(null);
 
     if (isNative) {
+      if (trackingConfig) {
+        try {
+          await LocationSync.startTracking({
+            serverUrl: API_BASE_URL,
+            deviceToken: trackingConfig.deviceToken,
+            walkId: trackingConfig.walkId,
+          });
+          watchId.current = "location-sync";
+          setIsTracking(true);
+          isTrackingRef.current = true;
+          return;
+        } catch {
+          setError("Error al iniciar el servei de localització nadiu.");
+          return;
+        }
+      }
+
       const permResult = await Geolocation.checkPermissions();
       if (permResult.location === "denied") {
         const requestResult = await Geolocation.requestPermissions();
@@ -174,7 +201,7 @@ export const useLocationTracking = () => {
   }, [processLocation, startTracking]);
 
   useEffect(() => {
-    return () => stopTracking();
+    return () => { stopTracking(); };
   }, [stopTracking]);
 
   return { isTracking, currentPosition, error, startTracking, stopTracking };

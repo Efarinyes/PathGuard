@@ -59,11 +59,13 @@ export default function PatientWalkController() {
   // Sync hook tracking with active walk state
   useEffect(() => {
     if (isWalking && !isTracking) {
-      startTracking();
+      if (deviceToken && activeWalkId) {
+        startTracking({ deviceToken, walkId: activeWalkId });
+      }
     } else if (!isWalking && isTracking) {
       stopTracking();
     }
-  }, [isWalking, isTracking, startTracking, stopTracking]);
+  }, [isWalking, isTracking, deviceToken, activeWalkId, startTracking, stopTracking]);
 
   // Push updates to API when the hook emits a valid, filtered point
   useEffect(() => {
