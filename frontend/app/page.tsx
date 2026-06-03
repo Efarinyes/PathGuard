@@ -1,9 +1,22 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Shield, Users, Heart, Smartphone } from 'lucide-react';
+import { useAppState } from '@/hooks/useAppState';
 
 export default function Home() {
+  const router = useRouter();
+  const { deviceToken, isHydrated } = useAppState();
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (deviceToken) {
+      router.replace('/patient');
+    }
+  }, [isHydrated, deviceToken, router]);
+
   return (
     <main className="min-h-screen bg-background flex flex-col">
       <div className="flex-1 flex flex-col items-center justify-center p-8">
