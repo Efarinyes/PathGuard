@@ -15,6 +15,7 @@
     "@capacitor/cli": "^8.3.4",
     "@capacitor/core": "^8.3.4",
     "@capacitor/geolocation": "^8.2.0",
+    "@pathguard/location-sync": "file:./plugins/location-sync",
     "@capacitor/ios": "^8.3.4",
     "@ducanh2912/next-pwa": "^10.2.9",
     "leaflet": "^1.9.4",

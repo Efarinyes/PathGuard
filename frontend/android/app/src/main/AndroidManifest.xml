@@ -33,6 +33,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <service
+            android:name="com.pathguard.app.plugin.LocationSyncForegroundService"
+            android:foregroundServiceType="location"
+            android:exported="false">
+        </service>
     </application>
 
     <!-- Permissions -->

@@ -127,8 +127,8 @@ export const useLocationTracking = () => {
               }, GPS_RETRY_DELAY_MS);
               return;
             }
-            if (position) {
-              onPositionUpdate(position.latitude, position.longitude);
+            if (position && position.coords) {
+              onPositionUpdate(position.coords.latitude, position.coords.longitude);
             }
           }
         );
