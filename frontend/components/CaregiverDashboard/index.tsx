@@ -54,7 +54,7 @@ export default function CaregiverDashboard() {
   }, [isPatientConnected, isActive, isLoading, hasReceivedStatus]);
 
   const renderMapSection = () => {
-    if (isActive && routeHistory.length > 0) {
+    if (isActive) {
       return <CaregiverMap locations={routeHistory} isPatientOffline={!isPatientConnected} />;
     }
     return (
