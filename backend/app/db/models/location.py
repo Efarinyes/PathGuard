@@ -11,7 +11,7 @@ class Location(Base):
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     timestamp = Column(DateTime(timezone=True), nullable=False)
-    client_id = Column(String(50), unique=True, index=True, nullable=True) # UUID for deduplication
+    client_id = Column(String(64), unique=True, index=True, nullable=True)
     is_recovered = Column(Boolean, default=False)  # True if synced offline during recovery
     
     # Relationships
