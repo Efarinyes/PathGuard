@@ -293,7 +293,7 @@ public class LocationSyncForegroundService extends Service {
 
         double lat = location.getLatitude();
         double lng = location.getLongitude();
-        long nowMs = System.currentTimeMillis();
+        long nowMs = location.getTime();
 
         LocationPoint candidate = new LocationPoint(lat, lng, nowMs, "");
 

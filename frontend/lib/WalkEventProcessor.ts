@@ -111,7 +111,7 @@ export class WalkEventProcessor {
     if (isLocationMsg) {
       const tsRaw = msg.timestamp;
       const eventTime = typeof tsRaw === 'string' ? new Date(tsRaw).getTime() : 0;
-      if (eventTime > 0 && eventTime < this.latestTimestamp) {
+      if (eventTime > 0 && eventTime < this.latestTimestamp - 30_000) {
         return false;
       }
       if (eventTime > 0) this.latestTimestamp = eventTime;
