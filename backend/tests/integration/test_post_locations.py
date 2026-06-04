@@ -483,11 +483,11 @@ class TestCacheUpdate:
         cached = walk_state_cache.get(active_walk.id)
         assert len(cached["history"]) == 3
 
-    def test_E5_cache_history_capped_at_50(
+    def test_E5_cache_history_capped_at_200(
         self, client: TestClient, active_walk: Walk, patient_headers: dict
     ):
-        """Sending 55 points must keep cache history at exactly 50 entries."""
-        for i in range(55):
+        """Sending 250 points must keep cache history at exactly 200 entries."""
+        for i in range(250):
             client.post(
                 ENDPOINT,
                 json=_payload(
@@ -498,7 +498,7 @@ class TestCacheUpdate:
                 headers=patient_headers,
             )
         cached = walk_state_cache.get(active_walk.id)
-        assert len(cached["history"]) == 50
+        assert len(cached["history"]) == 200
 
     def test_E6_failed_auth_does_not_pollute_cache(
         self, client: TestClient, active_walk: Walk

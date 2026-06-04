@@ -74,19 +74,21 @@ describe('GPS Batching System Integration', () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     (global.fetch as any).mockRejectedValue(new Error('Network Failure'));
 
-    // Clear state first
     (locationService as any)._resetInternalState();
     
-    // Save fewer than batch size to avoid auto-flush
+    // Save fewer than batch size to avoid auto-flush (distinct points to avoid SHA-256 dedup)
     for (let i = 0; i < 3; i++) {
-      await locationService.saveLocation({ latitude: 20, longitude: 20, timestamp: '2026-04-26T10:00:00Z', walk_id: 1 });
+      await locationService.saveLocation({
+        latitude: 20 + i * 0.001,
+        longitude: 20 + i * 0.001,
+        timestamp: new Date(Date.UTC(2026, 3, 26, 10, i, 0)).toISOString(),
+        walk_id: 1
+      });
     }
 
-    // Advance timer to trigger time-based flush
     await vi.advanceTimersByTimeAsync(5005);
     await vi.runAllTicks();
 
-    // Points should now be in IndexedDB due to network failure
     const unsynced = await offlineSyncService.getUnsynced();
     expect(unsynced.length).toBeGreaterThanOrEqual(3);
   });

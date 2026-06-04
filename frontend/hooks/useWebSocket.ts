@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { WS_BASE_URL, WS_MAX_RECONNECT_ATTEMPTS, WS_RECONNECT_BASE_DELAY_MS, WS_RECONNECT_MAX_DELAY_MS } from '@/lib/config';
+import { WS_BASE_URL, WS_FAST_RECONNECT_ATTEMPTS, WS_RECONNECT_BASE_DELAY_MS, WS_RECONNECT_MAX_DELAY_MS, WS_INFINITE_RETRY_DELAY_MS } from '@/lib/config';
 
 export interface UseWebSocketOptions {
   debounceMs?: number;
@@ -103,12 +103,17 @@ export function useWebSocket<T = unknown>(
 
     function scheduleReconnect() {
       if (!isMounted.current) return;
-      if (reconnectAttempt.current >= WS_MAX_RECONNECT_ATTEMPTS) {
-        console.warn('[WS] Maximum reconnect attempts reached (5). Stopping.');
-        return;
+
+      let delay: number;
+      if (reconnectAttempt.current < WS_FAST_RECONNECT_ATTEMPTS) {
+        delay = Math.min(
+          WS_RECONNECT_BASE_DELAY_MS * Math.pow(2, reconnectAttempt.current),
+          WS_RECONNECT_MAX_DELAY_MS,
+        );
+      } else {
+        delay = WS_INFINITE_RETRY_DELAY_MS;
       }
 
-      const delay = Math.min(WS_RECONNECT_BASE_DELAY_MS * Math.pow(2, reconnectAttempt.current), WS_RECONNECT_MAX_DELAY_MS);
       reconnectAttempt.current += 1;
       reconnectTimeout.current = setTimeout(connect, delay);
     }

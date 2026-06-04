@@ -2,9 +2,9 @@ package com.pathguard.app.plugin;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Build;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 
@@ -46,6 +46,12 @@ public class LocationSyncForegroundService extends Service {
     private static final int LOCATION_INTERVAL_MS = 5000;
     private static final int LOCATION_FASTEST_INTERVAL_MS = 2000;
 
+    // Sprint 2.3 — SharedPreferences keys
+    private static final String PREF_FILE = "pathguard_tracking";
+    private static final String PREF_WALK_ID = "active_walk_id";
+    private static final String PREF_DEVICE_TOKEN = "device_token";
+    private static final String PREF_SERVER_URL = "server_url";
+
     // Sprint 1.1 — GPS Filter constants
     private static final float MIN_DISTANCE_M = 25.0f;
     private static final float MAX_JUMP_M = 80.0f;
@@ -55,10 +61,12 @@ public class LocationSyncForegroundService extends Service {
 
     private static boolean running = false;
     private static int pointsSent = 0;
+    private boolean lastFlushFailed = false;
     private static String lastSentAt = null;
 
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
+    private SharedPreferences prefs;
     private LocationPoint lastAcceptedPoint = null;
     private final PriorityQueue<LocationPoint> buffer = new PriorityQueue<>(
             Comparator.comparingLong(p -> p.timestampMs)
@@ -99,30 +107,48 @@ public class LocationSyncForegroundService extends Service {
                 .writeTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(10, TimeUnit.SECONDS)
                 .build();
+        prefs = getSharedPreferences(PREF_FILE, MODE_PRIVATE);
+        walkId = prefs.getInt(PREF_WALK_ID, 0);
+        deviceToken = prefs.getString(PREF_DEVICE_TOKEN, null);
+        serverUrl = prefs.getString(PREF_SERVER_URL, null);
     }
 
     @Override
     public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
-        if (intent == null || intent.getAction() == null) {
-            return START_STICKY;
-        }
+        if (intent != null && intent.getAction() != null) {
+            switch (intent.getAction()) {
+                case "START":
+                    serverUrl = intent.getStringExtra("serverUrl");
+                    deviceToken = intent.getStringExtra("deviceToken");
+                    walkId = intent.getIntExtra("walkId", 0);
+                    prefs.edit()
+                        .putInt(PREF_WALK_ID, walkId)
+                        .putString(PREF_DEVICE_TOKEN, deviceToken)
+                        .putString(PREF_SERVER_URL, serverUrl)
+                        .apply();
+                    startTracking();
+                    break;
 
-        switch (intent.getAction()) {
-            case "START":
-                serverUrl = intent.getStringExtra("serverUrl");
-                deviceToken = intent.getStringExtra("deviceToken");
-                walkId = intent.getIntExtra("walkId", 0);
+                case "STOP":
+                    stopTracking();
+                    prefs.edit()
+                        .remove(PREF_WALK_ID)
+                        .remove(PREF_DEVICE_TOKEN)
+                        .remove(PREF_SERVER_URL)
+                        .apply();
+                    stopSelf();
+                    break;
+
+                case "UPDATE_WALK_ID":
+                    walkId = intent.getIntExtra("walkId", 0);
+                    prefs.edit().putInt(PREF_WALK_ID, walkId).apply();
+                    break;
+            }
+        } else {
+            // START_STICKY restart without intent — recover from prefs (already restored in onCreate)
+            if (walkId > 0 && deviceToken != null && serverUrl != null) {
                 startTracking();
-                break;
-
-            case "STOP":
-                stopTracking();
-                stopSelf();
-                break;
-
-            case "UPDATE_WALK_ID":
-                walkId = intent.getIntExtra("walkId", 0);
-                break;
+            }
         }
 
         return START_STICKY;
@@ -286,6 +312,7 @@ public class LocationSyncForegroundService extends Service {
 
         String clientId = generateClientId(nowMs, lat, lng);
         LocationPoint point = new LocationPoint(lat, lng, nowMs, clientId);
+        point.isRecovered = lastFlushFailed;
         lastAcceptedPoint = point;
 
         if (buffer.size() >= BUFFER_MAX_SIZE) {
@@ -314,6 +341,7 @@ public class LocationSyncForegroundService extends Service {
             obj.addProperty("timestamp", isoFormatter.format(new Date(p.timestampMs)));
             obj.addProperty("client_id", p.clientId);
             obj.addProperty("walk_id", walkId);
+            obj.addProperty("is_recovered", p.isRecovered);
             pointsArray.add(obj);
         }
 
@@ -336,13 +364,16 @@ public class LocationSyncForegroundService extends Service {
             if (response.isSuccessful() || response.code() == 409) {
                 pointsSent += batch.size();
                 lastSentAt = isoFormatter.format(new Date());
+                lastFlushFailed = false;
             } else {
+                lastFlushFailed = true;
                 for (LocationPoint p : batch) {
                     buffer.add(p);
                 }
             }
             response.close();
         } catch (Exception e) {
+            lastFlushFailed = true;
             for (LocationPoint p : batch) {
                 buffer.add(p);
             }
@@ -366,12 +397,14 @@ public class LocationSyncForegroundService extends Service {
         final double longitude;
         final long timestampMs;
         final String clientId;
+        boolean isRecovered;
 
         LocationPoint(double latitude, double longitude, long timestampMs, String clientId) {
             this.latitude = latitude;
             this.longitude = longitude;
             this.timestampMs = timestampMs;
             this.clientId = clientId;
+            this.isRecovered = false;
         }
     }
 }

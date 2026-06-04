@@ -87,8 +87,8 @@ const LOCATION_T2: LocationPayload = {
 };
 
 const LOCATION_T3: LocationPayload = {
-  latitude: 41.3889,
-  longitude: 2.1701,
+  latitude: 41.3886,
+  longitude: 2.1697,
   timestamp: '2026-04-25T10:01:00.000Z',
   walk_id: 42,
 };

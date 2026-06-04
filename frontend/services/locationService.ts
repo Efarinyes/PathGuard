@@ -4,6 +4,7 @@
  */
 import { offlineSyncService } from "./offlineSyncService";
 import { gpsTransportService } from "./gpsTransportService";
+import { generateLocationId } from "@/lib/locationId";
 import { API_BASE_URL, STORAGE_KEYS, BATCH_SIZE_THRESHOLD, BATCH_TIME_THRESHOLD_MS } from '@/lib/config';
 
 export interface LocationPayload {
@@ -14,11 +15,15 @@ export interface LocationPayload {
   is_recovered?: boolean;
 }
 
+interface BufferedPoint extends LocationPayload {
+  id: string;
+  walk_id: number;
+}
+
 class LocationService {
-  // Private state — no module-level mutable state (Golden Rule)
-  private batchBuffer: LocationPayload[] = [];
+  private batchBuffer: BufferedPoint[] = [];
   private batchTimer: NodeJS.Timeout | null = null;
-  private isSyncing = false; // Internal lock for chronological sync
+  private isSyncing = false;
 
   /**
    * Sends GPS coordinates with Adaptive Batching.
@@ -26,11 +31,15 @@ class LocationService {
    * 2. Flush if buffer is full (size threshold) or 5s have passed (time threshold).
    */
   async saveLocation(payload: LocationPayload): Promise<void> {
-    // Generate unique ID for deduplication (idempotency)
-    const eventId = crypto.randomUUID();
+    const id = await generateLocationId(
+      new Date(payload.timestamp).getTime(),
+      payload.latitude,
+      payload.longitude,
+      payload.walk_id || 0
+    );
 
     const point = {
-      id: eventId,
+      id,
       latitude: payload.latitude,
       longitude: payload.longitude,
       timestamp: payload.timestamp,
@@ -40,11 +49,9 @@ class LocationService {
 
     this.batchBuffer.push(point);
 
-    // Threshold check: Size
     if (this.batchBuffer.length >= BATCH_SIZE_THRESHOLD) {
       await this.flushBatch();
     } else if (!this.batchTimer) {
-      // Threshold check: Time
       this.batchTimer = setTimeout(async () => {
         await this.flushBatch();
       }, BATCH_TIME_THRESHOLD_MS);
@@ -66,49 +73,32 @@ class LocationService {
     const currentBatch = [...this.batchBuffer];
     this.batchBuffer = [];
 
-    if (currentBatch.length === 0) {
-      return;
-    }
+    if (currentBatch.length === 0) return;
 
     const walkId = currentBatch[0].walk_id;
     const batchId = crypto.randomUUID();
     const deviceToken = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEYS.DEVICE_TOKEN) : null;
 
+    const payload = currentBatch.map((p) => ({
+      latitude: p.latitude,
+      longitude: p.longitude,
+      timestamp: p.timestamp,
+      walk_id: p.walk_id,
+      client_id: p.id,
+    }));
+
     try {
-      const pointsWithClientId = currentBatch.map(p => ({
-        latitude: p.latitude,
-        longitude: p.longitude,
-        timestamp: p.timestamp,
-        walk_id: p.walk_id,
-        client_id: crypto.randomUUID()
-      }));
       await gpsTransportService.sendBatch({
         walk_id: walkId as number,
         batch_id: batchId,
-        points: pointsWithClientId
+        points: payload,
       }, deviceToken);
 
-      // Success or Conflict (Duplicate): Mark as synced to prevent retries
-      for (const point of pointsWithClientId) {
-        await offlineSyncService.markSynced(point.client_id);
-      }
-      await offlineSyncService.clearSynced();
-    } catch (error) {
-      // Resilience: Persist entire batch to IndexedDB for later recovery
       for (const point of currentBatch) {
-        if (!point.walk_id) continue;
-        try {
-          await offlineSyncService.add({
-            latitude: point.latitude,
-            longitude: point.longitude,
-            timestamp: point.timestamp,
-            walk_id: point.walk_id,
-            id: crypto.randomUUID()
-          });
-        } catch {
-          // Already in IndexedDB (from saveLocation), which is fine
-        }
+        await offlineSyncService.deleteLocation(point.id);
       }
+    } catch {
+      // No re-add (S2 fix). Points already persist in IndexedDB via saveLocation().
     }
   }
 
@@ -140,18 +130,17 @@ class LocationService {
           longitude: point.longitude,
           timestamp: point.timestamp,
           walk_id: point.walk_id,
-          is_recovered: true // Mark as recovered when syncing from offline
+          is_recovered: true,
         }, deviceToken);
 
         if (success) {
-          await offlineSyncService.markSynced(point.id);
+          await offlineSyncService.deleteLocation(point.id);
         } else {
-          break; // Stop syncing on first network failure to maintain order
+          break;
         }
       }
     } finally {
       this.isSyncing = false;
-      await offlineSyncService.clearSynced();
     }
   }
 

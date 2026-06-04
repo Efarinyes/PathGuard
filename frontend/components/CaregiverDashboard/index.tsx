@@ -17,7 +17,7 @@ import CaregiverDashboardLayout from './CaregiverDashboardLayout';
 export default function CaregiverDashboard() {
   const { userToken } = useAppState();
   const locationHook = useLivePatientLocation();
-  const { currentLocation, routeHistory, isConnected, isPatientConnected, hasReceivedStatus, isLoading, isActive, latestSosData } = locationHook;
+  const { currentLocation, routeHistory, isConnected, isPatientConnected, hasReceivedStatus, isLoading, isActive, latestSosData, presenceStatus } = locationHook;
   const { showAlert } = useSOSAlert();
   const [timeAgo, setTimeAgo] = useState<string>('Esperant dades...');
   const [notification, setNotification] = useState<{ message: string, type: 'info' | 'warning' } | null>(null);
@@ -94,6 +94,7 @@ export default function CaregiverDashboard() {
             isConnected={isConnected}
             isActive={isActive}
             isPatientConnected={isPatientConnected}
+            presenceStatus={presenceStatus}
             currentLocation={currentLocation}
             timeAgo={timeAgo}
           />

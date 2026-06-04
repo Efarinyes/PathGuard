@@ -4,6 +4,7 @@ import { useAppState } from './useAppState';
 import { LocationPayload } from '../services/locationService';
 import { walkService } from '../services/walkService';
 import { WalkEventProcessor, WalkState, WalkAction } from '../lib/WalkEventProcessor';
+import type { PresenceStatus } from '../lib/wsEventTypes';
 
 export interface UseLivePatientLocationReturn extends WalkState {
   isConnected: boolean;
@@ -11,6 +12,7 @@ export interface UseLivePatientLocationReturn extends WalkState {
   hasReceivedStatus: boolean;
   isLoading: boolean;
   watchersCount: number;
+  presenceStatus: PresenceStatus;
   latestSosData: { patient_id: number; walk_id: number | null; sos_count: number; timestamp: string } | null;
 }
 
@@ -33,6 +35,7 @@ export function useLivePatientLocation(
   );
 
   const [isPatientConnected, setIsPatientConnected] = useState(false);
+  const [presenceStatus, setPresenceStatus] = useState<PresenceStatus>('offline');
   const [watchersCount, setWatchersCount] = useState(0);
   const [latestSosData, setLatestSosData] = useState<{ patient_id: number; walk_id: number | null; sos_count: number; timestamp: string } | null>(null);
   const lastProcessedSosCount = useRef<number>(0);
@@ -113,7 +116,9 @@ export function useLivePatientLocation(
           setWatchersCount(classified.payload.watchers_count);
         }
         if (typeof classified.payload.patient_status === 'string') {
-          setIsPatientConnected(classified.payload.patient_status === 'online');
+          const status = classified.payload.patient_status as PresenceStatus;
+          setPresenceStatus(status);
+          setIsPatientConnected(status !== 'offline' && status !== 'limbo');
           hasReceivedStatus.current = true;
         }
         break;
@@ -131,12 +136,21 @@ export function useLivePatientLocation(
 
       case 'patient_online': {
         setIsPatientConnected(true);
+        setPresenceStatus('online');
         hasReceivedStatus.current = true;
         break;
       }
 
       case 'patient_offline': {
         setIsPatientConnected(false);
+        setPresenceStatus('offline');
+        hasReceivedStatus.current = true;
+        break;
+      }
+
+      case 'patient_status': {
+        setPresenceStatus(classified.status);
+        setIsPatientConnected(classified.status !== 'offline' && classified.status !== 'limbo');
         hasReceivedStatus.current = true;
         break;
       }
@@ -180,6 +194,7 @@ export function useLivePatientLocation(
     hasReceivedStatus: hasReceivedStatus.current,
     isLoading,
     watchersCount,
+    presenceStatus,
     latestSosData,
   };
 }

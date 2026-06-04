@@ -9,14 +9,13 @@ const DB_VERSION = 1;
 const STORE_NAME = 'locationQueue';
 
 export interface QueuedLocation {
-  id: string; // Client-generated UUID
+  id: string; // Deterministic SHA-256 (doubles as client_id for backend dedup)
   walk_id: number;
   latitude: number;
   longitude: number;
   timestamp: string;
-  synced: number; // 0 for unsynced, 1 for synced
+  synced: number; // 0 for unsynced, 1 for synced (kept for index, not for mark/clear)
   is_recovered?: boolean; // True if synced offline during recovery
-  client_id?: string; // UUID for backend deduplication
 }
 
 class OfflineSyncService {
@@ -93,79 +92,13 @@ class OfflineSyncService {
     });
   }
 
-  async markSynced(id: string): Promise<void> {
+  async deleteLocation(id: string): Promise<void> {
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readwrite');
-      const store = transaction.objectStore(STORE_NAME);
-      const getRequest = store.get(id);
-
-      getRequest.onsuccess = () => {
-        const data = getRequest.result;
-        if (data) {
-          data.synced = 1;
-          store.put(data);
-        }
-        resolve();
-      };
-      getRequest.onerror = () => reject('Failed to mark as synced');
-    });
-  }
-
-  async markSyncedBulk(ids: string[]): Promise<void> {
-    if (ids.length === 0) return;
-
-    const db = await this.initDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([STORE_NAME], 'readwrite');
-      const store = transaction.objectStore(STORE_NAME);
-
-      let completed = 0;
-      let hasError = false;
-
-      for (const id of ids) {
-        const getRequest = store.get(id);
-
-        getRequest.onsuccess = () => {
-          const data = getRequest.result;
-          if (data && !hasError) {
-            data.synced = 1;
-            store.put(data);
-          }
-          completed++;
-          if (completed === ids.length) {
-            resolve();
-          }
-        };
-
-        getRequest.onerror = () => {
-          if (!hasError) {
-            hasError = true;
-            reject('Failed to mark bulk as synced');
-          }
-        };
-      }
-    });
-  }
-
-  async clearSynced(): Promise<void> {
-    const db = await this.initDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([STORE_NAME], 'readwrite');
-      const store = transaction.objectStore(STORE_NAME);
-      const index = store.index('synced');
-
-      const request = index.openCursor(IDBKeyRange.only(1));
-      request.onsuccess = (event: any) => {
-        const cursor = event.target.result;
-        if (cursor) {
-          cursor.delete();
-          cursor.continue();
-        } else {
-          resolve();
-        }
-      };
-      request.onerror = () => reject('Failed to clear synced data');
+      const request = transaction.objectStore(STORE_NAME).delete(id);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject('Failed to delete location');
     });
   }
 }

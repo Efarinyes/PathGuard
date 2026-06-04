@@ -17,6 +17,7 @@ class ConnectionManager:
         self.websocket_to_user: Dict[WebSocket, int] = {}
         self.websocket_to_group: Dict[WebSocket, int] = {}
         self._patient_status_store: Dict[int, str] = {}
+        self.last_http_location_at: Dict[int, datetime] = {}
 
     async def connect(self, websocket: WebSocket, group_id: int, role: str, user_id: Optional[int] = None):
         await websocket.accept()
@@ -98,6 +99,39 @@ class ConnectionManager:
 
     def get_patient_status(self, group_id: int) -> str:
         return self._patient_status_store.get(group_id, "offline")
+
+    def update_http_presence(self, group_id: int) -> None:
+        """Cridat des de location_service.save_batch() quan arriben dades HTTP."""
+        self.last_http_location_at[group_id] = datetime.now(timezone.utc)
+
+    async def broadcast_patient_status(self, group_id: int) -> None:
+        status = self.get_presence_status(group_id)
+        await self.broadcast_to_group(group_id, {
+            "type": "patient_status",
+            "status": status,
+            "group_id": group_id,
+        })
+
+    def get_presence_status(self, group_id: int) -> str:
+        """Retorna 'online' | 'gps_online' | 'limbo' | 'offline'"""
+        ws_alive = (
+            group_id in self.patient_connections
+            and len(self.patient_connections[group_id]) > 0
+        )
+        last_http = self.last_http_location_at.get(group_id)
+        now = datetime.now(timezone.utc)
+
+        if ws_alive:
+            return "online"
+
+        if last_http:
+            diff = (now - last_http).total_seconds()
+            if diff < 60:
+                return "gps_online"
+            if diff < 300:
+                return "limbo"
+
+        return "offline"
 
 
 connection_manager = ConnectionManager()

@@ -12,14 +12,68 @@ export interface MapRendererProps {
   isPatientOffline?: boolean;
 }
 
-interface LocationSegment {
+export interface LocationSegment {
   coordinates: [number, number][];
   isRecovered: boolean;
 }
 
-function segmentLocations(locations: LocationPayload[]): LocationSegment[] {
+export function perpendicularDistance(
+  point: [number, number],
+  start: [number, number],
+  end: [number, number]
+): number {
+  const dx = end[0] - start[0];
+  const dy = end[1] - start[1];
+  const lengthSq = dx * dx + dy * dy;
+  if (lengthSq === 0) {
+    const dLat = point[0] - start[0];
+    const dLng = point[1] - start[1];
+    return Math.sqrt(dLat * dLat + dLng * dLng);
+  }
+  const t = Math.max(0, Math.min(1,
+    ((point[0] - start[0]) * dx + (point[1] - start[1]) * dy) / lengthSq
+  ));
+  const projLat = start[0] + t * dx;
+  const projLng = start[1] + t * dy;
+  const dLat = point[0] - projLat;
+  const dLng = point[1] - projLng;
+  return Math.sqrt(dLat * dLat + dLng * dLng);
+}
+
+export function douglasPeucker(
+  points: [number, number][],
+  epsilon: number
+): [number, number][] {
+  if (points.length <= 2) return points;
+
+  let maxDist = 0;
+  let maxIdx = 0;
+  const start = points[0];
+  const end = points[points.length - 1];
+
+  for (let i = 1; i < points.length - 1; i++) {
+    const dist = perpendicularDistance(points[i], start, end);
+    if (dist > maxDist) {
+      maxDist = dist;
+      maxIdx = i;
+    }
+  }
+
+  if (maxDist > epsilon) {
+    const left = douglasPeucker(points.slice(0, maxIdx + 1), epsilon);
+    const right = douglasPeucker(points.slice(maxIdx), epsilon);
+    return [...left.slice(0, -1), ...right];
+  }
+
+  return [start, end];
+}
+
+export function segmentLocations(
+  locations: LocationPayload[],
+  epsilon?: number
+): LocationSegment[] {
   const validLocations = locations.filter(
-    (loc) => typeof loc.latitude === 'number' && typeof loc.longitude === 'number'
+    (loc) => Number.isFinite(loc.latitude) && Number.isFinite(loc.longitude)
   );
 
   if (validLocations.length === 0) return [];
@@ -57,13 +111,22 @@ function segmentLocations(locations: LocationPayload[]): LocationSegment[] {
     });
   }
 
+  if (epsilon !== undefined && epsilon > 0) {
+    return segments.map((seg) => ({
+      ...seg,
+      coordinates: seg.isRecovered
+        ? seg.coordinates
+        : douglasPeucker(seg.coordinates, epsilon),
+    }));
+  }
+
   return segments;
 }
 
 export default function MapRenderer({ locations, isPatientOffline }: MapRendererProps) {
   const mapRef = useRef<LeafletMap | null>(null);
 
-  const segments = useMemo(() => segmentLocations(locations), [locations]);
+  const segments = useMemo(() => segmentLocations(locations, 0.00003), [locations]);
 
   const allCoordinates = useMemo(
     () => segments.flatMap((seg) => seg.coordinates),

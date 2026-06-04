@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import 'fake-indexeddb/auto';
-import { offlineSyncService, QueuedLocation } from './offlineSyncService';
+import { offlineSyncService } from './offlineSyncService';
 
 describe('offlineSyncService', () => {
   let db: IDBDatabase;
@@ -47,7 +47,7 @@ describe('offlineSyncService', () => {
   });
 
   describe('getUnsynced', () => {
-    it('should return only unsynced locations', async () => {
+    it('should return only synced=0 entries', async () => {
       await offlineSyncService.add({
         id: 'test-1',
         walk_id: 1,
@@ -56,7 +56,7 @@ describe('offlineSyncService', () => {
         timestamp: '2026-05-07T10:00:00Z',
       });
 
-      await offlineSyncService.markSynced('test-1');
+      await offlineSyncService.deleteLocation('test-1');
 
       const unsynced = await offlineSyncService.getUnsynced();
       expect(unsynced).toHaveLength(0);
@@ -116,8 +116,8 @@ describe('offlineSyncService', () => {
     });
   });
 
-  describe('markSynced', () => {
-    it('should mark a location as synced', async () => {
+  describe('deleteLocation', () => {
+    it('T1.3e: should delete a location from the queue', async () => {
       await offlineSyncService.add({
         id: 'test-1',
         walk_id: 1,
@@ -126,13 +126,13 @@ describe('offlineSyncService', () => {
         timestamp: '2026-05-07T10:00:00Z',
       });
 
-      await offlineSyncService.markSynced('test-1');
+      await offlineSyncService.deleteLocation('test-1');
 
       const unsynced = await offlineSyncService.getUnsynced();
       expect(unsynced).toHaveLength(0);
     });
 
-    it('should handle marking non-existent id gracefully', async () => {
+    it('T1.3e: should handle deleting non-existent id gracefully', async () => {
       await offlineSyncService.add({
         id: 'test-1',
         walk_id: 1,
@@ -141,15 +141,13 @@ describe('offlineSyncService', () => {
         timestamp: '2026-05-07T10:00:00Z',
       });
 
-      await offlineSyncService.markSynced('non-existent');
+      await offlineSyncService.deleteLocation('non-existent');
 
       const unsynced = await offlineSyncService.getUnsynced();
       expect(unsynced).toHaveLength(1);
     });
-  });
 
-  describe('markSyncedBulk', () => {
-    it('should mark multiple locations as synced', async () => {
+    it('T1.3e: should only delete the specific location, not others', async () => {
       await offlineSyncService.add({
         id: 'test-1',
         walk_id: 1,
@@ -164,77 +162,12 @@ describe('offlineSyncService', () => {
         longitude: 2.1735,
         timestamp: '2026-05-07T10:01:00Z',
       });
-      await offlineSyncService.add({
-        id: 'test-3',
-        walk_id: 1,
-        latitude: 41.3853,
-        longitude: 2.1736,
-        timestamp: '2026-05-07T10:02:00Z',
-      });
 
-      await offlineSyncService.markSyncedBulk(['test-1', 'test-2']);
+      await offlineSyncService.deleteLocation('test-1');
 
       const unsynced = await offlineSyncService.getUnsynced();
       expect(unsynced).toHaveLength(1);
-      expect(unsynced[0].id).toBe('test-3');
-    });
-
-    it('should handle empty array', async () => {
-      await offlineSyncService.add({
-        id: 'test-1',
-        walk_id: 1,
-        latitude: 41.3851,
-        longitude: 2.1734,
-        timestamp: '2026-05-07T10:00:00Z',
-      });
-
-      await offlineSyncService.markSyncedBulk([]);
-
-      const unsynced = await offlineSyncService.getUnsynced();
-      expect(unsynced).toHaveLength(1);
-    });
-  });
-
-  describe('clearSynced', () => {
-    it('should clear all synced locations', async () => {
-      await offlineSyncService.add({
-        id: 'test-1',
-        walk_id: 1,
-        latitude: 41.3851,
-        longitude: 2.1734,
-        timestamp: '2026-05-07T10:00:00Z',
-      });
-
-      await offlineSyncService.markSynced('test-1');
-      await offlineSyncService.clearSynced();
-
-      const transaction = db.transaction(['locationQueue'], 'readonly');
-      const store = transaction.objectStore('locationQueue');
-      const request = store.getAll();
-
-      const all = await new Promise<QueuedLocation[]>((resolve) => {
-        request.onsuccess = () => resolve(request.result as QueuedLocation[]);
-      });
-
-      expect(all).toHaveLength(0);
-    });
-  });
-
-  describe('QueuedLocation interface', () => {
-    it('should support is_recovered field', () => {
-      const location: QueuedLocation = {
-        id: 'test-1',
-        walk_id: 1,
-        latitude: 41.3851,
-        longitude: 2.1734,
-        timestamp: '2026-05-07T10:00:00Z',
-        synced: 0,
-        is_recovered: true,
-        client_id: 'uuid-123',
-      };
-
-      expect(location.is_recovered).toBe(true);
-      expect(location.client_id).toBe('uuid-123');
+      expect(unsynced[0].id).toBe('test-2');
     });
   });
 });

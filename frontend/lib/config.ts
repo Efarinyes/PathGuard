@@ -10,9 +10,10 @@ export const STORAGE_KEYS = {
 
 // WebSocket constants
 export const WS_HEARTBEAT_INTERVAL_MS = 5000;
-export const WS_MAX_RECONNECT_ATTEMPTS = 5;
+export const WS_FAST_RECONNECT_ATTEMPTS = 5;
 export const WS_RECONNECT_BASE_DELAY_MS = 1000;
-export const WS_RECONNECT_MAX_DELAY_MS = 10000;
+export const WS_RECONNECT_MAX_DELAY_MS = 16000;
+export const WS_INFINITE_RETRY_DELAY_MS = 30000;
 
 // GPS / Location tracking constants
 export const GPS_MIN_DISTANCE_M = 30;

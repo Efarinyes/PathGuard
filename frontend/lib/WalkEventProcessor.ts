@@ -1,5 +1,6 @@
 import { LocationPayload } from '../services/locationService';
 import { WSEventType, WalkSnapshotMessage } from './wsEventTypes';
+import { getDistanceHaversine } from './gpsUtils';
 
 export interface WalkState {
   currentLocation: LocationPayload | null;
@@ -155,6 +156,18 @@ export class WalkEventProcessor {
       return { type: 'patient_offline' };
     }
 
+    if (msgType === 'patient_status') {
+      const status = msg.status as string;
+      if (status === 'online' || status === 'gps_online' || status === 'limbo' || status === 'offline') {
+        return {
+          type: 'patient_status',
+          status,
+          group_id: typeof msg.group_id === 'number' ? msg.group_id : 0,
+        };
+      }
+      return null;
+    }
+
     // 4. Watchers update
     if (msgType === 'watchers_update') {
       const count = typeof msg.count === 'number' ? msg.count : 0;
@@ -197,6 +210,32 @@ export class WalkEventProcessor {
     }
 
     return null;
+  }
+
+  private static readonly MAX_SPEED_MS = 5;
+  private static readonly MAX_JUMP_M = 100;
+
+  private validateLocation(
+    point: LocationPayload,
+    lastPoint: LocationPayload | null,
+  ): boolean {
+    if (!lastPoint) return true;
+
+    const distance = getDistanceHaversine(
+      { latitude: lastPoint.latitude, longitude: lastPoint.longitude },
+      { latitude: point.latitude, longitude: point.longitude },
+    );
+
+    const dt = (
+      new Date(point.timestamp).getTime()
+      - new Date(lastPoint.timestamp).getTime()
+    ) / 1000;
+
+    if (dt <= 0) return false;
+    if (distance / dt > WalkEventProcessor.MAX_SPEED_MS) return false;
+    if (distance > WalkEventProcessor.MAX_JUMP_M) return false;
+
+    return true;
   }
 
   /**
@@ -273,6 +312,11 @@ export class WalkEventProcessor {
       }
 
       case 'LOCATION_UPDATE': {
+        const lastPoint = state.routeHistory.length > 0
+          ? state.routeHistory[state.routeHistory.length - 1]
+          : null;
+        if (!this.validateLocation(action.payload, lastPoint)) return state;
+
         const nextHistory = appendLocation(state.routeHistory, action.payload);
         const latest = nextHistory[nextHistory.length - 1];
 
@@ -307,8 +351,13 @@ export class WalkEventProcessor {
           .sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 
         let mergedHistory = [...state.routeHistory];
+        let lastValid = mergedHistory.length > 0
+          ? mergedHistory[mergedHistory.length - 1]
+          : null;
         for (const loc of validLocations) {
+          if (!this.validateLocation(loc, lastValid)) continue;
           mergedHistory = appendLocation(mergedHistory, loc);
+          lastValid = mergedHistory[mergedHistory.length - 1];
         }
 
         const latestLoc = mergedHistory[mergedHistory.length - 1];

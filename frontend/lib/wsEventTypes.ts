@@ -25,12 +25,15 @@ export interface WalkSnapshotMessage {
   [key: string]: unknown;
 }
 
+export type PresenceStatus = "online" | "gps_online" | "limbo" | "offline";
+
 export type WSEventType =
   | { type: 'snapshot'; payload: WalkSnapshotMessage }
   | { type: 'walk_started'; timestamp: number }
   | { type: 'walk_stopped' }
   | { type: 'patient_online' }
   | { type: 'patient_offline' }
+  | { type: 'patient_status'; status: PresenceStatus; group_id: number }
   | { type: 'watchers_update'; count: number }
   | { type: 'sos_alert'; patient_id: number; walk_id: number | null; sos_count: number; timestamp: string }
   | { type: 'location_update'; payload: LocationPayload };

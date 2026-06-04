@@ -342,20 +342,20 @@ class TestCacheMiss:
         assert cached is not None
         assert cached["latest"]["latitude"] == pytest.approx(41.3874)
 
-    def test_D5_history_capped_at_50_points(
+    def test_D5_history_capped_at_200_points(
         self, client: TestClient, db: Session,
         auth_headers: dict, active_walk: Walk, patient_with_caregiver: Patient,
     ):
         """
-        The DB fallback fetches at most 50 points (.limit(50)).
-        Inserting 60 rows must still yield a history of exactly 50.
+        The DB fallback fetches at most 200 points (.limit(200)).
+        Inserting 250 rows must still yield a history of exactly 200.
         """
-        for i in range(60):
+        for i in range(250):
             ts = datetime(2026, 4, 25, 10, i // 60, i % 60)
             _persist_location(db, active_walk, 41.3874 + i * 0.0001, 2.1686, ts)
 
         body = client.get(ENDPOINT, headers=auth_headers).json()
-        assert len(body["active_walk"]["history"]) == 50
+        assert len(body["active_walk"]["history"]) == 200
 
     def test_D6_no_locations_in_db_returns_none_latest(
         self, client: TestClient, db: Session,

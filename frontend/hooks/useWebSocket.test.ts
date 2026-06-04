@@ -212,7 +212,7 @@ describe('useWebSocket', () => {
       expect(mockWsInstances).toHaveLength(2); // reconnected ✓
     });
 
-    it('C2 — exponential backoff: 1s → 2s → 4s → 8s → 10s (capped)', () => {
+    it('C2 — exponential backoff: 1s → 2s → 4s → 8s → 16s (capped)', () => {
       const { ws: ws0 } = renderConnected();
 
       // attempt 0 → 1 000 ms
@@ -242,32 +242,42 @@ describe('useWebSocket', () => {
       act(() => vi.advanceTimersByTime(8_000));
       expect(mockWsInstances).toHaveLength(5);
 
-      // attempt 4 → 10 000 ms (cap)
+      // attempt 4 → 16 000 ms (cap)
       const ws4 = mockWsInstances[4];
       act(() => ws4.simulateClose());
-      act(() => vi.advanceTimersByTime(9_999));
+      act(() => vi.advanceTimersByTime(15_999));
       expect(mockWsInstances).toHaveLength(5);
       act(() => vi.advanceTimersByTime(1));
       expect(mockWsInstances).toHaveLength(6);
     });
 
-    it('C3 — stops reconnecting after 5 failed attempts', () => {
+    it('C3 — infinite retry: 5 fast then 30s fixed', () => {
       const { ws: first } = renderConnected();
-      const delays = [1_000, 2_000, 4_000, 8_000, 10_000];
+      const fastDelays = [1_000, 2_000, 4_000, 8_000, 16_000];
       let current = first;
 
-      for (const delay of delays) {
+      for (const delay of fastDelays) {
         act(() => current.simulateClose());
         act(() => vi.advanceTimersByTime(delay));
         current = mockWsInstances.at(-1)!;
       }
 
-      const countAfterExhaustion = mockWsInstances.length;
+      const countAfterFast = mockWsInstances.length;
 
-      // 6th close — guard fires, no new socket created
+      // 6th close → 30 000 ms fixed delay
       act(() => current.simulateClose());
-      act(() => vi.advanceTimersByTime(30_000));
-      expect(mockWsInstances).toHaveLength(countAfterExhaustion);
+      act(() => vi.advanceTimersByTime(29_999));
+      expect(mockWsInstances).toHaveLength(countAfterFast);
+      act(() => vi.advanceTimersByTime(1));
+      expect(mockWsInstances).toHaveLength(countAfterFast + 1);
+
+      // 7th close → still 30 000 ms
+      const after30s = mockWsInstances.at(-1)!;
+      act(() => after30s.simulateClose());
+      act(() => vi.advanceTimersByTime(29_999));
+      expect(mockWsInstances).toHaveLength(countAfterFast + 1);
+      act(() => vi.advanceTimersByTime(1));
+      expect(mockWsInstances).toHaveLength(countAfterFast + 2);
     });
 
     it('C4 — resets reconnect counter to 0 after a successful open', () => {
