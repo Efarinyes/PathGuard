@@ -3,6 +3,7 @@ package com.pathguard.app.plugin;
 import android.app.Service;
 import android.content.Intent;
 import android.location.Location;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -20,13 +21,14 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Queue;
+import java.util.PriorityQueue;
 import java.util.TimeZone;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -44,13 +46,23 @@ public class LocationSyncForegroundService extends Service {
     private static final int LOCATION_INTERVAL_MS = 5000;
     private static final int LOCATION_FASTEST_INTERVAL_MS = 2000;
 
+    // Sprint 1.1 — GPS Filter constants
+    private static final float MIN_DISTANCE_M = 25.0f;
+    private static final float MAX_JUMP_M = 80.0f;
+    private static final float MAX_ACCURACY_M = 50.0f;
+    private static final float MAX_SPEED_MS = 5.0f;
+    private static final long MAX_FIX_AGE_MS = 10_000;
+
     private static boolean running = false;
     private static int pointsSent = 0;
     private static String lastSentAt = null;
 
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
-    private final Queue<LocationPoint> buffer = new ConcurrentLinkedQueue<>();
+    private LocationPoint lastAcceptedPoint = null;
+    private final PriorityQueue<LocationPoint> buffer = new PriorityQueue<>(
+            Comparator.comparingLong(p -> p.timestampMs)
+    );
     private ScheduledExecutorService scheduler;
     private OkHttpClient httpClient;
     private String serverUrl;
@@ -121,10 +133,11 @@ public class LocationSyncForegroundService extends Service {
         running = true;
         pointsSent = 0;
         lastSentAt = null;
+        lastAcceptedPoint = null;
 
         LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, LOCATION_INTERVAL_MS)
                 .setMinUpdateIntervalMillis(LOCATION_FASTEST_INTERVAL_MS)
-                .setMinUpdateDistanceMeters(5)
+                .setMinUpdateDistanceMeters(15)
                 .build();
 
         locationCallback = new LocationCallback() {
@@ -169,24 +182,123 @@ public class LocationSyncForegroundService extends Service {
         flushBuffer();
     }
 
+    // --- GPS Filter Gates (Sprint 1.1 — SRP: one method per gate) ---
+
+    private boolean passesAccuracyGate(Location location) {
+        return location.hasAccuracy() && location.getAccuracy() <= MAX_ACCURACY_M;
+    }
+
+    private boolean passesFixAgeGate(Location location) {
+        return System.currentTimeMillis() - location.getTime() <= MAX_FIX_AGE_MS;
+    }
+
+    private boolean passesMockGate(Location location) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            return !location.isFromMockProvider();
+        }
+        return true;
+    }
+
+    private boolean passesAntiJitterGate(LocationPoint candidate) {
+        if (lastAcceptedPoint == null) return true;
+        double distance = haversine(
+                lastAcceptedPoint.latitude, lastAcceptedPoint.longitude,
+                candidate.latitude, candidate.longitude
+        );
+        return distance >= MIN_DISTANCE_M;
+    }
+
+    private boolean passesTeleportGate(LocationPoint candidate, long elapsedMs) {
+        if (lastAcceptedPoint == null || elapsedMs > 5000) return true;
+        double distance = haversine(
+                lastAcceptedPoint.latitude, lastAcceptedPoint.longitude,
+                candidate.latitude, candidate.longitude
+        );
+        return distance <= MAX_JUMP_M;
+    }
+
+    private boolean passesSpeedGate(double distance, long elapsedMs) {
+        if (elapsedMs <= 0) return false;
+        double speedMs = distance / (elapsedMs / 1000.0);
+        return speedMs <= MAX_SPEED_MS;
+    }
+
+    // --- Haversine distance (metres) ---
+
+    private static double haversine(double lat1, double lng1, double lat2, double lng2) {
+        final double R = 6371000.0;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLng = Math.toRadians(lng2 - lng1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    // --- Deterministic client_id (SHA-256) ---
+
+    private String generateClientId(long timestampMs, double lat, double lng) {
+        try {
+            String input = timestampMs + ":"
+                    + String.format(Locale.US, "%.6f", lat) + ":"
+                    + String.format(Locale.US, "%.6f", lng) + ":"
+                    + walkId;
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(input.getBytes("UTF-8"));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            return UUID.randomUUID().toString();
+        }
+    }
+
+    // --- Buffer management (Sprint 1.1 + 1.2) ---
+
     private void addToBuffer(Location location) {
+        if (!passesAccuracyGate(location)) return;
+        if (!passesFixAgeGate(location)) return;
+        if (!passesMockGate(location)) return;
+
+        double lat = location.getLatitude();
+        double lng = location.getLongitude();
+        long nowMs = System.currentTimeMillis();
+
+        LocationPoint candidate = new LocationPoint(lat, lng, nowMs, "");
+
+        if (!passesAntiJitterGate(candidate)) return;
+
+        long elapsedMs = lastAcceptedPoint != null ? nowMs - lastAcceptedPoint.timestampMs : 0;
+        if (!passesTeleportGate(candidate, elapsedMs)) return;
+
+        if (lastAcceptedPoint != null) {
+            double distance = haversine(
+                    lastAcceptedPoint.latitude, lastAcceptedPoint.longitude,
+                    lat, lng
+            );
+            if (!passesSpeedGate(distance, elapsedMs)) return;
+        }
+
+        String clientId = generateClientId(nowMs, lat, lng);
+        LocationPoint point = new LocationPoint(lat, lng, nowMs, clientId);
+        lastAcceptedPoint = point;
+
         if (buffer.size() >= BUFFER_MAX_SIZE) {
             buffer.poll();
         }
-
-        buffer.add(new LocationPoint(
-                location.getLatitude(),
-                location.getLongitude(),
-                isoFormatter.format(new Date(location.getTime())),
-                UUID.randomUUID().toString()
-        ));
+        buffer.add(point);
     }
 
     private void flushBuffer() {
         if (buffer.isEmpty()) return;
         if (serverUrl == null || deviceToken == null) return;
 
-        final Queue<LocationPoint> batch = new ConcurrentLinkedQueue<>();
+        PriorityQueue<LocationPoint> batch = new PriorityQueue<>(Comparator.comparingLong(p -> p.timestampMs));
         LocationPoint point;
         while ((point = buffer.poll()) != null) {
             batch.add(point);
@@ -199,7 +311,7 @@ public class LocationSyncForegroundService extends Service {
             JsonObject obj = new JsonObject();
             obj.addProperty("latitude", p.latitude);
             obj.addProperty("longitude", p.longitude);
-            obj.addProperty("timestamp", p.timestamp);
+            obj.addProperty("timestamp", isoFormatter.format(new Date(p.timestampMs)));
             obj.addProperty("client_id", p.clientId);
             obj.addProperty("walk_id", walkId);
             pointsArray.add(obj);
@@ -252,13 +364,13 @@ public class LocationSyncForegroundService extends Service {
     private static class LocationPoint {
         final double latitude;
         final double longitude;
-        final String timestamp;
+        final long timestampMs;
         final String clientId;
 
-        LocationPoint(double latitude, double longitude, String timestamp, String clientId) {
+        LocationPoint(double latitude, double longitude, long timestampMs, String clientId) {
             this.latitude = latitude;
             this.longitude = longitude;
-            this.timestamp = timestamp;
+            this.timestampMs = timestampMs;
             this.clientId = clientId;
         }
     }
