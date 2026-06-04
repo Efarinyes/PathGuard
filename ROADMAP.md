@@ -5,6 +5,8 @@
 **Font:** 4 auditories + CONTEXT.md + action-plan.md
 **Propòsit:** Pla d'implementació pas a pas. Juntament amb CONTEXT.md, és la biblia del projecte.
 
+> **Estat:** Sprint 1 i Sprint 2 completats. Pròxim: Sprint 3.
+
 ---
 
 ## PRE-REQUISITS
@@ -26,7 +28,7 @@ cd frontend && npm run build --webpack && npm test
 
 ---
 
-## SPRINT 1 — ESTABILITZAR EL PIPELINE (P0)
+## SPRINT 1 — ESTABILITZAR EL PIPELINE (P0) ✅ COMPLETAT
 
 **Branca:** `feat/sprint1-pipeline-estabilitzacio`
 **Durada:** 5-7 dies
@@ -68,7 +70,7 @@ private void addToBuffer(Location location) {
 
     double lat = location.getLatitude();
     double lng = location.getLongitude();
-    long now = System.currentTimeMillis();
+    long now = location.getTime();  // GPS UTC epoch ms (més fiable que System.currentTimeMillis())
 
     if (lastAcceptedPoint != null) {
         double distance = haversine(
@@ -80,7 +82,7 @@ private void addToBuffer(Location location) {
         if (distance < MIN_DISTANCE_M) return;
 
         // Gate 5: Teleportation detection
-        long elapsedSec = (now - lastAcceptedPoint.timestamp) / 1000;
+        long elapsedSec = (now - lastAcceptedPoint.timestampMs) / 1000;
         if (distance > MAX_JUMP_M && elapsedSec < 5) return;
 
         // Gate 6: Speed validation
@@ -89,7 +91,7 @@ private void addToBuffer(Location location) {
     }
 
     LocationPoint point = new LocationPoint(
-        lat, lng, now, generateClientId(lat, lng, now)
+        lat, lng, now, generateClientId(now, lat, lng)
     );
     lastAcceptedPoint = point;
     buffer.add(point);
@@ -402,7 +404,7 @@ cd frontend && npm run build --webpack && npm test
 
 ---
 
-## SPRINT 2 — PRESÈNCIA I ROBUSTESA (P1)
+## SPRINT 2 — PRESÈNCIA I ROBUSTESA (P1) ✅ COMPLETAT
 
 **Branca:** `feat/sprint2-presencia-robustesa`
 **Durada:** 5-7 dies
@@ -710,6 +712,22 @@ private validateLocation(
   return true;
 }
 ```
+
+### 2.7b — WalkEventProcessor: Tolerància Cronològica (Safety Net)
+
+**Fitxer:** `frontend/lib/WalkEventProcessor.ts`
+
+**Context:** La troballa F14 de l'auditoria descriu com el chronological check a `shouldProcessMessage()` pot rebutjar punts vàlids si arriben fora d'ordre. El ROADMAP original plantejava inserció ordenada com a solució definitiva (Sprint 3.4). Com a safety net immediat, s'ha afegit una tolerància de 30s:
+
+```typescript
+// Abans (rebuig estricte):
+if (eventTime > 0 && eventTime < this.latestTimestamp) return false;
+
+// Després (tolerància 30s):
+if (eventTime > 0 && eventTime < this.latestTimestamp - 30_000) return false;
+```
+
+Això permet que punts amb timestamp fins a 30s per sota de `latestTimestamp` passin el gate, evitant falsos rebutjos per deriva de rellotge o desordre temporal petit. La solució definitiva (F14 — inserció ordenada) queda pendent per Sprint 3.
 
 ### 2.8 — Validació Rang Coordenades (Backend)
 
