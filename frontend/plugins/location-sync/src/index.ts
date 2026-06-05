@@ -17,6 +17,8 @@ export interface LocationSyncPlugin {
   stopTracking(): Promise<void>;
   updateWalkId(options: { walkId: number }): Promise<void>;
   getStatus(): Promise<TrackingStatus>;
+  markBackgrounded(): Promise<void>;
+  markForegrounded(): Promise<void>;
 }
 
 const LocationSync = registerPlugin<LocationSyncPlugin>('LocationSync');

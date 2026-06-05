@@ -2,8 +2,13 @@ package com.pathguard.app.plugin;
 
 import android.app.ActivityManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.os.IBinder;
 
 import androidx.annotation.Nullable;
@@ -29,10 +34,14 @@ public class LocationSyncForegroundService extends Service {
     private static int pointsSent = 0;
     private static String lastSentAt = null;
 
+    private boolean appInBackground = false;
+
     private LocationAcquirer acquirer;
     private LocationBuffer locationBuffer;
     private LocationHttpClient httpClient;
     private ScheduledExecutorService scheduler;
+    private ConnectivityManager connectivityManager;
+    private ConnectivityManager.NetworkCallback networkCallback;
     private String serverUrl;
     private String deviceToken;
     private int walkId;
@@ -70,6 +79,18 @@ public class LocationSyncForegroundService extends Service {
         walkId = prefs.getInt(PREF_WALK_ID, 0);
         deviceToken = prefs.getString(PREF_DEVICE_TOKEN, null);
         serverUrl = prefs.getString(PREF_SERVER_URL, null);
+
+        connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        networkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(Network network) {
+                flushBuffer();
+            }
+        };
+        NetworkRequest request = new NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build();
+        connectivityManager.registerNetworkCallback(request, networkCallback);
 
         if (!locationBuffer.isEmpty() && serverUrl != null && deviceToken != null) {
             scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -115,6 +136,15 @@ public class LocationSyncForegroundService extends Service {
                     acquirer.setWalkId(walkId);
                     getSharedPreferences(PREF_FILE, MODE_PRIVATE).edit()
                         .putInt(PREF_WALK_ID, walkId).apply();
+                    break;
+
+                case "MARK_BACKGROUNDED":
+                    appInBackground = true;
+                    break;
+
+                case "MARK_FOREGROUNDED":
+                    appInBackground = false;
+                    flushBuffer();
                     break;
             }
         } else {
@@ -190,6 +220,9 @@ public class LocationSyncForegroundService extends Service {
 
     @Override
     public void onDestroy() {
+        if (connectivityManager != null && networkCallback != null) {
+            connectivityManager.unregisterNetworkCallback(networkCallback);
+        }
         stopTracking();
         super.onDestroy();
     }
