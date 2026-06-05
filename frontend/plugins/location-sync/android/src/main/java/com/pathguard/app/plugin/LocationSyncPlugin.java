@@ -82,24 +82,6 @@ public class LocationSyncPlugin extends Plugin {
     }
 
     @PluginMethod
-    public void markBackgrounded(PluginCall call) {
-        Context context = getContext();
-        Intent intent = new Intent(context, LocationSyncForegroundService.class);
-        intent.setAction("MARK_BACKGROUNDED");
-        context.startService(intent);
-        call.resolve();
-    }
-
-    @PluginMethod
-    public void markForegrounded(PluginCall call) {
-        Context context = getContext();
-        Intent intent = new Intent(context, LocationSyncForegroundService.class);
-        intent.setAction("MARK_FOREGROUNDED");
-        context.startService(intent);
-        call.resolve();
-    }
-
-    @PluginMethod
     public void getStatus(PluginCall call) {
         JSObject ret = new JSObject();
         ret.put("isTracking", LocationSyncForegroundService.isRunning());
