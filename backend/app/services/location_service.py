@@ -219,6 +219,7 @@ class LocationService:
                 "latitude": last_point["latitude"],
                 "longitude": last_point["longitude"],
                 "timestamp": last_ts_str,
+                "is_recovered": last_point.get("is_recovered", False),
             })
 
             # Sprint 2.5: Sort broadcast events by timestamp before publishing

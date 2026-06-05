@@ -14,10 +14,10 @@ interface PatientStatusCardProps {
 }
 
 const STATUS_CONFIG: Record<PresenceStatus, { color: string; label: string }> = {
-  online:      { color: 'bg-success', label: 'En línia' },
-  gps_online:  { color: 'bg-primary', label: 'GPS actiu' },
-  limbo:       { color: 'bg-warning', label: 'Incert' },
-  offline:     { color: 'bg-danger', label: 'Fora de línia' },
+  online:      { color: 'bg-success', label: 'Passeig actiu - En línia' },
+  gps_online:  { color: 'bg-primary', label: 'Passeig actiu - GPS actiu' },
+  limbo:       { color: 'bg-warning', label: 'Passeig actiu - Connectant...' },
+  offline:     { color: 'bg-warning', label: 'Passeig actiu - Sense cobertura' },
 };
 
 export default function PatientStatusCard({
