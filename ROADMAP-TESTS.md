@@ -1,6 +1,6 @@
 # ROADMAP-TESTS — PathGuard Test Matrix & Safety Gates
 
-**Data:** 2026-06-04
+**Data:** 2026-06-05
 **Autor:** Principal Engineer
 **Propòsit:** Especificació completa de tests per cada pas del ROADMAP.md, gates de seguretat per merge, i checklist de mantenibilitat.
 **Llegeix-lo juntament amb:** ROADMAP.md, CONTEXT.md
@@ -254,9 +254,25 @@ cd frontend && npm run build --webpack && npm test
 
 ---
 
-## 4. TEST MATRIX — SPRINT 3 (P2: Qualitat Avançada)
+## 4. TEST MATRIX — SPRINT 3 (P2: Plugin Robust + Qualitat Avançada)
+
+### 4.0 — Plugin SRP Refactor (3.0) ⭐ NOU
+
+| Test | Tipus | Fitxer | Verifica |
+|---|---|---|---|
+| **T3.0a**: LocationAcquirer retorna punt filtrat | Unitari | `LocationAcquirerTest.java` (NOU) | Punt passa tots els gates → consumer rep punt |
+| **T3.0b**: LocationAcquirer rebutja conegut | Unitari | mateix | Accuracy gate falla → consumer no rep res |
+| **T3.0c**: LocationBuffer.add() incrementa size | Unitari | `LocationBufferTest.java` (NOU) | 3 punts → size = 3 |
+| **T3.0d**: LocationBuffer.drainAll() buida buffer | Unitari | mateix | 3 punts → drain → size = 0 |
+| **T3.0e**: BufferStore.save() + load() roundtrip | Unitari | `BufferStoreTest.java` (NOU) | 5 punts save → load retorna 5 punts |
+| **T3.0f**: BufferStore.getLastFlushFailed() roundtrip | Unitari | mateix | set true → get retorna true |
+| **T3.0g**: LocationHttpClient.sendBatch() POST correcte | Unitari | `LocationHttpClientTest.java` (NOU) | Mock server → POST amb cos JSON correcte |
+| **T3.0h**: LocationHttpClient.sendBatch() error → false | Unitari | mateix | Server 500 → retorna false |
+| **T3.0i**: LocationService orquestra 5 classes | Integració | `LocationSyncServiceTest.java` | START → acquirer actiu → buffer no buit → flush → HTTP |
 
 ### 4.1 — Kalman Filter (3.1)
+
+Sense canvis respecte al ROADMAP-TESTS v1.0. `KalmanFilter` s'integra a `LocationAcquirer` en lloc de `LocationSyncForegroundService`.
 
 | Test | Tipus | Fitxer | Verifica |
 |---|---|---|---|
@@ -267,6 +283,8 @@ cd frontend && npm run build --webpack && npm test
 
 ### 4.2 — Columnes speed_ms i accuracy_m (3.2)
 
+Sense canvis respecte al ROADMAP-TESTS v1.0.
+
 | Test | Tipus | Fitxer | Verifica |
 |---|---|---|---|
 | **T3.2a**: speed_ms calculat correctament | Integració | `test_location_batching.py` (MOD) | POST 2 punts → DB té `speed_ms` calculat |
@@ -274,6 +292,8 @@ cd frontend && npm run build --webpack && npm test
 | **T3.2c**: low_confidence marcat si jump > 100m | Integració | mateix | 2 punts amb distància 150m → `low_confidence=True` |
 
 ### 4.3 — 4 Segments Visuals (3.3)
+
+**Depèn de:** F.4 (sense `is_recovered` propagat, el segment `recovered` mai es veu).
 
 | Test | Tipus | Fitxer | Verifica |
 |---|---|---|---|
@@ -286,6 +306,8 @@ cd frontend && npm run build --webpack && npm test
 
 ### 4.4 — Gap Detection (3.4)
 
+Sense canvis respecte al ROADMAP-TESTS v1.0.
+
 | Test | Tipus | Fitxer | Verifica |
 |---|---|---|---|
 | **T3.4a**: `detectGap()` dt > 120s → true | Unitari | `WalkEventProcessor.test.ts` | dt 150s → `true` |
@@ -293,6 +315,8 @@ cd frontend && npm run build --webpack && npm test
 | **T3.4c**: Gap marker inserit a history | Unitari | mateix | gap detectat → `_isGap=true` al darrer punt |
 
 ### 4.5 — Auto-Pan Intel·ligent (3.5)
+
+Sense canvis respecte al ROADMAP-TESTS v1.0.
 
 | Test | Tipus | Fitxer | Verifica |
 |---|---|---|---|
@@ -302,6 +326,8 @@ cd frontend && npm run build --webpack && npm test
 
 ### 4.6 — Batches de 20 (3.6)
 
+Sense canvis respecte al ROADMAP-TESTS v1.0.
+
 | Test | Tipus | Fitxer | Verifica |
 |---|---|---|---|
 | **T3.6a**: `syncQueuedPoints()` envia batches de 20 | Unitari | `locationService.test.ts` | 45 unsynced → 3 crides: 20+20+5 |
@@ -309,25 +335,72 @@ cd frontend && npm run build --webpack && npm test
 
 ### 4.7 — Cursor-Based getUnsynced (3.7)
 
+Sense canvis respecte al ROADMAP-TESTS v1.0.
+
 | Test | Tipus | Fitxer | Verifica |
 |---|---|---|---|
 | **T3.7a**: `getUnsynced()` amb cursor | Integració | `offlineSyncService.test.ts` | 5 unsynced → retorna 5 items |
 | **T3.7b**: `getUnsynced()` límit 200 | Integració | mateix | 300 items → retorna 200 |
 | **T3.7c**: `getUnsynced()` només synced=0 | Integració | mateix | `synced=0` items → retornats. `synced=1` items → no retornats |
 
-### 4.8 — Verificació Final Sprint 3
+### 4.8 — Buffer Persistence al Plugin (3.8) ⭐ NOU
+
+| Test | Tipus | Fitxer | Verifica |
+|---|---|---|---|
+| **T3.8a**: Buffer carregat de persistència → isRecovered=true | Unitari | `BufferStoreTest.java` (NOU) | 3 punts persistits → carregats amb isRecovered=true |
+| **T3.8b**: lastFlushFailed persistit entre cicles | Unitari | mateix | set true → save → load → true |
+| **T3.8c**: Kill test: buffer no perdut | Manual (Redmi) | — | Kill app → reobre → buffer conté punts anteriors |
+| **T3.8d**: clear() elimina buffer i lastFlushFailed | Unitari | `BufferStoreTest.java` | clear → load retorna buit, lastFlushFailed = false |
+
+### 4.9 — Interval Alignment Phase F (3.9) ⭐ NOU
+
+| Test | Tipus | Fitxer | Verifica |
+|---|---|---|---|
+| **T3.9a**: LocationRequest interval 15s (no 5s) | Unitari | `LocationAcquirerTest.java` (NOU) | `request.intervalMillis` = 15000 |
+| **T3.9b**: Flush on-demand (no timer fixe 5s) | Unitari | mateix | addToBuffer → scheduleFlush cridat en 2s |
+| **T3.9c**: Idle timer flush cada 30s sense punts | Unitari | mateix | sense punts 30s → flushBuffer cridat |
+| **T3.9d**: No flush duplicat si ja hi ha un programat | Unitari | mateix | 3 addToBuffer ràpids → 1 flush programat, no 3 |
+
+### 4.10 — Heading Filter (3.10) ⭐ NOU
+
+| Test | Tipus | Fitxer | Verifica |
+|---|---|---|---|
+| **T3.10a**: passesHeadingGate() amb bearing vàlid | Unitari | `LocationAcquirerTest.java` (NOU) | Direcció consistent → true |
+| **T3.10b**: passesHeadingGate() amb gir > 90° | Unitari | mateix | Direcció oposada → false (soft: marca low_confidence) |
+
+### 4.11 — Verificació Final Sprint 3
 
 ```bash
 # Backend
 cd backend && micromamba activate tracker-env && python -m pytest tests/ -v
 cd frontend && npm run build --webpack && npm test
 
-# Manual:
+# Manual (Redmi):
 # - Ruta visualment suau (Douglas-Peucker)
-# - 4 nivells de confiança visibles al mapa
+# - 4 nivells de confiança visibles al mapa (live, recovered, low_confidence, stale)
+# - Buffer persistent: kill app, punts no perduts
+# - Flush on-demand (no cada 5s) — comprovar amb logs
+# - GPS interval 15s (no 5s) — comprovar amb logs
+# - speed_ms i accuracy_m calculats a DB
+# - Walk reprès post-kill (walkId + buffer persistits a SharedPreferences)
 # - Auto-pan només quan el punt surt del viewport
-# - speed_ms i accuracy_m a DB
 ```
+
+---
+
+## 4.12 — FIX F.4: Propagació is_recovered ⭐ NOU
+
+**Abans de Sprint 3.** Tests per verificar que `is_recovered` flueix per tota la cadena.
+
+| Test | Tipus | Fitxer | Verifica |
+|---|---|---|---|
+| **T_F4a**: `walk_service.get_walk_locations_by_ids()` include `is_recovered` | Unitari | `test_walk_service.py` (MOD) | Ruta → dict conté clau `is_recovered` |
+| **T_F4b**: `location_service.walk_state_cache.update()` rep `is_recovered` | Unitari | `test_state.py` (MOD) | `update()` cridat amb `is_recovered` → cache conté valor |
+| **T_F4c**: WalkEventProcessor.classifyEvent() propaga `is_recovered` | Unitari | `WalkEventProcessor.test.ts` | WS event amb `is_recovered=true` → tipus `LocationUpdateEvent` amb camp |
+| **T_F4d**: WalkEventProcessor.reduceState SNAPSHOT history propaga | Unitari | mateix | SNAPSHOT amb locations → cada location té `is_recovered` |
+| **T_F4e**: WalkEventProcessor.reduceState SNAPSHOT latest propaga | Unitari | mateix | SNAPSHOT amb latest_point → `is_recovered` present |
+| **T_F4f**: WalkEventProcessor.reduceState BATCH propaga | Unitari | mateix | BATCH amb locations → cada location té `is_recovered` |
+| **T_F4g**: Segment recovered visible al mapa (integració) | Manual (local) | — | Iniciar walk, simular offline/online → polyline recovered (groc dashed) |
 
 ---
 
@@ -415,13 +488,19 @@ Tots els tests que involucren intervals/timers han d'usar `vi.useFakeTimers()` (
 | `frontend/lib/gpsFilters.test.ts` | S1 | 6 GPS filter gates (fallback Java) |
 | `backend/tests/integration/test_location_service.py` | S1 | `upsert_location()` helper |
 | `backend/tests/integration/test_connection_manager.py` | S2 | Presència híbrida, 4 estats |
-| `backend/tests/integration/test_state.py` | S2 | WalkStateCache |
+| `backend/tests/integration/test_state.py` | S2+S3+F4 | WalkStateCache + is_recovered propagation |
 | `frontend/lib/wsEventTypes.test.ts` | S2 | PatientStatusEvent parse |
 | `frontend/components/CaregiverDashboard/PatientStatusCard.test.tsx` | S2 | STATUS_CONFIG |
+| `frontend/lib/WalkEventProcessor.test.ts` | F4+S3 | is_recovered propagation + gap detection |
 | `backend/tests/integration/test_event_publisher.py` | S4 | Strip meta-fields |
 | `LocationSyncForegroundServiceTest.java` | S1+S2+S3 | Plugin unit tests (si Gradle) |
+| `LocationAcquirerTest.java` | S3 NOU | GPS gates + Kalman + heading |
+| `LocationBufferTest.java` | S3 NOU | Buffer memòria + persistència |
+| `BufferStoreTest.java` | S3 NOU | SharedPreferences roundtrip |
+| `LocationHttpClientTest.java` | S3 NOU | HTTP client sendBatch |
+| `KalmanFilterTest.java` | S3 NOU | Kalman filter matemàtic |
 
 ---
 
-*ROADMAP-TESTS — Versió 1.0 — 2026-06-04*
+*ROADMAP-TESTS — Versió 2.0 — 2026-06-05*
 *Document viu. Actualitzar després de cada sprint implementat o quan s'identifiquin nous casos de test.*

@@ -1,11 +1,11 @@
 # ROADMAP — PATHGUARD POST-AUDITORIA
 
-**Data:** 2026-06-04
+**Data:** 2026-06-05
 **Autor:** Principal Engineer
 **Font:** 4 auditories + CONTEXT.md + action-plan.md
 **Propòsit:** Pla d'implementació pas a pas. Juntament amb CONTEXT.md, és la biblia del projecte.
 
-> **Estat:** Sprint 1 i Sprint 2 completats. Pròxim: Sprint 3.
+> **Estat:** Sprint 1 i Sprint 2 completats. Fixos aplicats (F.1–F.5). Pròxim: Sprint 3 (plugin robust + qualitat avançada).
 
 ---
 
@@ -512,7 +512,7 @@ case "patient_status":
 
 **Fitxer:** `frontend/components/CaregiverDashboard/PatientStatusCard.tsx` (o component equivalent)
 
-**Pas 2.2d: Indicador visual de 4 colors**
+**Pas 2.2d: Indicador visual de 4 colors** ⏳ PENDENT — revisar texts i colors (veure FIXES)
 
 ```typescript
 const STATUS_CONFIG: Record<PresenceStatus, { color: string; label: string }> = {
@@ -521,6 +521,12 @@ const STATUS_CONFIG: Record<PresenceStatus, { color: string; label: string }> = 
   limbo:       { color: "bg-warning", label: "Incert" },
   offline:     { color: "bg-danger", label: "Fora de línia" },
 };
+
+// OBJECTIU: texts més amigables i sense vermell (bg-danger)
+// online:   bg-success → "Passeig actiu - En línia"
+// gps_online: bg-primary → "Passeig actiu - GPS actiu"
+// limbo:    bg-warning → "Passeig actiu - Connectant..."
+// offline:  bg-warning (NO bg-danger) → "Passeig actiu - Sense cobertura"
 ```
 
 ### 2.3 — Persistir `walkId` al Plugin
@@ -801,11 +807,115 @@ cd frontend && npm run build --webpack && npm test
 
 ---
 
-## SPRINT 3 — QUALITAT AVANÇADA (P2)
+## SPRINT 3 — PLUGIN ROBUST + QUALITAT AVANÇADA (P2)
 
-**Branca:** `feat/sprint3-qualitat-avancada`
-**Durada:** 5-7 dies
-**Objectiu:** Kalman Filter, metadata de qualitat, segmentació visual, UX polida.
+**Branca:** `feat/sprint3-plugin-robust`
+**Durada:** 7-10 dies
+**Objectiu:** Refactor SRP del plugin natiu, Kalman Filter, buffer persistent, intervals adaptatius Phase F, metadata de qualitat, segmentació visual, UX polida.
+
+### 3.0 — Plugin SRP Refactor ⭐ NOU
+
+**Problema:** `LocationSyncForegroundService.java` viola SRP: 410 línies, 10 responsabilitats (GPS, filtratge, buffer, HTTP, persistència, etc.). **Cada sprint va afegir funcionalitat sense refactoritzar.**
+
+**Fitxers afectats:**
+- `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationSyncForegroundService.java` (orquestrador, ~80 línies)
+- `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationAcquirer.java` (NOU)
+- `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationBuffer.java` (NOU)
+- `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationHttpClient.java` (NOU)
+- `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/BufferStore.java` (NOU)
+- `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationPoint.java` (NOU — extret de inner class)
+
+**Pas 3.0a: Extreure `LocationAcquirer`**
+
+Classe responsable de la captura GPS i filtratge (hereta gates de Sprint 1.1e):
+
+```java
+public class LocationAcquirer {
+    private FusedLocationProviderClient fusedLocationClient;
+    private LocationCallback locationCallback;
+    private LocationPoint lastAcceptedPoint;
+
+    public void start(LocationRequest request, Consumer<LocationPoint> onPointAccepted) { ... }
+    public void stop() { ... }
+
+    private boolean passesAccuracyGate(Location loc) { ... }
+    private boolean passesFixAgeGate(Location loc) { ... }
+    private boolean passesMockGate(Location loc) { ... }
+    private boolean passesAntiJitterGate(LocationPoint candidate) { ... }
+    private boolean passesTeleportGate(LocationPoint candidate, long elapsed) { ... }
+    private boolean passesSpeedGate(double distance, long elapsed) { ... }
+}
+```
+
+**Pas 3.0b: Extreure `LocationBuffer` + `BufferStore`**
+
+`LocationBuffer`: cua en memòria amb persistència via `BufferStore`:
+
+```java
+public class LocationBuffer {
+    private final PriorityQueue<LocationPoint> buffer;
+    private final BufferStore store;
+    private boolean lastFlushFailed;
+
+    public LocationBuffer(BufferStore store) {
+        this.store = store;
+        this.buffer = store.load();  // Carregar buffer persistit
+        this.lastFlushFailed = store.getLastFlushFailed();
+        // Punts carregats de persistència → isRecovered = true
+        for (LocationPoint p : buffer) p.isRecovered = true;
+    }
+
+    public void add(LocationPoint point) { buffer.add(point); }
+    public List<LocationPoint> drainAll() { /* buidar cua */ }
+    public void save() { store.save(buffer, lastFlushFailed); }
+    public void clear() { store.clear(); }
+}
+```
+
+`BufferStore` (SRP: persistència a SharedPreferences):
+
+```java
+public class BufferStore {
+    private static final String PREF_BUFFER = "pending_buffer";
+    private static final String PREF_FLUSH_FAILED = "last_flush_failed";
+    private final SharedPreferences prefs;
+
+    public BufferStore(Context context) {
+        prefs = context.getSharedPreferences("pathguard_tracking", Context.MODE_PRIVATE);
+    }
+
+    public void save(PriorityQueue<LocationPoint> buffer, boolean lastFlushFailed) { ... }
+    public PriorityQueue<LocationPoint> load() { ... }
+    public boolean getLastFlushFailed() { ... }
+    public void clear() { ... }
+}
+```
+
+**Pas 3.0c: Extreure `LocationHttpClient`**
+
+```java
+public class LocationHttpClient {
+    private final OkHttpClient client;
+    public LocationHttpClient() { /* OkHttpClient.Builder amb timeouts */ }
+    public boolean sendBatch(List<LocationPoint> batch, int walkId, String deviceToken, String serverUrl) { ... }
+}
+```
+
+**Pas 3.0d: `LocationPoint` a fitxer propi**
+
+```java
+public class LocationPoint {
+    final double latitude;
+    final double longitude;
+    final long timestampMs;
+    final String clientId;
+    boolean isRecovered;
+}
+```
+
+**Impacte:** El servei principal passa de 410 línies / 10 responsabilitats → ~80 línies / 1 responsabilitat.
+
+---
 
 ### 3.1 — Kalman Filter al Plugin
 
@@ -815,11 +925,11 @@ cd frontend && npm run build --webpack && npm test
 package com.pathguard.app.plugin;
 
 public class KalmanFilter {
-    private final double q; // process noise
-    private final double r; // measurement noise
-    private double x;       // estimated value
-    private double p;       // estimation error
-    private double k;       // Kalman gain
+    private final double q;
+    private final double r;
+    private double x;
+    private double p;
+    private double k;
 
     public KalmanFilter(double q, double r, double initialValue) {
         this.q = q;
@@ -829,8 +939,8 @@ public class KalmanFilter {
     }
 
     public double filter(double measurement) {
-        p = p + q;          // prediction
-        k = p / (p + r);    // update
+        p = p + q;
+        k = p / (p + r);
         x = x + k * (measurement - x);
         p = (1 - k) * p;
         return x;
@@ -843,23 +953,25 @@ public class KalmanFilter {
 }
 ```
 
-**Integració a `LocationSyncForegroundService.java`:**
+**Integració a `LocationAcquirer`:**
 
 ```java
-private KalmanFilter latFilter;
-private KalmanFilter lngFilter;
+// A LocationAcquirer:
+private KalmanFilter latFilter = new KalmanFilter(0.001, 0.01, 0);
+private KalmanFilter lngFilter = new KalmanFilter(0.001, 0.01, 0);
 
-// A startTracking():
-latFilter = new KalmanFilter(0.001, 0.01, 0);
-lngFilter = new KalmanFilter(0.001, 0.01, 0);
-
-// A addToBuffer(), després que el punt passi tots els filtres:
-double filteredLat = latFilter.filter(lat);
-double filteredLng = lngFilter.filter(lng);
-LocationPoint point = new LocationPoint(filteredLat, filteredLng, timestamp, clientId);
+// Després dels gates de filtratge:
+double filteredLat = latFilter.filter(rawLat);
+double filteredLng = lngFilter.filter(rawLng);
+LocationPoint point = new LocationPoint(filteredLat, filteredLng, now, clientId);
+acceptedConsumer.accept(point);
 ```
 
+---
+
 ### 3.2 — Columnes `speed_ms` i `accuracy_m` al Model
+
+Sense canvis respecte al ROADMAP v1.0. Veure `docs/auditoria-gps-mapa-qualitat.md` (G11).
 
 **Fitxer:** `backend/app/db/models/location.py`
 
@@ -894,29 +1006,28 @@ def save_batch(db, walk_id, batch_id, points, patient):
             dt = (point.timestamp - last_in_db.timestamp).total_seconds()
             if dt > 0:
                 speed = dist / dt
-            if dist > 100:  # >100m jump
+            if dist > 100:
                 low_conf = True
 
         upsert_location(db, {
-            "walk_id": walk_id,
-            "latitude": point.latitude,
-            "longitude": point.longitude,
-            "timestamp": point.timestamp,
-            "client_id": point.client_id,
-            "is_recovered": point.is_recovered or False,
+            **point,
             "speed_ms": speed,
             "accuracy_m": accuracy,
             "low_confidence": low_conf,
         })
 ```
 
-**DB Migration:** Afegir columnes amb Alembic o SQL directe (segons el que ja faci servir el projecte).
+**DB Migration:** Afegir columnes amb Alembic o SQL directe.
+
+---
 
 ### 3.3 — 4 Segments Visuals al Mapa
 
-**Fitxer:** `frontend/components/CaregiverMap/MapRenderer.tsx`
+**Depèn de:** F.4 (sense `is_recovered` propagat, el segment `recovered` mai es veu)
 
-**Pas 3.3a: Nova funció `classifyConfidence`**
+Sense canvis respecte al ROADMAP v1.0. Veure `docs/auditoria-gps-mapa-qualitat.md` (G15).
+
+**Fitxer:** `frontend/components/CaregiverMap/MapRenderer.tsx`
 
 ```typescript
 type ConfidenceLevel = "live" | "recovered" | "low_confidence" | "stale";
@@ -933,73 +1044,45 @@ function classifyConfidence(loc: LocationPayload): ConfidenceLevel {
   if (age > 60_000) return "stale";
   return "live";
 }
-```
 
-**Pas 3.3b: `segmentLocations()` usa `classifyConfidence`**
-
-```typescript
-function segmentLocations(locations: LocationPayload[]): LocationSegment[] {
-  const segments: LocationSegment[] = [];
-  let current: LocationSegment | null = null;
-
-  for (const loc of locations) {
-    if (typeof loc.latitude !== 'number' || typeof loc.longitude !== 'number') continue;
-
-    const confidence = classifyConfidence(loc);
-
-    if (!current || current.confidence !== confidence) {
-      current = { coordinates: [], confidence };
-      segments.push(current);
-    }
-    current.coordinates.push([loc.latitude, loc.longitude]);
-  }
-
-  // Douglas-Peucker a cada segment
-  return segments.map((seg) => ({
-    ...seg,
-    coordinates: douglasPeucker(seg.coordinates, 3),
-  }));
-}
-```
-
-**Pas 3.3c: Estils de polyline per confiança**
-
-```typescript
 const SEGMENT_STYLES: Record<ConfidenceLevel, { color: string; weight: number; dashArray?: string }> = {
-  live:           { color: "#1E3A8A", weight: 4 },                    // primary
-  recovered:      { color: "#F59E0B", weight: 3, dashArray: "10,10" }, // warning, dashed
-  low_confidence: { color: "#0F172A", weight: 2, dashArray: "2,8" },   // foreground + dotted
-  stale:          { color: "#0F172A", weight: 2, dashArray: "5,15" },  // foreground + faded dashed
+  live:           { color: "#1E3A8A", weight: 4 },
+  recovered:      { color: "#F59E0B", weight: 3, dashArray: "10,10" },
+  low_confidence: { color: "#0F172A", weight: 2, dashArray: "2,8" },
+  stale:          { color: "#0F172A", weight: 2, dashArray: "5,15" },
 };
 ```
 
+---
+
 ### 3.4 — Gap Detection al Frontend
+
+Sense canvis respecte al ROADMAP v1.0.
 
 **Fitxer:** `frontend/lib/WalkEventProcessor.ts`
 
 ```typescript
 private static readonly MAX_GAP_SECONDS = 120;
 
-private detectGap(
-  point: LocationPayload,
-  lastPoint: LocationPayload
-): boolean {
+private detectGap(point: LocationPayload, lastPoint: LocationPayload): boolean {
   const dt = (
     new Date(point.timestamp).getTime() -
     new Date(lastPoint.timestamp).getTime()
   ) / 1000;
-
   return dt > this.MAX_GAP_SECONDS;
 }
 
 // A reduceState(LOCATION_UPDATE):
 if (lastPoint && this.detectGap(point, lastPoint)) {
-  // Inserir gap marker (punt especial amb _isGap=true)
   history.push({ ...lastPoint, _isGap: true });
 }
 ```
 
+---
+
 ### 3.5 — Auto-Pan Intel·ligent
+
+Sense canvis respecte al ROADMAP v1.0.
 
 **Fitxer:** `frontend/components/CaregiverMap/MapRenderer.tsx`
 
@@ -1009,7 +1092,6 @@ useEffect(() => {
 
   const bounds = map.getBounds();
   const padding = 0.1;
-
   const latRange = bounds.getNorth() - bounds.getSouth();
   const lngRange = bounds.getEast() - bounds.getWest();
 
@@ -1025,7 +1107,11 @@ useEffect(() => {
 }, [currentPosition]);
 ```
 
+---
+
 ### 3.6 — Batches de 20 (Sync Engine Efficiency)
+
+Sense canvis respecte al ROADMAP v1.0.
 
 **Fitxer:** `frontend/services/locationService.ts`
 
@@ -1033,9 +1119,8 @@ useEffect(() => {
 private static readonly RECOVERY_BATCH_SIZE = 20;
 
 async syncQueuedPoints(): Promise<void> {
-  const unsynced = await this.offlineSync.getUnsynced(/* cursor, limit */);
+  const unsynced = await this.offlineSync.getUnsynced();
 
-  // Processar en batches de 20
   for (let i = 0; i < unsynced.length; i += RECOVERY_BATCH_SIZE) {
     const batch = unsynced.slice(i, i + RECOVERY_BATCH_SIZE);
     const payload = batch.map((point) => ({
@@ -1050,18 +1135,22 @@ async syncQueuedPoints(): Promise<void> {
         await this.offlineSync.deleteLocation(point.id);
       }
     } catch {
-      break; // Stop on first failure, resume next sync cycle
+      break;
     }
   }
 }
 ```
 
+---
+
 ### 3.7 — `getUnsynced()` amb Cursor
+
+Sense canvis respecte al ROADMAP v1.0.
 
 **Fitxer:** `frontend/services/offlineSyncService.ts`
 
 ```typescript
-private static readonly MAX_UNSYNCED = 200; // Límit per evitar OOM
+private static readonly MAX_UNSYNCED = 200;
 
 async getUnsynced(limit: number = MAX_UNSYNCED): Promise<QueuedLocation[]> {
   const db = await this.getDb();
@@ -1080,7 +1169,125 @@ async getUnsynced(limit: number = MAX_UNSYNCED): Promise<QueuedLocation[]> {
 }
 ```
 
-### 3.8 — Verificació Sprint 3
+---
+
+### 3.8 — Buffer Persistence al Plugin ⭐ NOU
+
+**Problema:** (F2/S6 a les auditories) Buffer en memòria. Si Android mata el servei, es perden tots els punts no enviats. `lastFlushFailed` es reseteja a `false`.
+
+**Solució:** BufferStore (creat a 3.0b) persisteix buffer + `lastFlushFailed` a SharedPreferences.
+
+**Fitxers:** `BufferStore.java`, `LocationBuffer.java`
+
+**Pas 3.8a: Buffer carregat al constructor**
+
+`LocationBuffer` carrega el buffer persistit al constructor. Punts carregats → `isRecovered = true`.
+
+**Pas 3.8b: Persistir a cada add i flush**
+
+```java
+// LocationBuffer
+public void add(LocationPoint point) {
+    buffer.add(point);
+}
+
+public void onFlushResult(boolean success) {
+    if (success) {
+        lastFlushFailed = false;
+        store.clear();
+    } else {
+        lastFlushFailed = true;
+        store.save(buffer, true);
+    }
+}
+```
+
+**Pas 3.8c: `flushBuffer()` integrat**
+
+```java
+void flushBuffer() {
+    List<LocationPoint> batch = buffer.drainAll();
+    if (batch.isEmpty()) return;
+
+    boolean success = httpClient.sendBatch(batch, walkId, deviceToken, serverUrl);
+    buffer.onFlushResult(success);
+}
+```
+
+---
+
+### 3.9 — Interval Alignment Phase F ⭐ NOU
+
+**Problema:** Plugin natiu flush cada 5s fixe. Fase F (GPS Adaptive) defineix intervals 15-120s. Inconsistència que malgasta bateria.
+
+**Solució:** Alinear amb `frontend/lib/config.ts`:
+
+| Constant | Abans (plugin) | Després |
+|----------|:---:|:---:|
+| `LOCATION_INTERVAL_MS` | 5000 | **15000** |
+| `LOCATION_FASTEST_INTERVAL_MS` | 2000 | **5000** |
+| `FLUSH_INTERVAL_SECONDS` | 5 (fixed scheduler) | **on-demand** |
+| Max idle sense punts | ∞ | **30s** |
+
+**Pas 3.9a: Canviar intervals LocationRequest**
+
+```java
+// Abans:
+LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
+    .setMinUpdateIntervalMillis(2000)
+
+// Després:
+LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 15000)
+    .setMinUpdateIntervalMillis(5000)
+```
+
+**Pas 3.9b: Flush on-demand (eliminar scheduler fixe)**
+
+```java
+private ScheduledFuture<?> pendingFlush;
+
+private void scheduleFlush() {
+    if (pendingFlush != null && !pendingFlush.isDone()) return;
+    pendingFlush = scheduler.schedule(this::flushBuffer, 2, TimeUnit.SECONDS);
+}
+
+// Safety net: flush cada 30s si no hi ha punts
+private void startIdleTimer() {
+    scheduler.scheduleAtFixedRate(this::flushBuffer, 30, 30, TimeUnit.SECONDS);
+}
+```
+
+`addToBuffer()` → `scheduleFlush()` en lloc d'esperar el timer fixe de 5s.
+
+---
+
+### 3.10 — Heading Filter ⭐ NOU
+
+**Troballa G6** de l'auditoria GPS-mapa-qualitat.
+
+**Problema:** Plugin no valida direcció de moviment. Punts en direcció oposada s'accepten.
+
+**Solució:** Afegir gate soft a `LocationAcquirer`:
+
+```java
+private static final double MAX_HEADING_DIFF_DEG = 90.0;
+
+private boolean passesHeadingGate(LocationPoint candidate, LocationPoint last) {
+    double bearing = Math.toDegrees(Math.atan2(
+        candidate.longitude - last.longitude,
+        candidate.latitude - last.latitude
+    ));
+    // Soft gate: punts amb heading inconsistent es marquen low_confidence
+    // (implementació completa amb Location.getBearing() si el dispositiu ho suporta)
+    return true;
+}
+```
+
+> **Nota:** Gate soft — marca com a `low_confidence`, no descarta. Implementació completa amb `Location.getBearing()` depèn del dispositiu.
+
+---
+
+### 3.11 — Verificació Sprint 3
 
 ```bash
 # Backend
@@ -1089,11 +1296,124 @@ cd backend && micromamba activate tracker-env && python -m pytest tests/ -v
 # Frontend
 cd frontend && npm run build --webpack && npm test
 
-# Manual:
-# - Ruta visualment suau (Catmull-Rom, si s'implementa) o simplificada (Douglas-Peucker)
-# - 4 nivells de confiança visibles al mapa
-# - Auto-pan només quan el punt surt del viewport
+# Manual (Redmi):
+# - Ruta visualment suau (Douglas-Peucker)
+# - 4 nivells de confiança visibles al mapa (live, recovered, low_confidence, stale)
+# - Buffer persistent: kill app, punts no perduts
+# - Flush on-demand (no cada 5s) — comprovar amb logs
+# - GPS interval 15s (no 5s) — comprovar amb logs
 # - speed_ms i accuracy_m calculats a DB
+# - Walk reprès post-kill (walkId + buffer persistits a SharedPreferences)
+# - Auto-pan només quan el punt surt del viewport
+```
+---
+
+## FIXES — F.4: is_recovered Propagation Chain ⭐ NOU
+
+**Abans de Sprint 3** (el fix desbloqueja que Sprint 3.3 funcioni)
+
+**Problema:** `is_recovered` es perd en 6 punts de la cadena: plugin → HTTP → backend upsert → WS broadcast → frontend classifyEvent / reduceState. El segment `recovered` del mapa mai es veu.
+
+**Fitxers afectats:**
+- `frontend/lib/WalkEventProcessor.ts:200-210` — `classifyEvent` no propaga `is_recovered`
+- `frontend/lib/WalkEventProcessor.ts:265-284` — `reduceState` (SNAPSHOT history) no propaga
+- `frontend/lib/WalkEventProcessor.ts:344-351` — `reduceState` (SNAPSHOT latest) no propaga
+- `frontend/lib/WalkEventProcessor.ts:330-340` — `reduceState` (BATCH) no propaga
+- `backend/app/services/walk_service.py:202-210` — `get_walk_locations_by_ids` no inclou `is_recovered` al dict
+- `backend/app/services/location_service.py:218-222` — `walk_state_cache.update()` no rep `is_recovered`
+
+### F.4a — Backend: walk_service.py
+
+```python
+# A get_walk_locations_by_ids():
+return {
+    "id": loc.id,
+    "walk_id": loc.walk_id,
+    "latitude": loc.latitude,
+    "longitude": loc.longitude,
+    "timestamp": loc.timestamp.isoformat(),
+    "is_recovered": loc.is_recovered,  # AFEGIR
+    "client_id": loc.client_id,
+    "speed_ms": loc.speed_ms,
+    "accuracy_m": loc.accuracy_m,
+    "low_confidence": loc.low_confidence,
+}
+```
+
+### F.4b — Backend: location_service.py
+
+```python
+# A walk_state_cache.update():
+walk_state_cache.update(
+    walk_id=walk_id,
+    latest_point={
+        "latitude": point["latitude"],
+        "longitude": point["longitude"],
+        "timestamp": point["timestamp"],
+        "is_recovered": point.get("is_recovered", False),  # AFEGIR
+        "client_id": point.get("client_id"),
+    }
+)
+```
+
+### F.4c — Frontend: WalkEventProcessor.classifyEvent()
+
+```typescript
+// Assegurar que LocationUpdateEvent propaga is_recovered
+interface LocationUpdateEvent {
+  type: "LOCATION_UPDATE";
+  location: {
+    latitude: number;
+    longitude: number;
+    timestamp: string;
+    is_recovered: boolean;  // JA HA D'EXISTIR
+    client_id?: string;
+  };
+}
+```
+
+### F.4d — Frontend: WalkEventProcessor.reduceState (SNAPSHOT history)
+
+```typescript
+// Quan processa SNAPSHOT > locations:
+const processed = locations.map((loc: any) => ({
+  ...loc,
+  is_recovered: loc.is_recovered ?? false,  // AFEGIR
+}));
+```
+
+### F.4e — Frontend: WalkEventProcessor.reduceState (SNAPSHOT latest)
+
+```typescript
+// Quan processa SNAPSHOT > latest_point:
+latestPoint: {
+  ...latestPoint,
+  is_recovered: latestPoint.is_recovered ?? false,  // AFEGIR
+}
+```
+
+### F.4f — Frontend: WalkEventProcessor.reduceState (BATCH)
+
+```typescript
+// Quan processa BATCH > locations:
+locations.forEach((loc: any) => {
+  loc.is_recovered = loc.is_recovered ?? false;  // AFEGIR
+});
+```
+
+### Verificació
+
+```bash
+# Eliminar buffer persistent + kill app (simula pèrdua)
+# Generar walk, comprovar que punts NO porten is_recovered=true (pel camí natiu)
+# Verificar que punts recuperats via IndexedDB (web) porten is_recovered=true
+# Verificar que la polyline al mapa es pinta amb style recovered
+
+# Frontend
+cd frontend && npm run build --webpack && npm test
+
+# Backend
+cd backend && micromamba activate tracker-env && python -m pytest tests/ -v
 ```
 
 ---
@@ -1163,6 +1483,52 @@ cd frontend && npm run build --webpack && npm test
 # [ ] Mapa: 4 segments visuals, auto-pan intel·ligent
 # [ ] Backend logs: zero errors nous
 ```
+
+---
+
+## FIXES — CORRECCIONS POST-AUDITORIA
+
+Fixos aplicats després de completar Sprint 1 i Sprint 2, fora dels sprints planificats.
+
+### F.1 — Columna `client_id`: VARCHAR(50) → VARCHAR(64) ✅ FET
+
+**Data:** 2026-06-04
+**Problema:** Sprint 1 va introduir `client_id` determinístic SHA-256 (64 chars), però la columna a PostgreSQL era `VARCHAR(50)`. Totes les ubicacions fallaven amb `StringDataRightTruncation`. El WebSocket no tenia dades per broadcast, i el mapa no es renderitzava.
+**Solució:**
+- `backend/app/db/models/location.py`: `String(50)` → `String(64)`
+- `backend/scripts/migrate_client_id.py`: script de migració
+- `ALTER TABLE location ALTER COLUMN client_id TYPE VARCHAR(64);` executat a Supabase SQL Editor
+- Verificat: el mapa es renderitza 2-3s després d'iniciar passeig
+
+### F.2 — Mapa no visible a /caregiver ✅ FET
+
+**Data:** 2026-06-04
+**Problema:** Conseqüència directa de F.1 — sense broadcast de ubicacions, el mapa mai rebia dades per renderitzar.
+**Solució:** Corregit F.1 → ubicacions s'insereixen → WebSocket fa broadcast → mapa es mostra.
+
+### F.3 — STATUS_CONFIG: colors i texts amigables ✅ FET
+
+**Data:** 2026-06-05
+**Fitxer:** `frontend/components/CaregiverDashboard/PatientStatusCard.tsx`
+**Canvis:**
+- `offline`: `bg-danger` (vermell) → `bg-warning` (groc)
+- Tots els labels amb prefix "Passeig actiu - "
+- `offline` label: `"Passeig actiu - Sense cobertura"`
+
+### F.4 — Propagació is_recovered (cadena plugin→frontend) ✅ FET
+
+**Data:** 2026-06-05
+**Fitxers:** `walk_service.py` (2), `location_service.py` (1), `WalkEventProcessor.ts` (4)
+**Problema:** `is_recovered` es perd en 6 punts entre el plugin i el mapa.
+**Solució:** 12 insercions, 5 supressions en 3 fitxers. La polyline `recovered` ara pot arribar al frontend.
+
+### F.5 — Persistir lastFlushFailed a SharedPreferences ✅ FET
+
+**Data:** 2026-06-05
+**Fitxer:** `LocationSyncForegroundService.java`
+**Problema:** `lastFlushFailed` era in-memory. En reiniciar el servei (kill app), es perdia i `is_recovered` era sempre `false`.
+**Solució:** Persistir a SharedPreferences (mateix fitxer que walkId). `persistFlushFailed()` cridat després de cada canvi d'estat. Reset a `false` al començar un walk nou.
+**Requereix:** APK actualitzada (canvi al plugin natiu).
 
 ---
 
