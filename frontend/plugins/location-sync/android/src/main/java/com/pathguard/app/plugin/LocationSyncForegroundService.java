@@ -1,5 +1,6 @@
 package com.pathguard.app.plugin;
 
+import android.app.ActivityManager;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -127,9 +128,16 @@ public class LocationSyncForegroundService extends Service {
     }
 
     private void onPointAccepted(LocationPoint point) {
-        point.isRecovered = locationBuffer.getLastFlushFailed();
+        point.isRecovered = locationBuffer.getLastFlushFailed() || !isAppInForeground();
         locationBuffer.add(point);
         scheduleFlush();
+    }
+
+    private boolean isAppInForeground() {
+        ActivityManager.RunningAppProcessInfo processInfo = new ActivityManager.RunningAppProcessInfo();
+        ActivityManager.getMyMemoryState(processInfo);
+        return processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+            || processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
     }
 
     private void startTracking() {
