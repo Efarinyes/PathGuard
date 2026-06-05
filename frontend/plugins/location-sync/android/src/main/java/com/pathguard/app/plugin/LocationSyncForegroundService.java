@@ -51,6 +51,7 @@ public class LocationSyncForegroundService extends Service {
     private static final String PREF_WALK_ID = "active_walk_id";
     private static final String PREF_DEVICE_TOKEN = "device_token";
     private static final String PREF_SERVER_URL = "server_url";
+    private static final String PREF_LAST_FLUSH_FAILED = "last_flush_failed";
 
     // Sprint 1.1 — GPS Filter constants
     private static final float MIN_DISTANCE_M = 25.0f;
@@ -111,6 +112,7 @@ public class LocationSyncForegroundService extends Service {
         walkId = prefs.getInt(PREF_WALK_ID, 0);
         deviceToken = prefs.getString(PREF_DEVICE_TOKEN, null);
         serverUrl = prefs.getString(PREF_SERVER_URL, null);
+        lastFlushFailed = prefs.getBoolean(PREF_LAST_FLUSH_FAILED, false);
     }
 
     @Override
@@ -121,10 +123,12 @@ public class LocationSyncForegroundService extends Service {
                     serverUrl = intent.getStringExtra("serverUrl");
                     deviceToken = intent.getStringExtra("deviceToken");
                     walkId = intent.getIntExtra("walkId", 0);
+                    lastFlushFailed = false;
                     prefs.edit()
                         .putInt(PREF_WALK_ID, walkId)
                         .putString(PREF_DEVICE_TOKEN, deviceToken)
                         .putString(PREF_SERVER_URL, serverUrl)
+                        .remove(PREF_LAST_FLUSH_FAILED)
                         .apply();
                     startTracking();
                     break;
@@ -365,8 +369,10 @@ public class LocationSyncForegroundService extends Service {
                 pointsSent += batch.size();
                 lastSentAt = isoFormatter.format(new Date());
                 lastFlushFailed = false;
+                persistFlushFailed();
             } else {
                 lastFlushFailed = true;
+                persistFlushFailed();
                 for (LocationPoint p : batch) {
                     buffer.add(p);
                 }
@@ -374,10 +380,15 @@ public class LocationSyncForegroundService extends Service {
             response.close();
         } catch (Exception e) {
             lastFlushFailed = true;
+            persistFlushFailed();
             for (LocationPoint p : batch) {
                 buffer.add(p);
             }
         }
+    }
+
+    private void persistFlushFailed() {
+        prefs.edit().putBoolean(PREF_LAST_FLUSH_FAILED, lastFlushFailed).apply();
     }
 
     @Override
