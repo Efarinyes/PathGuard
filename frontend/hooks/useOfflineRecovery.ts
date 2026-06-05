@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { locationService } from '../services/locationService';
+import { LocationSync } from '@/plugins/location-sync/src';
 
 export function useOfflineRecovery() {
   useEffect(() => {
@@ -9,8 +11,15 @@ export function useOfflineRecovery() {
       locationService.syncQueuedPoints();
     };
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
+    const handleVisibilityChange = async () => {
+      if (Capacitor.isNativePlatform()) {
+        if (document.visibilityState === "visible") {
+          await LocationSync.markForegrounded().catch(() => {});
+          locationService.syncQueuedPoints();
+        } else {
+          await LocationSync.markBackgrounded().catch(() => {});
+        }
+      } else if (document.visibilityState === "visible") {
         locationService.syncQueuedPoints();
       }
     };

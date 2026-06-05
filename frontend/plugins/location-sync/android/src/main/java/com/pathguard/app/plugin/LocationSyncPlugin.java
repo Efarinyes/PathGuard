@@ -89,4 +89,22 @@ public class LocationSyncPlugin extends Plugin {
         ret.put("lastSentAt", LocationSyncForegroundService.getLastSentAt());
         call.resolve(ret);
     }
+
+    @PluginMethod
+    public void markBackgrounded(PluginCall call) {
+        Context context = getContext();
+        Intent intent = new Intent(context, LocationSyncForegroundService.class);
+        intent.setAction("MARK_BACKGROUNDED");
+        context.startService(intent);
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void markForegrounded(PluginCall call) {
+        Context context = getContext();
+        Intent intent = new Intent(context, LocationSyncForegroundService.class);
+        intent.setAction("MARK_FOREGROUNDED");
+        context.startService(intent);
+        call.resolve();
+    }
 }
