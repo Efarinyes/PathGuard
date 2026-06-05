@@ -205,6 +205,7 @@ export class WalkEventProcessor {
           longitude: msg.longitude,
           timestamp: typeof msg.timestamp === 'string' ? msg.timestamp : new Date().toISOString(),
           walk_id: typeof msg.walk_id === 'number' ? msg.walk_id : undefined,
+          is_recovered: typeof msg.is_recovered === 'boolean' ? msg.is_recovered : false,
         },
       };
     }
@@ -263,11 +264,12 @@ export class WalkEventProcessor {
 
         const walkId = walkData.id;
         const history: LocationPayload[] = (walkData.history || [])
-          .map((p: { latitude: number; longitude: number; timestamp: string; walk_id?: number }): LocationPayload => ({
+          .map((p: { latitude: number; longitude: number; timestamp: string; walk_id?: number; is_recovered?: boolean }): LocationPayload => ({
             latitude: p.latitude,
             longitude: p.longitude,
             timestamp: p.timestamp,
             walk_id: p.walk_id ?? walkId,
+            is_recovered: p.is_recovered ?? false,
           }))
           .sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 
@@ -281,6 +283,7 @@ export class WalkEventProcessor {
             longitude: walkData.latest_location.longitude,
             timestamp: walkData.latest_location.timestamp,
             walk_id: walkData.latest_location.walk_id ?? walkId,
+            is_recovered: (walkData.latest_location as { is_recovered?: boolean }).is_recovered ?? false,
           };
           this.latestTimestamp = new Date(latestLoc.timestamp).getTime();
         }
@@ -347,6 +350,7 @@ export class WalkEventProcessor {
             longitude: loc.longitude,
             timestamp: loc.timestamp,
             walk_id: loc.walk_id ?? walk_id,
+            is_recovered: loc.is_recovered ?? false,
           }))
           .sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 

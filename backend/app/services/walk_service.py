@@ -157,7 +157,8 @@ class WalkService:
             {
                 "latitude": loc.latitude,
                 "longitude": loc.longitude,
-                "timestamp": loc.timestamp
+                "timestamp": loc.timestamp,
+                "is_recovered": loc.is_recovered,
             }
             for loc in locations
         ]
@@ -201,9 +202,10 @@ class WalkService:
         history.reverse()
         history_dicts = [
             {
-                "latitude": loc.latitude, 
-                "longitude": loc.longitude, 
-                "timestamp": format_timestamp_utc(loc.timestamp)
+                "latitude": loc.latitude,
+                "longitude": loc.longitude,
+                "timestamp": format_timestamp_utc(loc.timestamp),
+                "is_recovered": loc.is_recovered,
             } for loc in history
         ]
         
