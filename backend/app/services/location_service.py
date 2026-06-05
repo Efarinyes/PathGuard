@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any, Optional
-from sqlalchemy import text
+from sqlalchemy import text, func
 from sqlalchemy.orm import Session
 from app.db.models.location import Location
 from app.db.models.walk import Walk
@@ -12,26 +12,45 @@ from app.core.utils import format_timestamp_utc
 
 
 def upsert_location(db: Session, values: dict) -> bool:
-    """Atomic INSERT ON CONFLICT DO NOTHING / INSERT OR IGNORE.
+    """Atomic INSERT ON CONFLICT with intelligent merge for is_recovered.
 
-    Returns True if a new row was inserted, False if a conflict occurred
-    (duplicate client_id) and no row was changed.
+    If a row with the same client_id already exists, is_recovered is
+    updated to the MAX of the existing and new value (once true, stays true).
+    Returns True if a new row was inserted, False if it was an update or conflict.
     """
     dialect_name = db.get_bind().dialect.name
+    client_id = values.get("client_id")
+
+    is_new = True
+    if client_id:
+        is_new = not db.query(
+            db.query(Location).filter(Location.client_id == client_id).exists()
+        ).scalar()
+
     if dialect_name == 'postgresql':
         from sqlalchemy.dialects.postgresql import insert as pg_insert
         stmt = pg_insert(Location).values(**values)
-        stmt = stmt.on_conflict_do_nothing(index_elements=['client_id'])
-        result = db.execute(stmt)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['client_id'],
+            set_={
+                'is_recovered': func.greatest(
+                    Location.__table__.c.is_recovered,
+                    stmt.excluded.is_recovered
+                )
+            }
+        )
+        db.execute(stmt)
     else:
         table_name = Location.__tablename__
         stmt = text(f"""
-            INSERT OR IGNORE INTO {table_name}
+            INSERT INTO {table_name}
             (walk_id, latitude, longitude, timestamp, client_id, is_recovered)
             VALUES (:walk_id, :latitude, :longitude, :timestamp, :client_id, :is_recovered)
+            ON CONFLICT(client_id) DO UPDATE SET
+                is_recovered = max(is_recovered, excluded.is_recovered)
         """)
-        result = db.execute(stmt, values)
-    return result.rowcount > 0
+        db.execute(stmt, values)
+    return is_new
 
 
 def _validate_coordinates(lat: float, lng: float) -> None:
