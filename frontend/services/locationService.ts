@@ -43,7 +43,8 @@ class LocationService {
       latitude: payload.latitude,
       longitude: payload.longitude,
       timestamp: payload.timestamp,
-      walk_id: payload.walk_id || 0
+      walk_id: payload.walk_id || 0,
+      is_recovered: payload.is_recovered ?? false,
     };
     await offlineSyncService.add(point);
 
@@ -85,6 +86,7 @@ class LocationService {
       timestamp: p.timestamp,
       walk_id: p.walk_id,
       client_id: p.id,
+      is_recovered: p.is_recovered ?? false,
     }));
 
     try {

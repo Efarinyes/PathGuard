@@ -63,6 +63,7 @@ public class LocationSyncForegroundService extends Service {
     private static boolean running = false;
     private static int pointsSent = 0;
     private boolean lastFlushFailed = false;
+    private boolean appInBackground = false;
     private static String lastSentAt = null;
 
     private FusedLocationProviderClient fusedLocationClient;
@@ -122,14 +123,23 @@ public class LocationSyncForegroundService extends Service {
                 case "START":
                     serverUrl = intent.getStringExtra("serverUrl");
                     deviceToken = intent.getStringExtra("deviceToken");
-                    walkId = intent.getIntExtra("walkId", 0);
-                    lastFlushFailed = false;
-                    prefs.edit()
-                        .putInt(PREF_WALK_ID, walkId)
-                        .putString(PREF_DEVICE_TOKEN, deviceToken)
-                        .putString(PREF_SERVER_URL, serverUrl)
-                        .remove(PREF_LAST_FLUSH_FAILED)
-                        .apply();
+                    int newWalkId = intent.getIntExtra("walkId", 0);
+                    if (newWalkId != walkId) {
+                        lastFlushFailed = false;
+                        prefs.edit()
+                            .putInt(PREF_WALK_ID, newWalkId)
+                            .putString(PREF_DEVICE_TOKEN, deviceToken)
+                            .putString(PREF_SERVER_URL, serverUrl)
+                            .remove(PREF_LAST_FLUSH_FAILED)
+                            .apply();
+                    } else {
+                        prefs.edit()
+                            .putInt(PREF_WALK_ID, walkId)
+                            .putString(PREF_DEVICE_TOKEN, deviceToken)
+                            .putString(PREF_SERVER_URL, serverUrl)
+                            .apply();
+                    }
+                    walkId = newWalkId;
                     startTracking();
                     break;
 
@@ -139,6 +149,7 @@ public class LocationSyncForegroundService extends Service {
                         .remove(PREF_WALK_ID)
                         .remove(PREF_DEVICE_TOKEN)
                         .remove(PREF_SERVER_URL)
+                        .remove(PREF_LAST_FLUSH_FAILED)
                         .apply();
                     stopSelf();
                     break;
@@ -146,6 +157,14 @@ public class LocationSyncForegroundService extends Service {
                 case "UPDATE_WALK_ID":
                     walkId = intent.getIntExtra("walkId", 0);
                     prefs.edit().putInt(PREF_WALK_ID, walkId).apply();
+                    break;
+
+                case "MARK_BACKGROUNDED":
+                    appInBackground = true;
+                    break;
+
+                case "MARK_FOREGROUNDED":
+                    appInBackground = false;
                     break;
             }
         } else {
@@ -316,7 +335,7 @@ public class LocationSyncForegroundService extends Service {
 
         String clientId = generateClientId(nowMs, lat, lng);
         LocationPoint point = new LocationPoint(lat, lng, nowMs, clientId);
-        point.isRecovered = lastFlushFailed;
+        point.isRecovered = appInBackground || lastFlushFailed;
         lastAcceptedPoint = point;
 
         if (buffer.size() >= BUFFER_MAX_SIZE) {
