@@ -4,8 +4,9 @@ import { useEffect, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Polyline, Marker } from 'react-leaflet';
 import type { Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { LocationPayload } from '../../services/locationService';
-import { PulseDotIcon, StartFlagIcon, OfflinePulseDotIcon } from './CustomIcons';
+import { LocationPayload } from '@/services/locationService';
+import { StartFlagIcon } from './CustomIcons';
+import CurrentPositionMarker from './CurrentPositionMarker';
 
 export interface MapRendererProps {
   locations: LocationPayload[];
@@ -133,24 +134,23 @@ export default function MapRenderer({ locations, isPatientOffline }: MapRenderer
     [segments]
   );
 
-  const currentPosition = allCoordinates.length > 0 ? allCoordinates[allCoordinates.length - 1] : null;
-  const startPosition = allCoordinates.length > 0 ? allCoordinates[0] : null;
+  const currentIndex = allCoordinates.length > 0 ? allCoordinates.length - 1 : -1;
 
   useEffect(() => {
-    if (mapRef.current && currentPosition) {
-      mapRef.current.setView(currentPosition, mapRef.current.getZoom(), {
+    if (mapRef.current && allCoordinates.length > 0) {
+      mapRef.current.setView(allCoordinates[currentIndex], mapRef.current.getZoom(), {
         animate: true,
         duration: 1.5,
       });
     }
-  }, [currentPosition]);
+  }, [allCoordinates, currentIndex]);
 
   const defaultCenter: [number, number] = [41.5912, 1.5209];
 
   return (
     <div className="relative w-full h-full min-h-[400px] rounded-xl overflow-hidden border border-slate-200">
       <MapContainer
-        center={currentPosition || defaultCenter}
+        center={allCoordinates.length > 0 ? allCoordinates[currentIndex] : defaultCenter}
         zoom={15}
         ref={mapRef}
         className="w-full h-full z-0"
@@ -176,12 +176,17 @@ export default function MapRenderer({ locations, isPatientOffline }: MapRenderer
           ) : null
         )}
 
-        {startPosition && (
-          <Marker position={startPosition} icon={StartFlagIcon} />
+        {allCoordinates.length > 0 && allCoordinates[0] && (
+          <Marker position={allCoordinates[0]} icon={StartFlagIcon} />
         )}
 
-        {currentPosition && (
-          <Marker position={currentPosition} icon={isPatientOffline ? OfflinePulseDotIcon : PulseDotIcon} />
+        {currentIndex >= 0 && (
+          <CurrentPositionMarker
+            coordinates={allCoordinates}
+            locations={locations}
+            currentIndex={currentIndex}
+            isPatientOffline={isPatientOffline}
+          />
         )}
       </MapContainer>
 
