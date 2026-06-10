@@ -16,6 +16,7 @@ import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LocationSyncForegroundService extends Service {
 
@@ -28,6 +29,7 @@ public class LocationSyncForegroundService extends Service {
     private static boolean running = false;
     private static int pointsSent = 0;
     private static String lastSentAt = null;
+    private static final AtomicBoolean appInForeground = new AtomicBoolean(true);
 
     private LocationAcquirer acquirer;
     private LocationBuffer locationBuffer;
@@ -116,6 +118,14 @@ public class LocationSyncForegroundService extends Service {
                     getSharedPreferences(PREF_FILE, MODE_PRIVATE).edit()
                         .putInt(PREF_WALK_ID, walkId).apply();
                     break;
+
+                case "MARK_BACKGROUNDED":
+                    appInForeground.set(false);
+                    break;
+
+                case "MARK_FOREGROUNDED":
+                    appInForeground.set(true);
+                    break;
             }
         } else {
             if (walkId > 0 && deviceToken != null && serverUrl != null) {
@@ -134,6 +144,9 @@ public class LocationSyncForegroundService extends Service {
     }
 
     private boolean isAppInForeground() {
+        if (appInForeground.get()) {
+            return true;
+        }
         ActivityManager.RunningAppProcessInfo processInfo = new ActivityManager.RunningAppProcessInfo();
         ActivityManager.getMyMemoryState(processInfo);
         return processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
