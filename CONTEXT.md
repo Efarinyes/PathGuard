@@ -43,7 +43,7 @@ The system consists of:
 - A **caregiver dashboard** (`/caregiver`) that monitors the patient in real-time via WebSocket
 - An **owner dashboard** (`/caregiver/dashboard`) for group configuration (SOS toggle, activation codes, walk history)
 
-**Current phase:** PostgreSQL operational (Fase G completed). Next: Beta Deploy or Capacitor /patient.
+**Current phase:** PostgreSQL operational (Fase G completed). Android native layer provisional (tested 2026-06-10). Next: Beta Deploy or Capacitor /patient refinement.
 
 ---
 
@@ -316,7 +316,7 @@ Before making ANY change:
 
 ---
 
-## 10. Current Phase Status (as of 2026-05-31)
+## 10. Current Phase Status (as of 2026-06-10)
 
 | Phase | Status | Branch |
 |---|---|---|
@@ -330,7 +330,7 @@ Before making ANY change:
 | F — GPS Adaptive Logic | ✅ Completed | `feat/gps-adaptive-logic` (merged to develop) |
 | C+D — Dashboard Reorganization | ✅ Completed | `feat/dashboard-reorganization` (merged to develop) |
 | G — PostgreSQL Migration | ✅ Completed | `feat/postgresql-migration` (merged to develop) |
-| E — Capacitor /patient | ⏳ In progress (plugin LocationSync creat, pendent de test) | `feat/capacitor-patient-app` |
+| E — Capacitor /patient | ⏳ Provisional (plugin LocationSync testat al camp, pendent anàlisi) | `main` |
 | B — Walk distance | ❌ Cancelled | — |
 | 4.4 — SOS User Test | ⏳ Pending | — |
 | 4.5 — i18n | ⏳ Pending | — |
@@ -358,6 +358,13 @@ Before making ANY change:
 - 5 — Beta Deploy (checklist remaining items)
 - TODO-1: SOS Toggle Real-Time — flux actual acceptable
 - CSS-3: Duplicated patterns (Card, Spinner, ModalOverlay, FormInput) — post-beta
+
+**Capa nativa Android — ESTAT PROVISIONAL (afegit 2026-06-10)**
+- `main` ara conté el codi **testat al camp** (frontend amb direcció + Android plugin Sprint 3)
+- **Plugin `LocationSync`**: filtres defensius (FixAge ≤10s, Teleport >80m/5s, Speed ≤5 m/s), intervals passius (22s base / 8s fastest / 30m minDist), buffer 200 punts persistent, flush on-demand 2s + idle 30s, recupera `lastFlushFailed` a `onCreate()`
+- **Problemes detectats en test de camp**: sense direcció de passeig fiable, rutes inventades, discontinuïtats amb/sense cobertura
+- **Pendent**: anàlisi per col·laborador per refinar filtres GPS / rendering
+- **No considerar producció** fins a validació completa
 
 ---
 
