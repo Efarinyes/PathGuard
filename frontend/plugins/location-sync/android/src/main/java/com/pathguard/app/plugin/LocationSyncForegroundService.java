@@ -2,13 +2,8 @@ package com.pathguard.app.plugin;
 
 import android.app.ActivityManager;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
 import android.os.IBinder;
 
 import androidx.annotation.Nullable;
@@ -20,11 +15,11 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class LocationSyncForegroundService extends Service {
 
-    private static final int FLUSH_INTERVAL_SECONDS = 5;
     private static final String PREF_FILE = "pathguard_tracking";
     private static final String PREF_WALK_ID = "active_walk_id";
     private static final String PREF_DEVICE_TOKEN = "device_token";
@@ -34,14 +29,11 @@ public class LocationSyncForegroundService extends Service {
     private static int pointsSent = 0;
     private static String lastSentAt = null;
 
-    private boolean appInBackground = false;
-
     private LocationAcquirer acquirer;
     private LocationBuffer locationBuffer;
     private LocationHttpClient httpClient;
     private ScheduledExecutorService scheduler;
-    private ConnectivityManager connectivityManager;
-    private ConnectivityManager.NetworkCallback networkCallback;
+    private ScheduledFuture<?> pendingFlush;
     private String serverUrl;
     private String deviceToken;
     private int walkId;
@@ -80,17 +72,8 @@ public class LocationSyncForegroundService extends Service {
         deviceToken = prefs.getString(PREF_DEVICE_TOKEN, null);
         serverUrl = prefs.getString(PREF_SERVER_URL, null);
 
-        connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        networkCallback = new ConnectivityManager.NetworkCallback() {
-            @Override
-            public void onAvailable(Network network) {
-                flushBuffer();
-            }
-        };
-        NetworkRequest request = new NetworkRequest.Builder()
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .build();
-        connectivityManager.registerNetworkCallback(request, networkCallback);
+        boolean lastFlushFailed = bufferStore.getLastFlushFailed();
+        locationBuffer.setLastFlushFailed(lastFlushFailed);
 
         if (!locationBuffer.isEmpty() && serverUrl != null && deviceToken != null) {
             scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -137,15 +120,6 @@ public class LocationSyncForegroundService extends Service {
                     getSharedPreferences(PREF_FILE, MODE_PRIVATE).edit()
                         .putInt(PREF_WALK_ID, walkId).apply();
                     break;
-
-                case "MARK_BACKGROUNDED":
-                    appInBackground = true;
-                    break;
-
-                case "MARK_FOREGROUNDED":
-                    appInBackground = false;
-                    flushBuffer();
-                    break;
             }
         } else {
             if (walkId > 0 && deviceToken != null && serverUrl != null) {
@@ -182,7 +156,7 @@ public class LocationSyncForegroundService extends Service {
         }
 
         scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(this::flushBuffer, FLUSH_INTERVAL_SECONDS, FLUSH_INTERVAL_SECONDS, TimeUnit.SECONDS);
+        startIdleTimer();
     }
 
     private void stopTracking() {
@@ -193,11 +167,17 @@ public class LocationSyncForegroundService extends Service {
             scheduler.shutdown();
             scheduler = null;
         }
+        pendingFlush = null;
     }
 
     private void scheduleFlush() {
         if (scheduler == null || scheduler.isShutdown()) return;
-        scheduler.schedule(this::flushBuffer, 1, TimeUnit.SECONDS);
+        if (pendingFlush != null && !pendingFlush.isDone()) return;
+        pendingFlush = scheduler.schedule(this::flushBuffer, 2, TimeUnit.SECONDS);
+    }
+
+    private void startIdleTimer() {
+        scheduler.scheduleAtFixedRate(this::flushBuffer, 30, 30, TimeUnit.SECONDS);
     }
 
     private void flushBuffer() {
@@ -220,9 +200,6 @@ public class LocationSyncForegroundService extends Service {
 
     @Override
     public void onDestroy() {
-        if (connectivityManager != null && networkCallback != null) {
-            connectivityManager.unregisterNetworkCallback(networkCallback);
-        }
         stopTracking();
         super.onDestroy();
     }

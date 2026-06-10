@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 public class LocationBuffer {
-    private static final int BUFFER_MAX_SIZE = 100;
+    private static final int BUFFER_MAX_SIZE = 200;
     private final PriorityQueue<LocationPoint> buffer;
     private final BufferStore store;
     private boolean lastFlushFailed;
@@ -51,5 +51,9 @@ public class LocationBuffer {
 
     public boolean getLastFlushFailed() {
         return lastFlushFailed;
+    }
+
+    public void setLastFlushFailed(boolean failed) {
+        this.lastFlushFailed = failed;
     }
 }

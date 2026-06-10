@@ -17,9 +17,9 @@ import java.util.Locale;
 import java.util.UUID;
 
 public class LocationAcquirer {
-    private static final float MIN_DISTANCE_M = 25.0f;
-    private static final float MAX_JUMP_M = 80.0f;
+    private static final float MIN_DISTANCE_M = 30.0f;
     private static final float MAX_ACCURACY_M = 50.0f;
+    private static final float MAX_JUMP_M = 80.0f;
     private static final float MAX_SPEED_MS = 5.0f;
     private static final long MAX_FIX_AGE_MS = 10_000;
 
@@ -52,9 +52,9 @@ public class LocationAcquirer {
         running = true;
         lastAcceptedPoint = null;
 
-        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
-                .setMinUpdateIntervalMillis(2000)
-                .setMinUpdateDistanceMeters(15)
+        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 22000)
+                .setMinUpdateIntervalMillis(8000)
+                .setMinUpdateDistanceMeters(30)
                 .build();
 
         locationCallback = new LocationCallback() {
@@ -90,7 +90,6 @@ public class LocationAcquirer {
     private void processLocation(Location location) {
         if (!passesAccuracyGate(location)) return;
         if (!passesFixAgeGate(location)) return;
-        if (!passesMockGate(location)) return;
 
         double lat = location.getLatitude();
         double lng = location.getLongitude();
@@ -126,13 +125,6 @@ public class LocationAcquirer {
 
     private boolean passesFixAgeGate(Location location) {
         return System.currentTimeMillis() - location.getTime() <= MAX_FIX_AGE_MS;
-    }
-
-    private boolean passesMockGate(Location location) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            return !location.isFromMockProvider();
-        }
-        return true;
     }
 
     private boolean passesAntiJitterGate(LocationPoint candidate) {
