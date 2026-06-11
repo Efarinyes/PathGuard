@@ -1,10 +1,14 @@
 package com.pathguard.app.plugin;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -14,6 +18,13 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 
 @CapacitorPlugin(name = "LocationSync")
 public class LocationSyncPlugin extends Plugin {
+
+    private static final int REQUEST_POST_NOTIFICATIONS = 1001;
+
+    private PluginCall pendingStartCall;
+    private String pendingServerUrl;
+    private String pendingDeviceToken;
+    private Integer pendingWalkId;
 
     @PluginMethod
     public void startTracking(PluginCall call) {
@@ -44,14 +55,37 @@ public class LocationSyncPlugin extends Plugin {
             }
         }
 
+        doStartTracking(serverUrl, deviceToken, walkId);
+        call.resolve();
+    }
+
+    private void doStartTracking(String serverUrl, String deviceToken, Integer walkId) {
+        Context context = getContext();
         Intent intent = new Intent(context, LocationSyncForegroundService.class);
         intent.setAction("START");
         intent.putExtra("serverUrl", serverUrl);
         intent.putExtra("deviceToken", deviceToken);
         intent.putExtra("walkId", walkId);
-
         context.startForegroundService(intent);
-        call.resolve();
+    }
+
+    @Override
+    protected void handleRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.handleRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_POST_NOTIFICATIONS) {
+            if (pendingStartCall != null) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    doStartTracking(pendingServerUrl, pendingDeviceToken, pendingWalkId);
+                    pendingStartCall.resolve();
+                } else {
+                    pendingStartCall.reject("Permís de notificacions denegat. El servei en primer pla no podrà mostrar notificacions.");
+                }
+                pendingStartCall = null;
+                pendingServerUrl = null;
+                pendingDeviceToken = null;
+                pendingWalkId = null;
+            }
+        }
     }
 
     @PluginMethod
@@ -60,7 +94,6 @@ public class LocationSyncPlugin extends Plugin {
         Intent intent = new Intent(context, LocationSyncForegroundService.class);
         intent.setAction("STOP");
         context.startService(intent);
-
         call.resolve();
     }
 
@@ -77,7 +110,6 @@ public class LocationSyncPlugin extends Plugin {
         intent.setAction("UPDATE_WALK_ID");
         intent.putExtra("walkId", walkId);
         context.startService(intent);
-
         call.resolve();
     }
 
@@ -88,5 +120,23 @@ public class LocationSyncPlugin extends Plugin {
         ret.put("pointsSent", LocationSyncForegroundService.getPointsSent());
         ret.put("lastSentAt", LocationSyncForegroundService.getLastSentAt());
         call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void markBackgrounded(PluginCall call) {
+        Context context = getContext();
+        Intent intent = new Intent(context, LocationSyncForegroundService.class);
+        intent.setAction("MARK_BACKGROUNDED");
+        context.startService(intent);
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void markForegrounded(PluginCall call) {
+        Context context = getContext();
+        Intent intent = new Intent(context, LocationSyncForegroundService.class);
+        intent.setAction("MARK_FOREGROUNDED");
+        context.startService(intent);
+        call.resolve();
     }
 }

@@ -1532,6 +1532,112 @@ Fixos aplicats després de completar Sprint 1 i Sprint 2, fora dels sprints plan
 
 ---
 
+---
+
+## MILLORES UX — VISUALITZACIÓ MAPA (PENDENTS)
+
+**Propostes** per millorar la qualitat visual de la ruta de /patient a /caregiver, sense tocar backend, infraestructura ni plugins natius. Només frontend (`MapRenderer.tsx` + `WalkEventProcessor.ts`).
+
+### UX-1 — Douglas-Peucker als segments recovered
+
+**Problema:** `segmentLocations()` aplica simplificació només a segments no recovered. Els recovered es pinten sencers, amb zig-zags innecessaris del GPS sense assistència de xarxa.
+
+**Solució:** Aplicar `epsilon` (Douglas-Peucker) també als recovered. Una constant.
+
+**Fitxer:** `frontend/components/CaregiverMap/MapRenderer.tsx`
+**Esforç:** Minuts
+
+---
+
+### UX-2 — Segmentació per velocitat improbable
+
+**Problema:** Talls rectes "impossibles" (edificis) causats per punts recovered consecutius amb velocitat implicada > 2 m/s (caminar ràpid).
+
+**Solució:** Calcular haversine entre cada parell de punts consecutius dins un segment recovered. Si la velocitat implicada > 2 m/s, partir el segment i renderitzar el subtram sospitós amb més transparència o estil diferenciat.
+
+**Fitxer:** `frontend/components/CaregiverMap/MapRenderer.tsx`
+**Esforç:** Hores
+
+---
+
+### UX-3 — No renderitzar segments recovered molt curts
+
+**Problema:** El gate actual `coordinates.length > 1` deixa passar segments de 2-3 punts recovered. Pinta micro-línies rectes que semblen errors.
+
+**Solució:** Llindar mínim: no renderitzar segments recovered amb < 4 punts o longitud total < 30m. Aquests micro-segments desapareixen del mapa.
+
+**Fitxer:** `frontend/components/CaregiverMap/MapRenderer.tsx`
+**Esforç:** Hores
+
+---
+
+### UX-4 — Marcadors d'inici/fi de recuperació
+
+**Problema:** El cuidador no sap per què apareix un segment taronja.
+
+**Solució:** Marker verd "📡" al punt on es perd cobertura (inici recovered) i marker vermell "📡" al punt on es recupera (fi recovered). Context visual immediat.
+
+**Fitxer:** `frontend/components/CaregiverMap/MapRenderer.tsx`
+**Esforç:** Hores
+
+---
+
+### UX-5 — Millorar estil del segment recovered
+
+**Problema:** Línia discontinua `10,10` no comunica prou "això és menys fiable".
+
+**Solució:** Guixeta més fina (weight 3 vs 5), opacitat 0.5, `lineCap: 'round'` + `lineJoin: 'round'` per suavitzar cantonades.
+
+**Fitxer:** `frontend/components/CaregiverMap/MapRenderer.tsx`
+**Esforç:** Minuts
+
+---
+
+### UX-6 — Direcció del pacient al mapa
+
+**Problema:** El mapa mostra la ruta i el punt actual, però no indica cap on es mou el pacient. El cuidador no sap si camina cap a casa o se n'allunya.
+
+**Solució:** Calcular bearing (heading) entre els 2 últims punts GPS acceptats i reflectir la direcció al marcador del punt actual.
+
+**Opcions:**
+
+| | Enfoc | Esforç |
+|---|---|---|
+| **A** | Rotar el `PulseDotIcon` amb CSS (`transform: rotate(deg)`) usant `divIcon` amb un chevron/triangle direccional | Hores |
+| **B** | Plugin `leaflet-rotatedmarker` per rotar qualsevol marker natiu | Hores |
+| **C** | Les dues anteriors + fletxes (`>`) a intervals regulars sobre la polilínia de la ruta sencera | 1 dia |
+
+**Càlcul de bearing:**
+
+```typescript
+function getBearing(
+  lat1: number, lng1: number,
+  lat2: number, lng2: number
+): number {
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const y = Math.sin(dLng) * Math.cos(lat2 * Math.PI / 180);
+  const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180)
+          - Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLng);
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+```
+
+**Dependències:** Cap de nova si s'usa `divIcon` + CSS (Opció A). Opció B requereix `npm install leaflet-rotatedmarker`.
+
+**Recomanació:** Opció A (divIcon) — zero dependències, efecte net, fàcil de fer i desfer.
+
+**Fitxer:** `frontend/components/CaregiverMap/MapRenderer.tsx`
+**Esforç:** Hores
+
+**Problema:** Línia discontinua `10,10` no comunica prou "això és menys fiable".
+
+**Solució:** Guixeta més fina (weight 3 vs 5), opacitat 0.5, `lineCap: 'round'` + `lineJoin: 'round'` per suavitzar cantonades.
+
+**Fitxer:** `frontend/components/CaregiverMap/MapRenderer.tsx`
+**Esforç:** Minuts
+
+---
+
 ## MÈTRIQUES D'ÈXIT
 
 | Mètrica | Abans | Després |
