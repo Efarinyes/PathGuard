@@ -55,26 +55,6 @@ public class LocationSyncPlugin extends Plugin {
             }
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                pendingStartCall = call;
-                pendingServerUrl = serverUrl;
-                pendingDeviceToken = deviceToken;
-                pendingWalkId = walkId;
-
-                Activity activity = getActivity();
-                if (activity != null) {
-                    ActivityCompat.requestPermissions(activity,
-                            new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                            REQUEST_POST_NOTIFICATIONS);
-                } else {
-                    call.reject("No s'ha pogut obtenir l'Activity per demanar permís de notificacions.");
-                }
-                return;
-            }
-        }
-
         doStartTracking(serverUrl, deviceToken, walkId);
         call.resolve();
     }

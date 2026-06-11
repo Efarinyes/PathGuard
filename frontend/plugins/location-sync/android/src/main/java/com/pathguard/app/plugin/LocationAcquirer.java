@@ -17,7 +17,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 public class LocationAcquirer {
-    private static final float MIN_DISTANCE_M = 25.0f;
+    private static final float MIN_DISTANCE_M = 15.0f;
     private static final float MAX_JUMP_M = 80.0f;
     private static final float MAX_ACCURACY_M = 50.0f;
     private static final float MAX_SPEED_MS = 5.0f;

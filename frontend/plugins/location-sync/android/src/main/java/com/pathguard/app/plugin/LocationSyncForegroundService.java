@@ -140,7 +140,6 @@ public class LocationSyncForegroundService extends Service {
     private void onPointAccepted(LocationPoint point) {
         point.isRecovered = locationBuffer.getLastFlushFailed() || !isAppInForeground();
         locationBuffer.add(point);
-        scheduleFlush();
     }
 
     private boolean isAppInForeground() {
@@ -176,11 +175,6 @@ public class LocationSyncForegroundService extends Service {
             scheduler.shutdown();
             scheduler = null;
         }
-    }
-
-    private void scheduleFlush() {
-        if (scheduler == null || scheduler.isShutdown()) return;
-        scheduler.schedule(this::flushBuffer, 1, TimeUnit.SECONDS);
     }
 
     private void flushBuffer() {

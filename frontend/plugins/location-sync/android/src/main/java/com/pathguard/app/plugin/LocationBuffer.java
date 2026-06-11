@@ -6,14 +6,17 @@ import java.util.PriorityQueue;
 
 public class LocationBuffer {
     private static final int BUFFER_MAX_SIZE = 100;
+    private static final int RECOVERY_STREAK_THRESHOLD = 3;
     private final PriorityQueue<LocationPoint> buffer;
     private final BufferStore store;
     private boolean lastFlushFailed;
+    private int recoveryStreak;
 
     public LocationBuffer(BufferStore store) {
         this.store = store;
         this.buffer = store.load();
         this.lastFlushFailed = store.getLastFlushFailed();
+        this.recoveryStreak = 0;
         for (LocationPoint p : buffer) {
             p.isRecovered = true;
         }
@@ -35,13 +38,17 @@ public class LocationBuffer {
     }
 
     public void onFlushFailure(List<LocationPoint> batch) {
+        recoveryStreak = 0;
         lastFlushFailed = true;
         buffer.addAll(batch);
         store.save(buffer, true);
     }
 
     public void onFlushSuccess() {
-        lastFlushFailed = false;
+        recoveryStreak++;
+        if (recoveryStreak >= RECOVERY_STREAK_THRESHOLD) {
+            lastFlushFailed = false;
+        }
         store.clear();
     }
 
