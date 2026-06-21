@@ -15,7 +15,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -35,7 +34,6 @@ public class LocationSyncForegroundService extends Service {
     private LocationBuffer locationBuffer;
     private LocationHttpClient httpClient;
     private ScheduledExecutorService scheduler;
-    private ScheduledFuture<?> pendingFlush;
     private String serverUrl;
     private String deviceToken;
     private int walkId;
@@ -167,37 +165,54 @@ public class LocationSyncForegroundService extends Service {
             flushBuffer();
         }
 
-        scheduler = Executors.newSingleThreadScheduledExecutor();
-        startIdleTimer();
+        startPeriodicFlush();
     }
 
     private void stopTracking() {
         running = false;
         acquirer.stop();
-        flushBuffer();
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.execute(this::flushBuffer);
+        } else {
+            flushBuffer();
+        }
+        stopPeriodicFlush();
+    }
+
+    private void startPeriodicFlush() {
+        if (scheduler == null || scheduler.isShutdown()) {
+            scheduler = Executors.newSingleThreadScheduledExecutor();
+        }
+        scheduler.scheduleAtFixedRate(this::flushBuffer, 5, 30, TimeUnit.SECONDS);
+    }
+
+    private void stopPeriodicFlush() {
         if (scheduler != null && !scheduler.isShutdown()) {
             scheduler.shutdown();
             scheduler = null;
         }
-        pendingFlush = null;
     }
 
 
     private void flushBuffer() {
-        if (locationBuffer.isEmpty()) return;
-        if (serverUrl == null || deviceToken == null) return;
+        try {
+            if (locationBuffer.isEmpty()) return;
+            if (serverUrl == null || deviceToken == null) return;
 
-        List<LocationPoint> batch = locationBuffer.drainAll();
-        if (batch.isEmpty()) return;
+            List<LocationPoint> batch = locationBuffer.drainAll();
+            if (batch.isEmpty()) return;
 
-        boolean success = httpClient.sendBatch(batch, walkId, deviceToken, serverUrl, isoFormatter);
+            boolean success = httpClient.sendBatch(batch, walkId, deviceToken, serverUrl, isoFormatter);
 
-        if (success) {
-            pointsSent += batch.size();
-            lastSentAt = isoFormatter.format(new Date());
-            locationBuffer.onFlushSuccess();
-        } else {
-            locationBuffer.onFlushFailure(batch);
+            if (success) {
+                pointsSent += batch.size();
+                lastSentAt = isoFormatter.format(new Date());
+                locationBuffer.onFlushSuccess();
+            } else {
+                locationBuffer.onFlushFailure(batch);
+            }
+        } catch (Exception e) {
+            // Prevent any uncaught exception from cancelling the scheduler
         }
     }
 
