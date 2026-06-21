@@ -1,14 +1,12 @@
 package com.pathguard.app.plugin;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -39,19 +37,30 @@ public class LocationSyncPlugin extends Plugin {
 
         Context context = getContext();
 
+        boolean hasFine = context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        boolean hasCoarse = context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        if (!hasFine && !hasCoarse) {
+            call.reject("Permís d'ubicació no concedit. Cal ACCESS_FINE_LOCATION o ACCESS_COARSE_LOCATION.");
+            return;
+        }
+
         if (Build.VERSION.SDK_INT >= 34) {
-            boolean hasFine = context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-            boolean hasCoarse = context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-            if (!hasFine && !hasCoarse) {
-                call.reject("Permís d'ubicació no concedit. Cal ACCESS_FINE_LOCATION o ACCESS_COARSE_LOCATION.");
+            boolean hasFgsLocation = context.checkSelfPermission(Manifest.permission.FOREGROUND_SERVICE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            if (!hasFgsLocation) {
+                call.reject("Permís FOREGROUND_SERVICE_LOCATION no concedit.");
                 return;
             }
-            if (Build.VERSION.SDK_INT >= 35) {
-                boolean hasFgsLocation = context.checkSelfPermission(Manifest.permission.FOREGROUND_SERVICE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-                if (!hasFgsLocation) {
-                    call.reject("Permís FOREGROUND_SERVICE_LOCATION no concedit.");
-                    return;
-                }
+        }
+
+        if (Build.VERSION.SDK_INT >= 33) {
+            boolean hasNotifications = context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+            if (!hasNotifications) {
+                pendingStartCall = call;
+                pendingServerUrl = serverUrl;
+                pendingDeviceToken = deviceToken;
+                pendingWalkId = walkId;
+                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_POST_NOTIFICATIONS);
+                return;
             }
         }
 

@@ -16,20 +16,20 @@ public class LocationBuffer {
         this.store = store;
         this.buffer = store.load();
         this.lastFlushFailed = store.getLastFlushFailed();
-        this.recoveryStreak = 0;
+        this.recoveryStreak = store.getRecoveryStreak();
         for (LocationPoint p : buffer) {
             p.isRecovered = true;
         }
     }
 
-    public void add(LocationPoint point) {
+    public synchronized void add(LocationPoint point) {
         buffer.add(point);
         if (buffer.size() > BUFFER_MAX_SIZE) {
             buffer.poll();
         }
     }
 
-    public List<LocationPoint> drainAll() {
+    public synchronized List<LocationPoint> drainAll() {
         List<LocationPoint> batch = new ArrayList<>();
         while (!buffer.isEmpty()) {
             batch.add(buffer.poll());
@@ -41,7 +41,7 @@ public class LocationBuffer {
         recoveryStreak = 0;
         lastFlushFailed = true;
         buffer.addAll(batch);
-        store.save(buffer, true);
+        store.save(buffer, true, recoveryStreak);
     }
 
     public void onFlushSuccess() {
@@ -52,7 +52,7 @@ public class LocationBuffer {
         store.clear();
     }
 
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return buffer.isEmpty();
     }
 
