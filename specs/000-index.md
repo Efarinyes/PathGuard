@@ -29,9 +29,9 @@ Catàleg viu de totes les specs del projecte. Cada spec viu al seu propi fitxer 
 | ID | Tipus | Títol | Owner | Status | Branca |
 |---|---|---|---|---|---|
 | [SPEC-010](tech-SPEC-010-restore-android-plugin.md) | tech | Restore Android plugin (3 fitxers perduts) | android | draft | — |
-| [SPEC-020](integration-SPEC-020-consolidate-gps-capture.md) | integration | Consolidar captura GPS cross-platform | platform-integration | draft | — |
+| [SPEC-020](integration-SPEC-020-consolidate-gps-capture.md) | integration | Consolidar captura GPS cross-platform | platform-integration | approved | `fix/SPEC-020-ios-gps-fixes` (iOS) + `fix/SPEC-020-frontend-gps-refactor` (FE) |
 | [SPEC-030](feature-SPEC-030-device-token-revocation.md) | feature | Revocació de device_token (owner) | backend | draft | — |
-| [SPEC-040](tech-SPEC-040-bridge-contract-v2.md) | tech | Bridge LocationSync v2 — 6 mètodes, contracte canònic | platform-integration | draft | — |
+| [SPEC-040](tech-SPEC-040-bridge-contract-v2.md) | tech | Bridge LocationSync v2 — 6 mètodes, contracte canònic | platform-integration | approved | `refactor/SPEC-040-bridge-v2-ios` |
 | [SPEC-050](feature-SPEC-050-field-testing.md) | feature | Proves de camp amb dispositius reals | qa | draft | — |
 
 ### P1 — Beta readiness
@@ -39,7 +39,7 @@ Catàleg viu de totes les specs del projecte. Cada spec viu al seu propi fitxer 
 | ID | Tipus | Títol | Owner | Status | Branca |
 |---|---|---|---|---|---|
 | [SPEC-060](devops-SPEC-060-cicd-pipeline.md) | devops | Pipeline CI/CD multi-plataforma | devops | draft | — |
-| [SPEC-070](tech-SPEC-070-ios-armv7-fix.md) | tech | iOS Info.plist: armv7 → arm64 | ios | draft | — |
+| [SPEC-070](tech-SPEC-070-ios-armv7-fix.md) | tech | iOS Info.plist: armv7 → arm64 | ios | approved | `fix/SPEC-070-ios-arm64` |
 | [SPEC-080](devops-SPEC-080-release-process.md) | devops | Tag-driven release + artifacts + secrets | devops | draft | — |
 
 ### P2 — Post-beta

@@ -2,9 +2,11 @@
 id: integration-SPEC-020
 title: Consolidar captura GPS cross-platform
 type: integration
-status: draft
+status: approved
 priority: P0
 created: 2026-06-30
+approved: 2026-06-30
+approved_by: tech-lead
 author: tech-lead
 agents_affected:
   - platform-integration
@@ -15,7 +17,7 @@ reviewer: tech-lead
 blocked_by: []
 replaces: null
 supersedes: null
-adr: pending  # ADR-0004 a redactar
+adr: 0004
 ---
 
 # Spec: Consolidar captura GPS cross-platform

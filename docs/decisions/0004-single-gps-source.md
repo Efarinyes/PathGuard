@@ -2,7 +2,7 @@
 
 ## Status
 
-`proposed` — pendent sign-off Tech Lead (SPEC-020)
+`accepted` — 2026-06-30 (sign-off Tech Lead, gating SPEC-020)
 
 ## Context
 

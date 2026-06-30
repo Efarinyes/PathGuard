@@ -2,9 +2,11 @@
 id: tech-SPEC-070
 title: iOS Info.plist: armv7 → arm64
 type: tech
-status: draft
+status: approved
 priority: P1
 created: 2026-06-30
+approved: 2026-06-30
+approved_by: tech-lead
 author: tech-lead
 agents_affected:
   - ios
