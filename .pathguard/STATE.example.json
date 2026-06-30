@@ -1,0 +1,158 @@
+{
+  "version": "1.0.0",
+  "schema_note": "Aquest fitxer és un EXEMPLE commited. La instància real és .pathguard/STATE.json (gitignored).",
+  "last_updated": "2026-06-30T12:00:00Z",
+  "session": {
+    "active_agent": "tech-lead",
+    "active_spec": "SPEC-010",
+    "active_branch": "refactor/fase-0-structural-restructuring",
+    "last_action": "Fase 0 implementada: 26 skills, 11 specs, 6 ADRs, docs reorganitzats, repo netejat (branques + tags antics)",
+    "next_action": "Validar Fase 0 → iniciar SPEC-010 (restaurar plugin Android)",
+    "blocked_by": []
+  },
+  "project": {
+    "current_branch": "develop",
+    "phase": "Fase 0 → Fase 1",
+    "milestone": "beta-ready",
+    "target_version": "v2.7.0-beta.1",
+    "deployed_env": {
+      "frontend": "https://path-guard-orpin.vercel.app",
+      "backend": "https://pathguard-sjxy.onrender.com",
+      "database": "Supabase PostgreSQL (eu-west-1, ref cduokeaobbsdjnckuuxk)",
+      "note": "Vercel i Render NO es redeployen durant proves natives. Capa Android/iOS es construeix amb Android Studio/Xcode."
+    }
+  },
+  "branches": {
+    "production": "main",
+    "integration": "develop",
+    "active_work": [
+      "feat/ios-native-layer (capa iOS provisional, plugin trencat — SPEC-010)",
+      "refactor/fase-0-structural-restructuring (Fase 0 — pendent merge a develop)"
+    ]
+  },
+  "active_specs": [
+    {
+      "id": "SPEC-010",
+      "type": "tech",
+      "title": "Restaurar plugin Android (3 fitxers perduts)",
+      "status": "draft",
+      "priority": "P0",
+      "agent_owner": "android",
+      "reviewer": "platform-integration"
+    },
+    {
+      "id": "SPEC-020",
+      "type": "integration",
+      "title": "Consolidar captura GPS cross-platform",
+      "status": "draft",
+      "priority": "P0",
+      "agent_owner": "platform-integration",
+      "subtasks": [
+        { "id": "020.1", "title": "iOS LocationBuffer.onFlushResult re-add batch", "status": "todo" },
+        { "id": "020.2", "title": "iOS Timer → DispatchSourceTimer per flush 2s", "status": "todo" },
+        { "id": "020.3", "title": "iOS LocationBuffer histeresi invertida", "status": "todo" },
+        { "id": "020.4", "title": "Frontend useLocationTracking 1 mode", "status": "todo" },
+        { "id": "020.5", "title": "Frontend useOfflineRecovery guards", "status": "todo" }
+      ]
+    },
+    {
+      "id": "SPEC-030",
+      "type": "feature",
+      "title": "Revocació de device_token",
+      "status": "draft",
+      "priority": "P0",
+      "agent_owner": "backend"
+    },
+    {
+      "id": "SPEC-040",
+      "type": "tech",
+      "title": "Bridge LocationSync v2 — 6 mètodes, contracte canònic",
+      "status": "draft",
+      "priority": "P0",
+      "agent_owner": "platform-integration"
+    },
+    {
+      "id": "SPEC-050",
+      "type": "feature",
+      "title": "Proves de camp amb dispositius reals",
+      "status": "draft",
+      "priority": "P0",
+      "agent_owner": "qa"
+    },
+    {
+      "id": "SPEC-060",
+      "type": "devops",
+      "title": "Pipeline CI/CD multi-plataforma",
+      "status": "draft",
+      "priority": "P1",
+      "agent_owner": "devops"
+    },
+    {
+      "id": "SPEC-070",
+      "type": "tech",
+      "title": "iOS Info.plist: armv7 → arm64",
+      "status": "draft",
+      "priority": "P1",
+      "agent_owner": "ios"
+    },
+    {
+      "id": "SPEC-080",
+      "type": "devops",
+      "title": "Tag-driven release + artifacts + secrets",
+      "status": "draft",
+      "priority": "P1",
+      "agent_owner": "devops"
+    },
+    {
+      "id": "SPEC-100",
+      "type": "feature",
+      "title": "i18n: CA/ES/EN",
+      "status": "draft",
+      "priority": "P2",
+      "agent_owner": "frontend"
+    },
+    {
+      "id": "SPEC-110",
+      "type": "tech",
+      "title": "Tests unitaris natius (XCTest + JUnit)",
+      "status": "draft",
+      "priority": "P2",
+      "agent_owner": "ios+android+qa"
+    },
+    {
+      "id": "SPEC-120",
+      "type": "tech",
+      "title": "WebSocket presence via Redis (post-beta)",
+      "status": "draft",
+      "priority": "P2",
+      "agent_owner": "backend+devops"
+    }
+  ],
+  "open_issues_from_audit": [
+    { "id": "R-P0-1", "severity": "critical", "file": "frontend/plugins/location-sync/android/", "spec": "SPEC-010" },
+    { "id": "R-P0-2", "severity": "high", "file": "frontend/plugins/location-sync/ios/Plugin/LocationBuffer.swift", "spec": "SPEC-020.1" },
+    { "id": "R-P0-3", "severity": "high", "file": "frontend/hooks/useLocationTracking.ts", "spec": "SPEC-020.4" },
+    { "id": "R-P0-4", "severity": "high", "file": "backend/app/db/models/patient.py", "spec": "SPEC-030" },
+    { "id": "R-P0-5", "severity": "medium", "file": "frontend/plugins/location-sync/ios/Plugin/LocationAcquirer.swift", "spec": "SPEC-020.6" }
+  ],
+  "test_commands": {
+    "backend": "cd backend && /Users/eduardfarinyes/micromamba/envs/tracker-env/bin/python -m pytest tests/ -v",
+    "frontend_build": "cd frontend && npm run build --webpack",
+    "frontend_test": "cd frontend && npm test",
+    "android_build": "cd frontend/android && ./gradlew assembleDebug",
+    "ios_build": "cd frontend/ios && xcodebuild -workspace App/App.xcworkspace -scheme App -configuration Debug"
+  },
+  "conventions": {
+    "branch_prefix": {
+      "feature": "feat/",
+      "fix": "fix/",
+      "refactor": "refactor/",
+      "docs": "docs/",
+      "release": "release/"
+    },
+    "commit_style": "conventional (feat:, fix:, refactor:, docs:, test:)",
+    "spec_id_format": "<type>-SPEC-NNN (type in: feature, tech, integration)",
+    "adr_id_format": "NNNN-kebab-case-titol.md"
+  },
+  "next_session_pickup": "Revisar PR de Fase 0 a develop. Si aprovat, començar SPEC-010 obrint branca fix/SPEC-010-restore-android-plugin des de main. Identificar els 3 fitxers esborrats via git log. Aplicar tests Gradle."
+}
