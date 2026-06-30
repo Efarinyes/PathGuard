@@ -4,13 +4,14 @@ description: |
   Procediment per validar una spec implementada. Carregar
   quan una spec està en estat `implementing` i es vol
   passar a `validated`.
-triggers:
-  - Spec implementada
-  - Verificar AC abans de merge
-  - QA sign-off
-agent_owner: qa
-prerequisites:
-  - pathguard-sdd-implement
+metadata:
+  triggers:
+    - Spec implementada
+    - Verificar AC abans de merge
+    - QA sign-off
+  agent_owner: qa
+  prerequisites:
+    - pathguard-sdd-implement
 ---
 
 # SDD — Validar una Spec

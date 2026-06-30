@@ -4,14 +4,15 @@ description: |
   Procediment de proves de camp amb dispositius reals. Carregar
   quan es planifica una validació field, o quan QA prepara
   el procediment per a un release.
-triggers:
-  - Preparar validació per release
-  - Planificar proves amb dispositius
-  - Documentar resultats de camp
-agent_owner: qa
-prerequisites:
-  - pathguard-agent-qa
-  - pathguard-test-pyramid
+metadata:
+  triggers:
+    - Preparar validació per release
+    - Planificar proves amb dispositius
+    - Documentar resultats de camp
+  agent_owner: qa
+  prerequisites:
+    - pathguard-agent-qa
+    - pathguard-test-pyramid
 ---
 
 # Field Testing — Procediment

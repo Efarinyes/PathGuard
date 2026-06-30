@@ -3,12 +3,13 @@ name: pathguard-commit
 description: |
   Estil i procediment de commits. Carregar quan es fa
   commit, abans d'obrir PR.
-triggers:
-  - Fer commit
-  - Preparar PR
-agent_owner: "*"
-prerequisites:
-  - pathguard-conventions
+metadata:
+  triggers:
+    - Fer commit
+    - Preparar PR
+  agent_owner: "*"
+  prerequisites:
+    - pathguard-conventions
 ---
 
 # Commit — Estil i procediment

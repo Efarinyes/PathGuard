@@ -4,16 +4,17 @@ description: |
   Rol: Agent DevOps / Release. Propietari de CI/CD, secrets,
   observabilitat, builds i releases. Carregar quan una tasca
   afecta pipelines, entorns, observabilitat o deploys.
-triggers:
-  - Modificar .github/workflows/
-  - Canviar env vars a Vercel/Render
-  - Configurar secrets
-  - Build d'APK/IPA
-  - Crear tag/release
-agent_owner: devops
-prerequisites:
-  - pathguard-state
-  - pathguard-golden-rules
+metadata:
+  triggers:
+    - Modificar .github/workflows/
+    - Canviar env vars a Vercel/Render
+    - Configurar secrets
+    - Build d'APK/IPA
+    - Crear tag/release
+  agent_owner: devops
+  prerequisites:
+    - pathguard-state
+    - pathguard-golden-rules
 ---
 
 # Agent DevOps / Release

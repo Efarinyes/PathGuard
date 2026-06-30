@@ -1,0 +1,1 @@
+../../../.pathguard/skills/_domain/pathguard-capacitor-config.md

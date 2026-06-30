@@ -1,0 +1,1 @@
+../../../.pathguard/skills/_workflow/pathguard-sdd-create-spec.md

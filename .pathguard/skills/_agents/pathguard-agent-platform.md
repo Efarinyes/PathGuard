@@ -5,16 +5,17 @@ description: |
   coherència entre PWA, Android i iOS. L'única excepció a la
   regla "1 domini per agent". Carregar quan una tasca afecta
   el bridge TS, capacitor.config, o múltiples capes natives.
-triggers:
-  - Canvis a frontend/plugins/location-sync/src/index.ts
-  - Canvis a capacitor.config.ts / capacitor.config.json
-  - Constants compartides (GPS intervals, URLs, ports)
-  - Refactor de useLocationTracking, useOfflineRecovery
-  - Coordinació cross-platform
-agent_owner: platform-integration
-prerequisites:
-  - pathguard-state
-  - pathguard-golden-rules
+metadata:
+  triggers:
+    - Canvis a frontend/plugins/location-sync/src/index.ts
+    - Canvis a capacitor.config.ts / capacitor.config.json
+    - Constants compartides (GPS intervals, URLs, ports)
+    - Refactor de useLocationTracking, useOfflineRecovery
+    - Coordinació cross-platform
+  agent_owner: platform-integration
+  prerequisites:
+    - pathguard-state
+    - pathguard-golden-rules
 ---
 
 # Agent Platform Integration (transversal)

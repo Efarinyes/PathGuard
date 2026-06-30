@@ -4,14 +4,15 @@ description: |
   Configuració Capacitor (capacitor.config.ts, capacitor.config.json).
   Carregar quan es modifica la config nativa, URLs, plugins
   o webDir.
-triggers:
-  - Modificar capacitor.config.ts
-  - Modificar frontend/ios/App/App/capacitor.config.json
-  - Afegir plugin
-  - Canviar appId o appName
-agent_owner: platform-integration
-prerequisites:
-  - pathguard-agent-platform
+metadata:
+  triggers:
+    - Modificar capacitor.config.ts
+    - Modificar frontend/ios/App/App/capacitor.config.json
+    - Afegir plugin
+    - Canviar appId o appName
+  agent_owner: platform-integration
+  prerequisites:
+    - pathguard-agent-platform
 ---
 
 # Capacitor Config

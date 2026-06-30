@@ -3,14 +3,15 @@ name: pathguard-sdd-create-spec
 description: |
   Procediment per crear una nova spec SDD. Carregar quan
   s'inicia una feature, refactor, o canvi cross-capa.
-triggers:
-  - "vull afegir X"
-  - "cal canviar Y"
-  - Iniciar qualsevol tasca que toqui ≥2 capes
-agent_owner: tech-lead
-prerequisites:
-  - pathguard-state
-  - pathguard-golden-rules
+metadata:
+  triggers:
+    - "vull afegir X"
+    - "cal canviar Y"
+    - Iniciar qualsevol tasca que toqui ≥2 capes
+  agent_owner: tech-lead
+  prerequisites:
+    - pathguard-state
+    - pathguard-golden-rules
 ---
 
 # SDD — Crear una Spec

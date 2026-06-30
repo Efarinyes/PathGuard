@@ -4,15 +4,16 @@ description: |
   Rol: Agent QA / Testing. Propietari de l'estratègia de proves.
   Defineix la piràmide, els criteris d'acceptació, els casos
   crítics de negoci. L'única autoritat per dir "Beta Ready".
-triggers:
-  - Crear o modificar tests
-  - Validar una spec
-  - Definir criteris d'acceptació
-  - Proves de camp
-agent_owner: qa
-prerequisites:
-  - pathguard-state
-  - pathguard-golden-rules
+metadata:
+  triggers:
+    - Crear o modificar tests
+    - Validar una spec
+    - Definir criteris d'acceptació
+    - Proves de camp
+  agent_owner: qa
+  prerequisites:
+    - pathguard-state
+    - pathguard-golden-rules
 ---
 
 # Agent QA / Testing

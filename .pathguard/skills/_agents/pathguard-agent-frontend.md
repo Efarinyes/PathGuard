@@ -4,14 +4,15 @@ description: |
   Rol: Agent Frontend (Next.js / PWA). Propietari de tota la capa
   TypeScript/React del projecte. Carregar quan la tasca afecta
   UI, components, routing, hooks, services o testing frontend.
-triggers:
-  - Qualsevol canvi a frontend/app/, components/, hooks/, services/, lib/
-  - Decisions sobre UX, tokens Tailwind, accessibility
-  - Tests Vitest nous o modificats
-agent_owner: frontend
-prerequisites:
-  - pathguard-state
-  - pathguard-golden-rules
+metadata:
+  triggers:
+    - Qualsevol canvi a frontend/app/, components/, hooks/, services/, lib/
+    - Decisions sobre UX, tokens Tailwind, accessibility
+    - Tests Vitest nous o modificats
+  agent_owner: frontend
+  prerequisites:
+    - pathguard-state
+    - pathguard-golden-rules
 ---
 
 # Agent Frontend (Next.js / PWA)

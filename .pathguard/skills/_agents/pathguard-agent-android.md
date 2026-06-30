@@ -4,15 +4,16 @@ description: |
   Rol: Agent Android Native. Propietari de la capa Java/Kotlin
   del plugin Capacitor per Android. Carregar quan la tasca
   afecta LocationAcquirer, BufferStore, ForegroundService o Gradle.
-triggers:
-  - Qualsevol canvi a frontend/plugins/location-sync/android/
-  - Canvis a frontend/android/app/src/main/
-  - Gradle, manifest, recursos Android
-  - Tests JUnit natius nous o modificats
-agent_owner: android
-prerequisites:
-  - pathguard-state
-  - pathguard-golden-rules
+metadata:
+  triggers:
+    - Qualsevol canvi a frontend/plugins/location-sync/android/
+    - Canvis a frontend/android/app/src/main/
+    - Gradle, manifest, recursos Android
+    - Tests JUnit natius nous o modificats
+  agent_owner: android
+  prerequisites:
+    - pathguard-state
+    - pathguard-golden-rules
 ---
 
 # Agent Android Native

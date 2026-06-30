@@ -5,14 +5,15 @@ description: |
   spec activa, agent actiu, pròxima acció, bloquejos. Carregar
   A L'INICI DE TOTA SESSIÓ i abans de qualsevol canvi. Sense
   aquest skill no s'ha d'escriure codi.
-triggers:
-  - Inici de qualsevol sessió
-  - Després d'una pausa llarga
-  - Abans d'obrir una branca
-  - Abans de fer un commit
-  - Quan l'usuari diu "continua" o "on érem?"
-agent_owner: "*"
-prerequisites: []
+metadata:
+  triggers:
+    - Inici de qualsevol sessió
+    - Després d'una pausa llarga
+    - Abans d'obrir una branca
+    - Abans de fer un commit
+    - Quan l'usuari diu "continua" o "on érem?"
+  agent_owner: "*"
+  prerequisites: []
 ---
 
 # PathGuard — Estat del Projecte

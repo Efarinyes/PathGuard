@@ -4,15 +4,16 @@ description: |
   Rol: Agent Backend (FastAPI). Propietari de tota la capa Python
   del projecte. Carregar quan la tasca afecta API, models,
   serveis, autenticació, persistència o tests backend.
-triggers:
-  - Qualsevol canvi a backend/app/
-  - Nous endpoints, models, schemas
-  - Decisions sobre auth, group isolation, WebSocket
-  - Tests pytest nous o modificats
-agent_owner: backend
-prerequisites:
-  - pathguard-state
-  - pathguard-golden-rules
+metadata:
+  triggers:
+    - Qualsevol canvi a backend/app/
+    - Nous endpoints, models, schemas
+    - Decisions sobre auth, group isolation, WebSocket
+    - Tests pytest nous o modificats
+  agent_owner: backend
+  prerequisites:
+    - pathguard-state
+    - pathguard-golden-rules
 ---
 
 # Agent Backend (FastAPI)

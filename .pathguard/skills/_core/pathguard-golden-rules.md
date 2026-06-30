@@ -4,13 +4,14 @@ description: |
   Les 10 regles d'or no negociables del projecte. Apliquen a TOT
   el codi escrit. Són enforced, no aspiracionals. Carregar
   sempre que hi hagi dubtes sobre què és acceptable.
-triggers:
-  - Abans d'escriure codi
-  - En revisió de PR
-  - Quan es considera una excepció
-  - Quan algú proposa "només aquest cop..."
-agent_owner: "*"
-prerequisites: []
+metadata:
+  triggers:
+    - Abans d'escriure codi
+    - En revisió de PR
+    - Quan es considera una excepció
+    - Quan algú proposa "només aquest cop..."
+  agent_owner: "*"
+  prerequisites: []
 ---
 
 # PathGuard — Golden Rules

@@ -4,14 +4,15 @@ description: |
   Arquitectura i patrons del plugin LocationSync iOS (Swift).
   Carregar quan la tasca toca LocationAcquirer, LocationBuffer,
   LocationSyncService, BufferStore o LocationHttpClient.
-triggers:
-  - Modificar frontend/plugins/location-sync/ios/
-  - Modificar frontend/ios/
-  - Validar proves de camp iOS
-agent_owner: ios
-prerequisites:
-  - pathguard-agent-ios
-  - pathguard-bridge-contract
+metadata:
+  triggers:
+    - Modificar frontend/plugins/location-sync/ios/
+    - Modificar frontend/ios/
+    - Validar proves de camp iOS
+  agent_owner: ios
+  prerequisites:
+    - pathguard-agent-ios
+    - pathguard-bridge-contract
 ---
 
 # iOS Plugin — Detall tècnic

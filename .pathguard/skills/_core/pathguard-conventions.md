@@ -4,13 +4,14 @@ description: |
   Convencions operatives del projecte: branques, commits, IDs,
   idioma, semver. Carregar quan s'inicia qualsevol tasca que
   toqui el sistema de control de versions o la nomenclatura.
-triggers:
-  - Obrir/modificar una branca
-  - Fer commit
-  - Crear spec / ADR
-  - Crear tag / release
-agent_owner: "*"
-prerequisites: []
+metadata:
+  triggers:
+    - Obrir/modificar una branca
+    - Fer commit
+    - Crear spec / ADR
+    - Crear tag / release
+  agent_owner: "*"
+  prerequisites: []
 ---
 
 # PathGuard — Convencions

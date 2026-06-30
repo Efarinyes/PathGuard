@@ -4,14 +4,15 @@ description: |
   Pipelines CI/CD, secrets, builds i releases. Carregar quan
   es crea/modifica un workflow, es configuren secrets, o es
   planifica un release.
-triggers:
-  - Modificar .github/workflows/
-  - Configurar env vars
-  - Crear tag / release
-  - Build APK/IPA
-agent_owner: devops
-prerequisites:
-  - pathguard-agent-devops
+metadata:
+  triggers:
+    - Modificar .github/workflows/
+    - Configurar env vars
+    - Crear tag / release
+    - Build APK/IPA
+  agent_owner: devops
+  prerequisites:
+    - pathguard-agent-devops
 ---
 
 # CI/CD — Pipelines i operacions

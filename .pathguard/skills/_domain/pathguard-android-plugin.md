@@ -4,14 +4,15 @@ description: |
   Arquitectura i patrons del plugin LocationSync Android (Java).
   Carregar quan la tasca toca LocationAcquirer, LocationBuffer,
   BufferStore, ForegroundService o LocationHttpClient.
-triggers:
-  - Modificar frontend/plugins/location-sync/android/
-  - Modificar frontend/android/
-  - Validar proves de camp Android
-agent_owner: android
-prerequisites:
-  - pathguard-agent-android
-  - pathguard-bridge-contract
+metadata:
+  triggers:
+    - Modificar frontend/plugins/location-sync/android/
+    - Modificar frontend/android/
+    - Validar proves de camp Android
+  agent_owner: android
+  prerequisites:
+    - pathguard-agent-android
+    - pathguard-bridge-contract
 ---
 
 # Android Plugin — Detall tècnic

@@ -3,15 +3,16 @@ name: pathguard-sdd-implement
 description: |
   Procediment per implementar una spec aprovada. Carregar
   quan s'inicia la implementació d'una feature o refactor.
-triggers:
-  - Spec aprovada
-  - Inici d'implementació
-  - Obrir branca de feature
-agent_owner: <agent-owner>
-prerequisites:
-  - pathguard-sdd-create-spec (la spec)
-  - pathguard-sdd-review-spec (aprovada)
-  - pathguard-state (saber on som)
+metadata:
+  triggers:
+    - Spec aprovada
+    - Inici d'implementació
+    - Obrir branca de feature
+  agent_owner: <agent-owner>
+  prerequisites:
+    - pathguard-sdd-create-spec (la spec)
+    - pathguard-sdd-review-spec (aprovada)
+    - pathguard-state (saber on som)
 ---
 
 # SDD — Implementar una Spec

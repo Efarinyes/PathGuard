@@ -3,13 +3,14 @@ name: pathguard-branching
 description: |
   Convencions i procediment de branching. Carregar quan
   s'obre/modifica una branca o es planifica un release.
-triggers:
-  - Obrir branca
-  - Planificar release
-  - Decidir prefix
-agent_owner: "*"
-prerequisites:
-  - pathguard-conventions
+metadata:
+  triggers:
+    - Obrir branca
+    - Planificar release
+    - Decidir prefix
+  agent_owner: "*"
+  prerequisites:
+    - pathguard-conventions
 ---
 
 # Branching — Convencions

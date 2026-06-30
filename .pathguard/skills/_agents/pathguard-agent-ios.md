@@ -4,15 +4,16 @@ description: |
   Rol: Agent iOS Native. Propietari de la capa Swift/Xcode
   del plugin Capacitor per iOS. Carregar quan la tasca afecta
   LocationAcquirer, LocationBuffer, Package.swift o Info.plist.
-triggers:
-  - Qualsevol canvi a frontend/plugins/location-sync/ios/
-  - Canvis a frontend/ios/
-  - Xcode project, Info.plist, Capabilities
-  - Tests XCTest nous o modificats
-agent_owner: ios
-prerequisites:
-  - pathguard-state
-  - pathguard-golden-rules
+metadata:
+  triggers:
+    - Qualsevol canvi a frontend/plugins/location-sync/ios/
+    - Canvis a frontend/ios/
+    - Xcode project, Info.plist, Capabilities
+    - Tests XCTest nous o modificats
+  agent_owner: ios
+  prerequisites:
+    - pathguard-state
+    - pathguard-golden-rules
 ---
 
 # Agent iOS Native

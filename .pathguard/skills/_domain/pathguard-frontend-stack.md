@@ -4,13 +4,14 @@ description: |
   Detall de l'stack frontend (Next.js 16, React 19, Tailwind v4,
   Capacitor 8). Carregar quan la tasca requereixi saber quines
   versions, configuracions o patrons són vàlids.
-triggers:
-  - Afegir dependència frontend
-  - Decidir entre dues opcions d'implementació
-  - Resoldre warning de Next.js 16
-agent_owner: frontend
-prerequisites:
-  - pathguard-agent-frontend
+metadata:
+  triggers:
+    - Afegir dependència frontend
+    - Decidir entre dues opcions d'implementació
+    - Resoldre warning de Next.js 16
+  agent_owner: frontend
+  prerequisites:
+    - pathguard-agent-frontend
 ---
 
 # Frontend Stack — Detall tècnic

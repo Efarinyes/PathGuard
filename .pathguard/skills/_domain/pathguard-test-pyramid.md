@@ -3,14 +3,15 @@ name: pathguard-test-pyramid
 description: |
   Piràmide de tests i estratègia de testing. Carregar quan
   es crea o modifica un test, o quan es planifica cobertura.
-triggers:
-  - Crear o modificar test
-  - Definir cobertura per feature
-  - Decidir entre unit/integration/e2e
-  - Validar gates de release
-agent_owner: qa
-prerequisites:
-  - pathguard-agent-qa
+metadata:
+  triggers:
+    - Crear o modificar test
+    - Definir cobertura per feature
+    - Decidir entre unit/integration/e2e
+    - Validar gates de release
+  agent_owner: qa
+  prerequisites:
+    - pathguard-agent-qa
 ---
 
 # Test Pyramid — PathGuard

@@ -4,14 +4,15 @@ description: |
   Detall de l'stack backend (FastAPI 0.136, SQLAlchemy 2.0,
   Pydantic v2, dual DB SQLite/PostgreSQL). Carregar quan
   la tasca requereixi saber versions o patrons específics.
-triggers:
-  - Afegir endpoint
-  - Modificar model
-  - Decidir entre SQLite i PostgreSQL
-  - Errors de CORS, auth, WebSocket
-agent_owner: backend
-prerequisites:
-  - pathguard-agent-backend
+metadata:
+  triggers:
+    - Afegir endpoint
+    - Modificar model
+    - Decidir entre SQLite i PostgreSQL
+    - Errors de CORS, auth, WebSocket
+  agent_owner: backend
+  prerequisites:
+    - pathguard-agent-backend
 ---
 
 # Backend Stack — Detall tècnic

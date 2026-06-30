@@ -5,14 +5,15 @@ description: |
   signatura és IMMUTABLE excepte canvis coordinats amb tots
   els agents nadius. Carregar abans de qualsevol canvi al
   bridge o als plugins nadius.
-triggers:
-  - Modificar frontend/plugins/location-sync/src/index.ts
-  - Afegir mètode al plugin (iOS, Android)
-  - Modificar capacitor.config
-  - Resoldre conflicte de signatura
-agent_owner: platform-integration
-prerequisites:
-  - pathguard-agent-platform
+metadata:
+  triggers:
+    - Modificar frontend/plugins/location-sync/src/index.ts
+    - Afegir mètode al plugin (iOS, Android)
+    - Modificar capacitor.config
+    - Resoldre conflicte de signatura
+  agent_owner: platform-integration
+  prerequisites:
+    - pathguard-agent-platform
 ---
 
 # Bridge Contract — LocationSync Plugin

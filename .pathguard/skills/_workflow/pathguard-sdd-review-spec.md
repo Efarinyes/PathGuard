@@ -3,12 +3,13 @@ name: pathguard-sdd-review-spec
 description: |
   Procediment per revisar una spec SDD. Carregar quan el
   Tech Lead avalua una spec nova o modificada.
-triggers:
-  - Rebre spec per revisar
-  - Decidir si aprovar/rebutjar
-agent_owner: tech-lead
-prerequisites:
-  - pathguard-sdd-create-spec
+metadata:
+  triggers:
+    - Rebre spec per revisar
+    - Decidir si aprovar/rebutjar
+  agent_owner: tech-lead
+  prerequisites:
+    - pathguard-sdd-create-spec
 ---
 
 # SDD — Revisar una Spec

@@ -1,0 +1,1 @@
+../../../.pathguard/skills/_core/pathguard-state.md

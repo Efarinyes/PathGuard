@@ -1,6 +1,6 @@
 # PathGuard — Context
 
-**Regla d'or:** Carrega `.pathguard/skills/_core/pathguard-state.md` a l'inici de TOTA sessió. Sense això, no escriuis codi.
+**Regla d'or:** A l'inici de TOTA sessió, invoca `skill({ name: "pathguard-state" })` per obtenir branca, fase, spec activa, agent actiu, pròxim pas, bloquejos i pickup-point. Aquest skill llegeix `.pathguard/STATE.json`. Sense carregar-lo no s'ha d'escriure codi, obrir branques ni fer commits.
 
 ---
 
@@ -17,7 +17,7 @@
 9. **No magic** — tot explícit (imports, tipus, estats).
 10. **Si la solució sembla un hack, està rebutjada.** Resol l'arrel.
 
-Detall: `.pathguard/skills/_core/pathguard-golden-rules.md`
+Detall: skill `pathguard-golden-rules` (font: `.pathguard/skills/_core/pathguard-golden-rules.md`, accés opencode: `.opencode/skills/pathguard-golden-rules/SKILL.md`)
 
 ---
 
@@ -33,7 +33,7 @@ Detall: `.pathguard/skills/_core/pathguard-golden-rules.md`
 | **Capacitor config** | `frontend/capacitor.config.ts` | Agent Platform Integration |
 | **Specs** | `specs/` | Tech Lead |
 | **ADRs** | `docs/decisions/` | Tech Lead |
-| **Agents i skills** | `.pathguard/` | Tech Lead |
+| **Agents i skills** | `.pathguard/skills/` (font) + `.opencode/skills/` (índex opencode) | Tech Lead |
 
 ---
 
@@ -94,3 +94,4 @@ Veure `agents/INDEX.md` per mapeig complet.
 - **ADRs:** `docs/decisions/`
 - **Fase actual:** `docs/phases/phase-status.md`
 - **Roadmap beta:** `ROADMAP/beta-readiness.md`
+- **AGENTS — instruccions globals per a agents:** `AGENTS.md`

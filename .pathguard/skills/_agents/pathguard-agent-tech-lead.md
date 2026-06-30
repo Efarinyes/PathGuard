@@ -4,17 +4,18 @@ description: |
   Rol: Tech Lead / Coordinator. Decisor arquitectònic, validador
   multi-capa, controlador de conflictes. L'única autoritat per
   aprovar canvis cross-capa, crear ADRs i mergejar releases.
-triggers:
-  - Modificar CONTEXT.md
-  - Crear o modificar un ADR
-  - Validar spec cross-capa
-  - Crear tag / release
-  - Resoldre conflicte entre agents
-  - Modificar rols d'agent
-agent_owner: tech-lead
-prerequisites:
-  - pathguard-state
-  - pathguard-golden-rules
+metadata:
+  triggers:
+    - Modificar CONTEXT.md
+    - Crear o modificar un ADR
+    - Validar spec cross-capa
+    - Crear tag / release
+    - Resoldre conflicte entre agents
+    - Modificar rols d'agent
+  agent_owner: tech-lead
+  prerequisites:
+    - pathguard-state
+    - pathguard-golden-rules
 ---
 
 # Tech Lead / Coordinator
