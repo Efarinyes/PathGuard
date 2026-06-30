@@ -17,7 +17,7 @@ Aquest és l'**ÍNDEX** de tota la documentació del projecte. Si ets una IA o u
 1. [`../../CONTEXT.md`](../../CONTEXT.md) — Golden rules + manifest
 2. [`../../agents/INDEX.md`](../../agents/INDEX.md) — Mapa d'agents i skills
 3. [`../../specs/000-index.md`](../../specs/000-index.md) — Catàleg de specs
-4. Carrega `.pathguard/skills/_core/pathguard-state.md` (saber on som)
+4. Carrega `.opencode/skills/pathguard-core-state/SKILL.md` (saber on som)
 
 ## Porta d'entrada per a persones noves
 

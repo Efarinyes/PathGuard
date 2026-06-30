@@ -14,7 +14,7 @@ Si no recordes què és Z, mira `.pathguard/STATE.json` — allà ho diu. És un
 
 **Si obres la sessió amb una IA** (ChatGPT, Claude, etc.), digues-li exactament:
 
-> "Bon dia. Carrega l'skill `pathguard-state` i digue'm on som, quina spec estem tocant, i quin és el proper pas. No facis res més fins que jo t'ho confirmi."
+> "Bon dia. Carrega l'skill `pathguard-core-state` i digue'm on som, quina spec estem tocant, i quin és el proper pas. No facis res més fins que jo t'ho confirmi."
 
 **Si no saps què fer**, fes-te aquestes 3 preguntes en ordre:
 
@@ -43,7 +43,7 @@ Atura't. **No inventis.** Fes una d'aquestes quatre coses:
 
 1. **Mira `.pathguard/STATE.json`** — el camp `next_session_pickup` et diu on vas deixar-ho.
 2. **Mira `specs/000-index.md`** — quin número de spec estàvem tocant?
-3. **Pregunta a la IA** — *"Carrega `pathguard-state` i el skill que toqui. Explica'm on som."*
+3. **Pregunta a la IA** — *"Carrega `pathguard-core-state` i el skill que toqui. Explica'm on som."*
 4. **Si tot falla**, mira el `git log` de l'última hora per veure què s'ha tocat.
 
 **Mai no comencis a canviar coses sense saber on ets.** Millor 5 minuts de pausa que 1 hora de feina en la direcció equivocada.
@@ -84,7 +84,7 @@ Si has tocat branques, comprova que no tens canvis sense commit (`git status` ne
 
 A l'inici:
 
-> "Hola. Carrega `pathguard-state` i `pathguard-golden-rules`. Després digue'm què proposes i per què. No escriguis codi fins que jo t'ho confirmi."
+> "Hola. Carrega `pathguard-core-state` i `pathguard-core-golden-rules`. Després digue'm què proposes i per què. No escriguis codi fins que jo t'ho confirmi."
 
 Durant:
 

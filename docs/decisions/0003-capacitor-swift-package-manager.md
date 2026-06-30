@@ -57,7 +57,7 @@ Configuració:
 
 ### Mitigacions
 - Test build a cada canvi
-- Documentació clara a `pathguard-ios-plugin.md`
+- Documentació clara a `pathguard-domain-ios-plugin.md`
 
 ## Implementation
 
@@ -67,6 +67,6 @@ Configuració:
 
 ## References
 
-- `.pathguard/skills/_domain/pathguard-ios-plugin.md`
-- `.pathguard/skills/_domain/pathguard-capacitor-config.md`
+- `.opencode/skills/pathguard-domain-ios-plugin/SKILL.md`
+- `.opencode/skills/pathguard-domain-capacitor-config/SKILL.md`
 - [Capacitor SPM docs](https://capacitorjs.com/docs/ios/spm)

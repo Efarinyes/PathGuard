@@ -6,7 +6,7 @@ Guia per fer proves de camp amb dispositius reals.
 
 Per al procediment detallat, carrega el skill:
 
-> `.pathguard/skills/_domain/pathguard-field-testing.md`
+> `.opencode/skills/pathguard-domain-field-testing/SKILL.md`
 
 Aquest skill conté:
 - Dispositius requerits
@@ -21,7 +21,7 @@ La guia completa original (amb captures i procediment pas a pas) és a:
 
 > [`../archive/guia-proves-reals.md`](../archive/guia-proves-reals.md)
 
-⚠️ Aquest document està **arxivat** perquè la informació operativa ha passat al skill `pathguard-field-testing.md`. Es conserva per història.
+⚠️ Aquest document està **arxivat** perquè la informació operativa ha passat al skill `pathguard-domain-field-testing.md`. Es conserva per història.
 
 ## Resum dels 7 escenaris
 
@@ -65,6 +65,6 @@ Tots els 7 escenaris han de passar amb ✅. Qualsevol ⚠️ o ❌ requereix:
 
 ## Referències
 
-- Skill: `.pathguard/skills/_domain/pathguard-field-testing.md`
+- Skill: `.opencode/skills/pathguard-domain-field-testing/SKILL.md`
 - Detall original: [`../archive/guia-proves-reals.md`](../archive/guia-proves-reals.md)
-- Piràmide de tests: `.pathguard/skills/_domain/pathguard-test-pyramid.md`
+- Piràmide de tests: `.opencode/skills/pathguard-domain-test-pyramid/SKILL.md`

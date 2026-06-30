@@ -1,6 +1,6 @@
 # PathGuard — Context
 
-**Regla d'or:** A l'inici de TOTA sessió, invoca `skill({ name: "pathguard-state" })` per obtenir branca, fase, spec activa, agent actiu, pròxim pas, bloquejos i pickup-point. Aquest skill llegeix `.pathguard/STATE.json`. Sense carregar-lo no s'ha d'escriure codi, obrir branques ni fer commits.
+**Regla d'or:** A l'inici de TOTA sessió, invoca `skill({ name: "pathguard-core-state" })` per obtenir branca, fase, spec activa, agent actiu, pròxim pas, bloquejos i pickup-point. Aquest skill llegeix `.pathguard/STATE.json`. Sense carregar-lo no s'ha d'escriure codi, obrir branques ni fer commits.
 
 ---
 
@@ -17,7 +17,7 @@
 9. **No magic** — tot explícit (imports, tipus, estats).
 10. **Si la solució sembla un hack, està rebutjada.** Resol l'arrel.
 
-Detall: skill `pathguard-golden-rules` (font: `.pathguard/skills/_core/pathguard-golden-rules.md`, accés opencode: `.opencode/skills/pathguard-golden-rules/SKILL.md`)
+Detall: skill `pathguard-core-golden-rules` (font: `.opencode/skills/pathguard-core-golden-rules/SKILL.md`, accés opencode: `.opencode/skills/pathguard-core-golden-rules/SKILL.md`)
 
 ---
 
@@ -33,7 +33,7 @@ Detall: skill `pathguard-golden-rules` (font: `.pathguard/skills/_core/pathguard
 | **Capacitor config** | `frontend/capacitor.config.ts` | Agent Platform Integration |
 | **Specs** | `specs/` | Tech Lead |
 | **ADRs** | `docs/decisions/` | Tech Lead |
-| **Agents i skills** | `.pathguard/skills/` (font) + `.opencode/skills/` (índex opencode) | Tech Lead |
+| **Agents i skills** | `.opencode/skills/` (font) + `.opencode/skills/` (índex opencode) | Tech Lead |
 
 ---
 
@@ -43,14 +43,14 @@ Detall: skill `pathguard-golden-rules` (font: `.pathguard/skills/_core/pathguard
 Veure `agents/INDEX.md` per mapeig complet.
 
 ### 2. Si crees/modifiques/valides una spec, carrega el workflow
-- `pathguard-sdd-create-spec`
-- `pathguard-sdd-review-spec`
-- `pathguard-sdd-implement`
-- `pathguard-sdd-validate`
+- `pathguard-workflow-sdd-create-spec`
+- `pathguard-workflow-sdd-review-spec`
+- `pathguard-workflow-sdd-implement`
+- `pathguard-workflow-sdd-validate`
 
 ### 3. Si toques branques o commits, carrega
-- `pathguard-branching`
-- `pathguard-commit`
+- `pathguard-workflow-branching`
+- `pathguard-workflow-commit`
 
 ---
 

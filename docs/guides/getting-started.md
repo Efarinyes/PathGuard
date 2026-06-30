@@ -83,7 +83,7 @@ PathGuard-project/
 
 ## Com treballar
 
-1. **Carrega** `.pathguard/skills/_core/pathguard-state.md` (saber on som)
+1. **Carrega** `.opencode/skills/pathguard-core-state/SKILL.md` (saber on som)
 2. **Identifica el teu rol** a `agents/INDEX.md`
 3. **Carrega el skill del teu rol**
 4. **Si la tasca és SDD**, carrega el skill de workflow

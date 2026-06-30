@@ -1,1 +1,0 @@
-../../../.pathguard/skills/_workflow/pathguard-sdd-validate.md

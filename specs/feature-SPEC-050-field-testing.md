@@ -26,7 +26,7 @@ adr: null
 Executar i documentar els **7 escenaris de proves de camp** amb dispositius reals per validar que la beta és llesta per a usuaris reals.
 
 ## 2. Context
-El skill `.pathguard/skills/_domain/pathguard-field-testing.md` ja defineix els 7 escenaris. Aquesta spec els **executa** i en documenta els resultats.
+El skill `.opencode/skills/pathguard-domain-field-testing/SKILL.md` ja defineix els 7 escenaris. Aquesta spec els **executa** i en documenta els resultats.
 
 ## 3. Problema
 - No s'ha fet cap validació de camp amb iOS (Android parcial)
@@ -83,6 +83,6 @@ El skill `.pathguard/skills/_domain/pathguard-field-testing.md` ja defineix els 
 - Field tests en producció (sempre staging o local)
 
 ## 10. Referències
-- `.pathguard/skills/_domain/pathguard-field-testing.md` (procediment)
+- `.opencode/skills/pathguard-domain-field-testing/SKILL.md` (procediment)
 - `docs/guides/real-world-testing.md` (guia)
 - `docs/archive/guia-proves-reals.md` (guia original)

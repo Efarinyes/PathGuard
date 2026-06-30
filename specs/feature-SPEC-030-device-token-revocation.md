@@ -90,7 +90,7 @@ Si un dispositiu es perd o el token filtra, no hi ha manera d'invalidar-lo. Per 
    - UI dashboard
    - Substitució localStorage → Capacitor Preferences
    - Tests Vitest
-4. **Platform Integration:** actualitza skill `pathguard-bridge-contract.md`
+4. **Platform Integration:** actualitza skill `pathguard-domain-bridge-contract.md`
 5. **QA:** e2e test + field test
 6. **PRs** ordenats a develop
 
@@ -109,9 +109,9 @@ Si un dispositiu es perd o el token filtra, no hi ha manera d'invalidar-lo. Per 
 
 ## 10. Referències
 - `audit_native_layer.md` secció 4 (R-P0-4)
-- `.pathguard/skills/_domain/pathguard-backend-models.md`
-- `.pathguard/skills/_domain/pathguard-capacitor-config.md`
-- `.pathguard/skills/_domain/pathguard-bridge-contract.md`
+- `.opencode/skills/_domain/pathguard-backend-models.md`
+- `.opencode/skills/pathguard-domain-capacitor-config/SKILL.md`
+- `.opencode/skills/pathguard-domain-bridge-contract/SKILL.md`
 
 ---
 

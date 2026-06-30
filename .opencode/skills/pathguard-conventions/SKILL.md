@@ -1,1 +1,0 @@
-../../../.pathguard/skills/_core/pathguard-conventions.md

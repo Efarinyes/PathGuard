@@ -65,4 +65,4 @@ Actualment no hi ha flux de release definit. Es fan builds manuals quan cal.
 
 ## 10. Referències
 - SPEC-060 (CI/CD)
-- `.pathguard/skills/_domain/pathguard-cicd.md`
+- `.opencode/skills/pathguard-domain-cicd/SKILL.md`

@@ -31,7 +31,7 @@ El contracte actual a `frontend/plugins/location-sync/src/index.ts` ja té 6 mè
 - iOS implementa tots 6 però `markBackgrounded/Forwarded` són buits
 - Android implementa tots 6 via intents al service
 - Frontend en crida 4-5 però no tots de forma consistent
-- El skill `pathguard-bridge-contract.md` és bo però no és enforcing
+- El skill `pathguard-domain-bridge-contract.md` és bo però no és enforcing
 
 ## 3. Problema
 - Sense contracte explícit, els agents natius tendeixen a divergir
@@ -46,7 +46,7 @@ El contracte actual a `frontend/plugins/location-sync/src/index.ts` ja té 6 mè
 
 ## 5. Criteris d'acceptació
 - [ ] AC-1: `LocationSync` té exactament 6 mètodes (signatura TS canònica)
-- [ ] AC-2: Skill `pathguard-bridge-contract.md` actualitzat amb la v2
+- [ ] AC-2: Skill `pathguard-domain-bridge-contract.md` actualitzat amb la v2
 - [ ] AC-3: Tests Vitest per la interfície TS (signatura + tipus)
 - [ ] AC-4: iOS implementa els 6 (incloent `markBackgrounded/Forwarded` no buits)
 - [ ] AC-5: Android implementa els 6
@@ -79,5 +79,5 @@ El contracte actual a `frontend/plugins/location-sync/src/index.ts` ja té 6 mè
 
 ## 10. Referències
 - `audit_native_layer.md` (multi-referència)
-- `.pathguard/skills/_domain/pathguard-bridge-contract.md`
+- `.opencode/skills/pathguard-domain-bridge-contract/SKILL.md`
 - SPEC-020, SPEC-030

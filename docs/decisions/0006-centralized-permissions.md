@@ -82,7 +82,7 @@ manager.requestWhenInUseAuthorization()
 ### Mitigacions
 - `LocationSync.startTracking` retorna error amb codi (`permission_denied`)
 - UI mostra error clar i enllaç a settings
-- Documentació al skill `pathguard-bridge-contract.md`
+- Documentació al skill `pathguard-domain-bridge-contract.md`
 
 ## Implementation
 
@@ -94,4 +94,4 @@ manager.requestWhenInUseAuthorization()
 
 - SPEC-020 (Consolidar captura GPS), subtask 020.6
 - `audit_native_layer.md` secció 6 (R-P0-5)
-- `.pathguard/skills/_domain/pathguard-bridge-contract.md`
+- `.opencode/skills/pathguard-domain-bridge-contract/SKILL.md`

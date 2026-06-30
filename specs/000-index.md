@@ -60,7 +60,7 @@ Cap encara.
 
 ## Com crear una nova spec
 
-1. Carrega `.pathguard/skills/_workflow/pathguard-sdd-create-spec.md`
+1. Carrega `.opencode/skills/pathguard-workflow-sdd-create-spec/SKILL.md`
 2. Segueix el template
 3. Troba el següent NNN disponible per tipus
 4. Crea `specs/<type>-SPEC-NNN-kebab-case-titol.md`
@@ -76,6 +76,6 @@ Cap encara.
 
 ## Referències
 
-- Workflow: `.pathguard/skills/_workflow/pathguard-sdd-create-spec.md`
-- Template: `.pathguard/skills/_workflow/pathguard-sdd-create-spec.md` (secció Template)
-- Review: `.pathguard/skills/_workflow/pathguard-sdd-review-spec.md`
+- Workflow: `.opencode/skills/pathguard-workflow-sdd-create-spec/SKILL.md`
+- Template: `.opencode/skills/pathguard-workflow-sdd-create-spec/SKILL.md` (secció Template)
+- Review: `.opencode/skills/pathguard-workflow-sdd-review-spec/SKILL.md`

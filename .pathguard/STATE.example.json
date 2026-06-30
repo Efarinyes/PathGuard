@@ -1,11 +1,13 @@
 {
   "bootstrap": {
-    "rule": "Mai no escriuis codi sense carregar primer el skill pathguard-state.",
-    "first_skill_to_load": "pathguard-state",
-    "first_skill_path": ".pathguard/skills/_core/pathguard-state.md",
+    "rule": "Mai no escriuis codi sense carregar primer el skill pathguard-core-state.",
+    "first_skill_to_load": "pathguard-core-state",
+    "first_skill_path": ".opencode/skills/pathguard-core-state/SKILL.md",
     "what_this_skill_does": "Llegeix aquest fitxer STATE.json i retorna un resum estructurat: branca actual, agent actiu, spec activa, pròxim pas, bloquejos i pickup-point per la propera sessió.",
     "if_state_is_stale": "Si last_updated té més de 24h, pregunta a l'usuari o consulta git log per validar l'estat real abans d'actuar.",
-    "next_skill_to_load": "Segons la tasca — veure agents/INDEX.md o .pathguard/skills/_core/pathguard-conventions.md"
+    "next_skill_to_load": "Segons la tasca — veure agents/INDEX.md o .opencode/skills/pathguard-core-conventions/SKILL.md",
+    "how_to_resume": "Quan tornis a obrir sessió: 1) Comprova branca amb 'git branch --show-current'. 2) Llegeix les primeres 30 línies d'aquest fitxer. 3) Mira 'session.next_action' per saber què toca. 4) Si tens dubtes, obre el fitxer next_session_pickup d'aquest STATE.json.",
+    "work_mode": "Sol. No calen PRs per canvis estructurals o de documentació. Per canvis de funcionalitat amb risc, crear branca + PR per revisió."
   },
   "version": "1.0.0",
   "schema_note": "Aquest fitxer és un EXEMPLE commited (plantilla). La instància real és .pathguard/STATE.json (gitignored, regenerable des d'aquest). Conté camp 'bootstrap' per a auto-orientació de models nous.",
@@ -14,9 +16,9 @@
     "active_agent": "tech-lead",
     "active_spec": "SPEC-010",
     "active_branch": "feat/ios-native-layer",
-    "last_action": "Fase 0 fusionada a feat/ios-native-layer (merge commit 0641ac0). Camp bootstrap afegit al STATE.json. Sistema SDD + skills + agents completament disponible a la branca de treball.",
-    "next_action": "Revisar PR de Fase 0 a GitHub (https://github.com/Efarinyes/PathGuard/pull/new/refactor/fase-0-structural-restructuring). Quan estigui llest, començar SPEC-010 obrint branca fix/SPEC-010-restore-android-plugin des de main.",
-    "blocked_by": ["PR de Fase 0 pendent de revisió (la branca origen s'esborrarà quan el PR es fusioni o es cancel·li)"]
+    "last_action": "Fase 0 fusionada a feat/ios-native-layer. Bootstrap afegit al STATE.json. Sistema SDD + skills + agents completament disponible a la branca de treball. Decidit: treball sol, sense PRs per canvis estructurals.",
+    "next_action": "Decidir si vols fusionar refactor/fase-0-structural-restructuring a develop (fast-forward, sense conflictes) o mantenir-la com a branca independent. Un cop fet, començar SPEC-010 obrint branca fix/SPEC-010-restore-android-plugin des de main.",
+    "blocked_by": []
   },
   "project": {
     "current_branch": "develop",
@@ -162,5 +164,5 @@
     "spec_id_format": "<type>-SPEC-NNN (type in: feature, tech, integration)",
     "adr_id_format": "NNNN-kebab-case-titol.md"
   },
-  "next_session_pickup": "Carregar el skill pathguard-state. Validar el PR de Fase 0 a GitHub (https://github.com/Efarinyes/PathGuard/pull/new/refactor/fase-0-structural-restructuring). Quan estigui aprovat i fusionat a develop, esborrar la branca refactor/fase-0-structural-restructuring (ja no cal). Obrir branca fix/SPEC-010-restore-android-plugin des de main i començar la restauració del plugin Android (3 fitxers: BufferStore.java, LocationHttpClient.java, LocationSyncForegroundService.java)."
+  "next_session_pickup": "Com sempre: obre el projecte, llegeix les primeres 30 línies de .pathguard/STATE.json (camp bootstrap + session), segueix session.next_action. Si encara tens dubtes, pregunta."
 }

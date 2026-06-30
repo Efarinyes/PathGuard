@@ -1,1 +1,0 @@
-../../../.pathguard/skills/_domain/pathguard-android-plugin.md

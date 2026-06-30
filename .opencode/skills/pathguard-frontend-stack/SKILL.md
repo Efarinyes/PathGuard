@@ -1,1 +1,0 @@
-../../../.pathguard/skills/_domain/pathguard-frontend-stack.md

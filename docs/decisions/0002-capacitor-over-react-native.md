@@ -80,8 +80,8 @@ Arquitectura:
 - Documentació Capacitor menys extensa que RN
 
 ### Mitigacions
-- Skill `pathguard-bridge-contract.md` com a font única
-- Tests cross-platform al skill `pathguard-test-pyramid`
+- Skill `pathguard-domain-bridge-contract.md` com a font única
+- Tests cross-platform al skill `pathguard-domain-test-pyramid`
 - Field tests validatius
 
 ## Implementation
@@ -92,5 +92,5 @@ Arquitectura:
 
 ## References
 
-- `.pathguard/skills/_domain/pathguard-capacitor-config.md`
+- `.opencode/skills/pathguard-domain-capacitor-config/SKILL.md`
 - [Capacitor docs](https://capacitorjs.com/docs)

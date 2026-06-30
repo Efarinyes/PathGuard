@@ -9,7 +9,7 @@ Aquest fitxer és la **primera lectura obligatòria** per a qualsevol agent open
 Invocar **abans de qualsevol altra cosa**, com a primera crida de tool:
 
 ```
-skill({ name: "pathguard-state" })
+skill({ name: "pathguard-core-state" })
 ```
 
 Aquest skill llegeix `.pathguard/STATE.json` i retorna:
@@ -28,14 +28,14 @@ Aquest skill llegeix `.pathguard/STATE.json` i retorna:
 
 ## Com es resolen els skills
 
-Tots els 26 skills de PathGuard viuen a `.opencode/skills/<nom>/SKILL.md` i són **symlinks** cap a `.pathguard/skills/<categoria>/<nom>.md`. La font única de veritat és `.pathguard/skills/`.
+Tots els 26 skills de PathGuard viuen a `.opencode/skills/<nom>/SKILL.md` i són **symlinks** cap a `.opencode/skills/<categoria>/<nom>.md`. La font única de veritat és `.opencode/skills/`.
 
 | Categoria | Ubicació font | Què conté |
 |---|---|---|
-| `_core` | `.pathguard/skills/_core/` | `pathguard-state`, `pathguard-golden-rules`, `pathguard-conventions` |
-| `_agents` | `.pathguard/skills/_agents/` | 8 skills de rol (frontend, backend, android, ios, platform, qa, devops, tech-lead) |
-| `_domain` | `.pathguard/skills/_domain/` | 9 skills de domini (stacks, plugins, CI/CD, testing) |
-| `_workflow` | `.pathguard/skills/_workflow/` | 6 skills de workflow (SDD, branching, commit) |
+| `_core` | `.opencode/skills/_core/` | `pathguard-core-state`, `pathguard-core-golden-rules`, `pathguard-core-conventions` |
+| `_agents` | `.opencode/skills/_agents/` | 8 skills de rol (frontend, backend, android, ios, platform, qa, devops, tech-lead) |
+| `_domain` | `.opencode/skills/_domain/` | 9 skills de domini (stacks, plugins, CI/CD, testing) |
+| `_workflow` | `.opencode/skills/_workflow/` | 6 skills de workflow (SDD, branching, commit) |
 
 Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
 
@@ -43,16 +43,16 @@ Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
 
 ## Convencions d'ús dels skills
 
-1. **Carrega `pathguard-state` SEMPRE primer.**
-2. **Carrega `pathguard-golden-rules` i `pathguard-conventions`** abans d'escriure codi o obrir branques.
+1. **Carrega `pathguard-core-state` SEMPRE primer.**
+2. **Carrega `pathguard-core-golden-rules` i `pathguard-core-conventions`** abans d'escriure codi o obrir branques.
 3. **Carrega el skill del teu rol** (`pathguard-agent-<rol>`) quan la tasca afecta el teu domini.
-4. **Carrega skills de domini** segons la zona tocada (ex: `pathguard-ios-plugin` si toques Swift/CLLocationManager).
-5. **Carrega skills de workflow** quan iniciïs un cicle SDD (`pathguard-sdd-create-spec`, etc.).
+4. **Carrega skills de domini** segons la zona tocada (ex: `pathguard-domain-ios-plugin` si toques Swift/CLLocationManager).
+5. **Carrega skills de workflow** quan iniciïs un cicle SDD (`pathguard-workflow-sdd-create-spec`, etc.).
 6. **No carreguis `customize-opencode`** — és un skill built-in d'opencode per configurar la pròpia eina, no per treballar al projecte.
 
 ---
 
-## Regles d'or (resum; detall a `pathguard-golden-rules`)
+## Regles d'or (resum; detall a `pathguard-core-golden-rules`)
 
 1. SOLID + CleanCode + SRP
 2. Zero `fetch()` en components — tot via `services/`
@@ -89,7 +89,7 @@ Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
 | Capacitor config | `frontend/capacitor.config.ts` | Agent Platform Integration |
 | Specs | `specs/` | Tech Lead |
 | ADRs | `docs/decisions/` | Tech Lead |
-| Skills (font) | `.pathguard/skills/` | Tech Lead |
+| Skills (font) | `.opencode/skills/` | Tech Lead |
 | Skills (índex opencode) | `.opencode/skills/` | Tech Lead |
 
 ---
@@ -107,7 +107,7 @@ Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
 
 ## Referència ràpida
 
-- Estat del projecte: `.pathguard/STATE.json` (llegit pel skill `pathguard-state`)
+- Estat del projecte: `.pathguard/STATE.json` (llegit pel skill `pathguard-core-state`)
 - Mapa d'agents i skills: `agents/INDEX.md`
 - Catàleg de specs: `specs/000-index.md`
 - Índex de documentació: `docs/INDEX.md`

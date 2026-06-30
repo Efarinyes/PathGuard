@@ -69,7 +69,7 @@ else:
 ### Mitigacions
 - Helper `upsert_location()` amb fallback
 - Tests que validin ambdós dialectes
-- Documentació clara a `pathguard-backend-stack.md`
+- Documentació clara a `pathguard-domain-backend-stack.md`
 
 ## Implementation
 
@@ -80,5 +80,5 @@ else:
 ## References
 
 - `docs/FASE-G-POSTGRESQL-MIGRATION.md` (arxivat)
-- `.pathguard/skills/_domain/pathguard-backend-stack.md`
+- `.opencode/skills/pathguard-domain-backend-stack/SKILL.md`
 - [Supabase docs](https://supabase.com/docs)

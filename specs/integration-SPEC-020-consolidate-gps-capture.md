@@ -106,7 +106,7 @@ Aquesta spec toca **4 agents** i requereix coordinació:
 
 ### 020.7 — Eliminar Geolocation
 - [ ] AC-1: `@capacitor/geolocation` no s'usa quan hi ha plugin
-- [ ] AC-2: Documentat al skill `pathguard-bridge-contract.md`
+- [ ] AC-2: Documentat al skill `pathguard-domain-bridge-contract.md`
 
 ## 7. Riscos identificats
 - **R1:** Regressió en captura GPS (menys punts, més errors)
@@ -124,7 +124,7 @@ Aquesta spec toca **4 agents** i requereix coordinació:
 
 **Ordre:**
 1. **Tech Lead:** redacta ADR-0004 (1 font GPS)
-2. **Platform Integration:** actualitza skill `pathguard-bridge-contract.md` amb el contracte v2
+2. **Platform Integration:** actualitza skill `pathguard-domain-bridge-contract.md` amb el contracte v2
 3. **iOS (020.1, 020.2, 020.3):** branca `fix/SPEC-020-ios-gps-fixes` (pot ser paral·lel)
 4. **Frontend (020.4, 020.5):** branca `fix/SPEC-020-frontend-gps-refactor`
 5. **iOS (020.6):** permisos centralitzats
@@ -146,10 +146,10 @@ Aquesta spec toca **4 agents** i requereix coordinació:
 
 ## 11. Referències
 - `audit_native_layer.md` (5 issues)
-- `.pathguard/skills/_domain/pathguard-ios-plugin.md`
-- `.pathguard/skills/_domain/pathguard-android-plugin.md`
-- `.pathguard/skills/_domain/pathguard-bridge-contract.md`
-- `.pathguard/skills/_domain/pathguard-frontend-stack.md`
+- `.opencode/skills/pathguard-domain-ios-plugin/SKILL.md`
+- `.opencode/skills/pathguard-domain-android-plugin/SKILL.md`
+- `.opencode/skills/pathguard-domain-bridge-contract/SKILL.md`
+- `.opencode/skills/pathguard-domain-frontend-stack/SKILL.md`
 
 ---
 
