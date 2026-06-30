@@ -1,3 +1,5 @@
+<!-- ARXIVAT 2026-06-30: document històric. Veure docs/INDEX.md per la documentació activa. -->
+
 # PathGuard — Guia de Proves Reals en Dispositius
 
 ## Resum
