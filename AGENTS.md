@@ -28,14 +28,14 @@ Aquest skill llegeix `.pathguard/STATE.json` i retorna:
 
 ## Com es resolen els skills
 
-Tots els 26 skills de PathGuard viuen a `.opencode/skills/<nom>/SKILL.md` i són **symlinks** cap a `.opencode/skills/<categoria>/<nom>.md`. La font única de veritat és `.opencode/skills/`.
+Tots els 26 skills de PathGuard viuen a `.opencode/skills/<nom>/SKILL.md` com a fitxers plans (un directori per skill, format natiu opencode). Cap symlink, cap duplicació. La categoria es dedueix pel prefix del nom: `pathguard-core-*` (3), `pathguard-agent-*` (8), `pathguard-domain-*` (9), `pathguard-workflow-*` (6).
 
-| Categoria | Ubicació font | Què conté |
+| Categoria | Prefix al nom | Què conté |
 |---|---|---|
-| `_core` | `.opencode/skills/_core/` | `pathguard-core-state`, `pathguard-core-golden-rules`, `pathguard-core-conventions` |
-| `_agents` | `.opencode/skills/_agents/` | 8 skills de rol (frontend, backend, android, ios, platform, qa, devops, tech-lead) |
-| `_domain` | `.opencode/skills/_domain/` | 9 skills de domini (stacks, plugins, CI/CD, testing) |
-| `_workflow` | `.opencode/skills/_workflow/` | 6 skills de workflow (SDD, branching, commit) |
+| `core` | `pathguard-core-*` | 3 skills: `pathguard-core-state`, `pathguard-core-golden-rules`, `pathguard-core-conventions` |
+| `agent` | `pathguard-agent-*` | 8 skills de rol: frontend, backend, android, ios, platform, qa, devops, tech-lead |
+| `domain` | `pathguard-domain-*` | 9 skills de domini: stacks, plugins, CI/CD, testing |
+| `workflow` | `pathguard-workflow-*` | 6 skills de workflow: SDD, branching, commit |
 
 Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
 
@@ -89,8 +89,7 @@ Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
 | Capacitor config | `frontend/capacitor.config.ts` | Agent Platform Integration |
 | Specs | `specs/` | Tech Lead |
 | ADRs | `docs/decisions/` | Tech Lead |
-| Skills (font) | `.opencode/skills/` | Tech Lead |
-| Skills (índex opencode) | `.opencode/skills/` | Tech Lead |
+| Skills | `.opencode/skills/` | Tech Lead |
 
 ---
 

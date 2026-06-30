@@ -17,7 +17,7 @@
 9. **No magic** — tot explícit (imports, tipus, estats).
 10. **Si la solució sembla un hack, està rebutjada.** Resol l'arrel.
 
-Detall: skill `pathguard-core-golden-rules` (font: `.opencode/skills/pathguard-core-golden-rules/SKILL.md`, accés opencode: `.opencode/skills/pathguard-core-golden-rules/SKILL.md`)
+Detall: skill `pathguard-core-golden-rules` (a `.opencode/skills/pathguard-core-golden-rules/SKILL.md`)
 
 ---
 
@@ -33,7 +33,7 @@ Detall: skill `pathguard-core-golden-rules` (font: `.opencode/skills/pathguard-c
 | **Capacitor config** | `frontend/capacitor.config.ts` | Agent Platform Integration |
 | **Specs** | `specs/` | Tech Lead |
 | **ADRs** | `docs/decisions/` | Tech Lead |
-| **Agents i skills** | `.opencode/skills/` (font) + `.opencode/skills/` (índex opencode) | Tech Lead |
+| **Agents i skills** | `.opencode/skills/` | Tech Lead |
 
 ---
 
