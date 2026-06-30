@@ -1,14 +1,22 @@
 {
+  "bootstrap": {
+    "rule": "Mai no escriuis codi sense carregar primer el skill pathguard-state.",
+    "first_skill_to_load": "pathguard-state",
+    "first_skill_path": ".pathguard/skills/_core/pathguard-state.md",
+    "what_this_skill_does": "Llegeix aquest fitxer STATE.json i retorna un resum estructurat: branca actual, agent actiu, spec activa, pròxim pas, bloquejos i pickup-point per la propera sessió.",
+    "if_state_is_stale": "Si last_updated té més de 24h, pregunta a l'usuari o consulta git log per validar l'estat real abans d'actuar.",
+    "next_skill_to_load": "Segons la tasca — veure agents/INDEX.md o .pathguard/skills/_core/pathguard-conventions.md"
+  },
   "version": "1.0.0",
-  "schema_note": "Aquest fitxer és un EXEMPLE commited. La instància real és .pathguard/STATE.json (gitignored).",
-  "last_updated": "2026-06-30T12:00:00Z",
+  "schema_note": "Aquest fitxer és un EXEMPLE commited (plantilla). La instància real és .pathguard/STATE.json (gitignored, regenerable des d'aquest). Conté camp 'bootstrap' per a auto-orientació de models nous.",
+  "last_updated": "2026-06-30T13:00:00Z",
   "session": {
     "active_agent": "tech-lead",
     "active_spec": "SPEC-010",
-    "active_branch": "refactor/fase-0-structural-restructuring",
-    "last_action": "Fase 0 implementada: 26 skills, 11 specs, 6 ADRs, docs reorganitzats, repo netejat (branques + tags antics)",
-    "next_action": "Validar Fase 0 → iniciar SPEC-010 (restaurar plugin Android)",
-    "blocked_by": []
+    "active_branch": "feat/ios-native-layer",
+    "last_action": "Fase 0 fusionada a feat/ios-native-layer (merge commit 0641ac0). Camp bootstrap afegit al STATE.json. Sistema SDD + skills + agents completament disponible a la branca de treball.",
+    "next_action": "Revisar PR de Fase 0 a GitHub (https://github.com/Efarinyes/PathGuard/pull/new/refactor/fase-0-structural-restructuring). Quan estigui llest, començar SPEC-010 obrint branca fix/SPEC-010-restore-android-plugin des de main.",
+    "blocked_by": ["PR de Fase 0 pendent de revisió (la branca origen s'esborrarà quan el PR es fusioni o es cancel·li)"]
   },
   "project": {
     "current_branch": "develop",
@@ -26,8 +34,8 @@
     "production": "main",
     "integration": "develop",
     "active_work": [
-      "feat/ios-native-layer (capa iOS provisional, plugin trencat — SPEC-010)",
-      "refactor/fase-0-structural-restructuring (Fase 0 — pendent merge a develop)"
+      "feat/ios-native-layer (capa iOS provisional, plugin trencat — SPEC-010; ara té Fase 0 mergejada)",
+      "refactor/fase-0-structural-restructuring (Fase 0 — pendent PR a develop, s'esborrarà quan es fusioni o cancel·li)"
     ]
   },
   "active_specs": [
@@ -154,5 +162,5 @@
     "spec_id_format": "<type>-SPEC-NNN (type in: feature, tech, integration)",
     "adr_id_format": "NNNN-kebab-case-titol.md"
   },
-  "next_session_pickup": "Revisar PR de Fase 0 a develop. Si aprovat, començar SPEC-010 obrint branca fix/SPEC-010-restore-android-plugin des de main. Identificar els 3 fitxers esborrats via git log. Aplicar tests Gradle."
+  "next_session_pickup": "Carregar el skill pathguard-state. Validar el PR de Fase 0 a GitHub (https://github.com/Efarinyes/PathGuard/pull/new/refactor/fase-0-structural-restructuring). Quan estigui aprovat i fusionat a develop, esborrar la branca refactor/fase-0-structural-restructuring (ja no cal). Obrir branca fix/SPEC-010-restore-android-plugin des de main i començar la restauració del plugin Android (3 fitxers: BufferStore.java, LocationHttpClient.java, LocationSyncForegroundService.java)."
 }
