@@ -47,5 +47,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>PathGuard necessita el teu permís per compartir la teva ubicació amb el cuidador, fins i tot quan l'app està en segon pla.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>PathGuard necessita accés a la ubicació per mostrar la ruta del passeig.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 </dict>
 </plist>
