@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { WS_BASE_URL, WS_FAST_RECONNECT_ATTEMPTS, WS_RECONNECT_BASE_DELAY_MS, WS_RECONNECT_MAX_DELAY_MS, WS_INFINITE_RETRY_DELAY_MS } from '@/lib/config';
+import { WS_BASE_URL, WS_FAST_RECONNECT_ATTEMPTS, WS_RECONNECT_BASE_DELAY_MS, WS_RECONNECT_MAX_DELAY_MS, WS_INFINITE_RETRY_DELAY_MS, WS_HEALTH_PING_INTERVAL_MS } from '@/lib/config';
 
 export interface UseWebSocketOptions {
   debounceMs?: number;
@@ -137,10 +137,20 @@ export function useWebSocket<T = unknown>(
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('online', handleOnline);
 
+    const healthPing = setInterval(() => {
+      if (!isMounted.current) return;
+      if (!enabled) return;
+      if (ws.current?.readyState === WebSocket.OPEN) return;
+      reconnectAttempt.current = 0;
+      connect();
+    }, WS_HEALTH_PING_INTERVAL_MS);
+
     return () => {
       isMounted.current = false;
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('online', handleOnline);
+
+      clearInterval(healthPing);
 
       if (reconnectTimeout.current) {
         clearTimeout(reconnectTimeout.current);
