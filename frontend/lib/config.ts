@@ -14,6 +14,7 @@ export const WS_FAST_RECONNECT_ATTEMPTS = 5;
 export const WS_RECONNECT_BASE_DELAY_MS = 1000;
 export const WS_RECONNECT_MAX_DELAY_MS = 16000;
 export const WS_INFINITE_RETRY_DELAY_MS = 30000;
+export const WS_HEALTH_PING_INTERVAL_MS = 15000;
 
 // GPS / Location tracking constants
 export const GPS_MIN_DISTANCE_M = 30;

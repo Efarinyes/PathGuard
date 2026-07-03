@@ -15,6 +15,17 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useWebSocket } from './useWebSocket';
 
+// Mock the config so the WS health ping (15s) does NOT interfere with backoff tests.
+// The health ping itself is covered separately in useWebSocket.healthPing.test.ts
+// where the real interval is used.
+vi.mock('@/lib/config', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/config')>();
+  return {
+    ...actual,
+    WS_HEALTH_PING_INTERVAL_MS: 3_600_000, // 1h — disabled for these tests
+  };
+});
+
 // ─── MockWebSocket ────────────────────────────────────────────────────────────
 
 let mockWsInstances: MockWebSocket[] = [];
@@ -50,6 +61,7 @@ class MockWebSocket {
 beforeEach(() => {
   mockWsInstances = [];
   vi.stubGlobal('WebSocket', MockWebSocket);
+  Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
 });
 
 afterEach(() => {
