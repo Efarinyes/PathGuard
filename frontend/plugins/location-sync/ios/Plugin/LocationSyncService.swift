@@ -132,8 +132,6 @@ class LocationSyncService {
 
     private func onPointAccepted(_ point: LocationPoint) {
         NSLog("[LocationSyncService] onPointAccepted: lat=\(point.latitude), lng=\(point.longitude)")
-        var point = point
-        point.isRecovered = buffer.isLastFlushFailed || !appInForeground
         buffer.add(point)
         scheduleFlush()
     }
