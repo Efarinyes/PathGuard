@@ -14,6 +14,8 @@ metadata:
     - pathguard-agent-qa
 ---
 
+<!-- ARXIVAT: fusionat amb pathguard-agent-qa el 2026-07-04 -->
+
 # Test Pyramid — PathGuard
 
 ## Piràmide

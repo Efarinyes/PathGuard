@@ -135,5 +135,5 @@ Si algun AC falla:
 ## Recursos
 
 - `pathguard-workflow-sdd-implement` (pas previ)
-- `pathguard-domain-test-pyramid` (tests)
-- `pathguard-field-testing` (procediment camp)
+- `pathguard-agent-qa` (tests)
+- `pathguard-domain-field-testing` (procediment camp)
