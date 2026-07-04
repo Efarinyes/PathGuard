@@ -13,8 +13,8 @@ metadata:
     - Crear tag/release
   agent_owner: devops
   prerequisites:
-    - pathguard-state
-    - pathguard-golden-rules
+    - pathguard-core-state
+    - pathguard-core-golden-rules
 ---
 
 # Agent DevOps / Release

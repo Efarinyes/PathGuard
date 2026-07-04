@@ -12,7 +12,7 @@ metadata:
   agent_owner: android
   prerequisites:
     - pathguard-agent-android
-    - pathguard-bridge-contract
+    - pathguard-domain-bridge-contract
 ---
 
 # Android Plugin — Detall tècnic

@@ -14,8 +14,8 @@ metadata:
     - Modificar rols d'agent
   agent_owner: tech-lead
   prerequisites:
-    - pathguard-state
-    - pathguard-golden-rules
+    - pathguard-core-state
+    - pathguard-core-golden-rules
 ---
 
 # Tech Lead / Coordinator

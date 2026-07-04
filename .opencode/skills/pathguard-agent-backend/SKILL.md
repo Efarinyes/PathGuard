@@ -12,8 +12,8 @@ metadata:
     - Tests pytest nous o modificats
   agent_owner: backend
   prerequisites:
-    - pathguard-state
-    - pathguard-golden-rules
+    - pathguard-core-state
+    - pathguard-core-golden-rules
 ---
 
 # Agent Backend (FastAPI)

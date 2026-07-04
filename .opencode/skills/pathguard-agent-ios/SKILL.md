@@ -12,8 +12,8 @@ metadata:
     - Tests XCTest nous o modificats
   agent_owner: ios
   prerequisites:
-    - pathguard-state
-    - pathguard-golden-rules
+    - pathguard-core-state
+    - pathguard-core-golden-rules
 ---
 
 # Agent iOS Native

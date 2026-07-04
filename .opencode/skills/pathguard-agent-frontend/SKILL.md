@@ -11,8 +11,8 @@ metadata:
     - Tests Vitest nous o modificats
   agent_owner: frontend
   prerequisites:
-    - pathguard-state
-    - pathguard-golden-rules
+    - pathguard-core-state
+    - pathguard-core-golden-rules
 ---
 
 # Agent Frontend (Next.js / PWA)

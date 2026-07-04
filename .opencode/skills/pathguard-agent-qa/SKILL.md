@@ -12,8 +12,8 @@ metadata:
     - Proves de camp
   agent_owner: qa
   prerequisites:
-    - pathguard-state
-    - pathguard-golden-rules
+    - pathguard-core-state
+    - pathguard-core-golden-rules
 ---
 
 # Agent QA / Testing

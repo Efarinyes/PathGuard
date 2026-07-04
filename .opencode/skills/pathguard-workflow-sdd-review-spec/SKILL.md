@@ -9,7 +9,7 @@ metadata:
     - Decidir si aprovar/rebutjar
   agent_owner: tech-lead
   prerequisites:
-    - pathguard-sdd-create-spec
+    - pathguard-workflow-sdd-create-spec
 ---
 
 # SDD — Revisar una Spec
@@ -112,7 +112,7 @@ Si la spec implica decisió arquitectònica:
 
 ## Recursos
 
-- `pathguard-sdd-create-spec` (crear)
-- `pathguard-sdd-implement` (següent pas)
+- `pathguard-workflow-sdd-create-spec` (crear)
+- `pathguard-workflow-sdd-implement` (següent pas)
 - `.audit_archive/technical_audit.md` (criteris tècnics)
 - `.audit_archive/product_audit.md` (criteris de producte)

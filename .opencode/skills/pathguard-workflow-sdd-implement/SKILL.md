@@ -10,9 +10,9 @@ metadata:
     - Obrir branca de feature
   agent_owner: <agent-owner>
   prerequisites:
-    - pathguard-sdd-create-spec (la spec)
-    - pathguard-sdd-review-spec (aprovada)
-    - pathguard-state (saber on som)
+    - pathguard-workflow-sdd-create-spec (la spec)
+    - pathguard-workflow-sdd-review-spec (aprovada)
+    - pathguard-core-state (saber on som)
 ---
 
 # SDD — Implementar una Spec
@@ -170,8 +170,8 @@ Aleshores es tanca la spec i es pot tag/releaset.
 
 ## Recursos
 
-- `pathguard-sdd-create-spec` (la spec)
-- `pathguard-sdd-review-spec` (aprovada)
-- `pathguard-sdd-validate` (següent pas)
-- `pathguard-branching` (convencions branques)
-- `pathguard-commit` (convencions commits)
+- `pathguard-workflow-sdd-create-spec` (la spec)
+- `pathguard-workflow-sdd-review-spec` (aprovada)
+- `pathguard-workflow-sdd-validate` (següent pas)
+- `pathguard-workflow-branching` (convencions branques)
+- `pathguard-workflow-commit` (convencions commits)

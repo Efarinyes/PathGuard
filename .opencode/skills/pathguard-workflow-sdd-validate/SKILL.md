@@ -11,7 +11,7 @@ metadata:
     - QA sign-off
   agent_owner: qa
   prerequisites:
-    - pathguard-sdd-implement
+    - pathguard-workflow-sdd-implement
 ---
 
 # SDD — Validar una Spec
@@ -134,6 +134,6 @@ Si algun AC falla:
 
 ## Recursos
 
-- `pathguard-sdd-implement` (pas previ)
-- `pathguard-test-pyramid` (tests)
+- `pathguard-workflow-sdd-implement` (pas previ)
+- `pathguard-domain-test-pyramid` (tests)
 - `pathguard-field-testing` (procediment camp)

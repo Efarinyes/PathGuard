@@ -10,7 +10,7 @@ metadata:
     - Decidir prefix
   agent_owner: "*"
   prerequisites:
-    - pathguard-conventions
+    - pathguard-core-conventions
 ---
 
 # Branching — Convencions
@@ -116,6 +116,6 @@ git branch -d release/v2.7.0-beta.1
 
 ## Recursos
 
-- `pathguard-conventions` (convencions generals)
-- `pathguard-commit` (estil de commits)
-- `pathguard-sdd-implement` (procediment)
+- `pathguard-core-conventions` (convencions generals)
+- `pathguard-workflow-commit` (estil de commits)
+- `pathguard-workflow-sdd-implement` (procediment)

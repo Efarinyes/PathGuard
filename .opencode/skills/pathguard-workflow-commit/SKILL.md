@@ -9,7 +9,7 @@ metadata:
     - Preparar PR
   agent_owner: "*"
   prerequisites:
-    - pathguard-conventions
+    - pathguard-core-conventions
 ---
 
 # Commit — Estil i procediment
@@ -129,6 +129,6 @@ git diff --cached | grep -iE '(password|secret|api_key|token)\s*=\s*["\047][^"\0
 
 ## Recursos
 
-- `pathguard-conventions` (convencions generals)
-- `pathguard-branching` (branches)
+- `pathguard-core-conventions` (convencions generals)
+- `pathguard-workflow-branching` (branches)
 - Conventional Commits: https://www.conventionalcommits.org/
