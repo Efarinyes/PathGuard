@@ -1,12 +1,42 @@
 # AGENTS — Instruccions globals per a agents opencode a PathGuard
 
-Aquest fitxer és la **primera lectura obligatòria** per a qualsevol agent opencode que treballi al projecte. Complementa (no substitueix) `CONTEXT.md`.
+Aquest fitxer és el **punt d'entrada obligatori** per a qualsevol agent opencode que treballi sobre aquest repositori. Complementa (no substitueix) `CONTEXT.md` i la resta de la documentació de governança.
+
+---
+
+## Inicialització obligatòria dels agents
+
+Abans d'iniciar qualsevol tasca, qualsevol agent (independentment del model utilitzat) ha de seguir aquest procés.
+
+### Ordre de lectura
+
+1. `.opencode/governance/ARCHITECT.md`
+2. `.opencode/governance/MODEL_ROLES.md`
+3. `.opencode/governance/ORCHESTRATOR.md`
+4. `CONTEXT.md`
+5. La SPEC relacionada amb la tasca
+6. La documentació tècnica relacionada
+
+### Procés obligatori
+
+Abans de començar qualsevol implementació l'agent ha de:
+
+- comprendre el context
+- identificar els skills implicats
+- reutilitzar abans de crear
+- verificar si existeix una SPEC
+- crear o ampliar la SPEC si és necessari
+- planificar les tasques
+- decidir la seqüència d'execució
+- validar els resultats abans de considerar la tasca finalitzada
+
+Cap implementació hauria de començar sense haver completat aquest procés.
 
 ---
 
 ## Primera acció de cada sessió
 
-Invocar **abans de qualsevol altra cosa**, com a primera crida de tool:
+Un cop completada la inicialització, la primera crida de tool ha de ser:
 
 ```
 skill({ name: "pathguard-core-state" })
@@ -22,11 +52,21 @@ Aquest skill llegeix `.pathguard/STATE.json` i retorna:
 - Bloquejos
 - Pickup-point per continuar la propera sessió
 
-**No escriure codi, obrir branques ni fer commits** sense haver carregat aquest skill.
+**No escriure codi, obrir branques ni fer commits** sense haver carregat aquest skill i validat l'estat.
 
 ---
 
-## Com es resolen els skills
+## Skills
+
+Els skills disponibles es troben a:
+
+```
+.opencode/skills/
+```
+
+L'orquestrador és responsable d'identificar quin o quins skills són els adequats per a cada tasca.
+
+No s'han d'invocar skills sense haver analitzat prèviament el context i les especificacions.
 
 Els 20 skills actius de PathGuard viuen a `.opencode/skills/<nom>/SKILL.md` com a fitxers plans (un directori per skill, format natiu opencode). Cap symlink, cap duplicació. La categoria es dedueix pel prefix del nom: `pathguard-core-*` (3), `pathguard-agent-*` (8), `pathguard-domain-*` (3), `pathguard-workflow-*` (6).
 
@@ -67,16 +107,6 @@ Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
 
 ---
 
-## Idioma
-
-- **Codi** (identificadors, comentaris): anglès
-- **UI strings (català)**: hardcoded actualment, i18n post-beta
-- **Documentació interna** (specs, ADRs, aquest fitxer): anglès permès, català acceptable
-- **Comunicació amb l'usuari** (errors, missatges al xat): català
-- **Branques i commits**: anglès
-
----
-
 ## Estructura del projecte (resum)
 
 | Capa | Path | Propietari |
@@ -104,6 +134,16 @@ Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
 
 ---
 
+## Idioma
+
+- **Codi** (identificadors, comentaris): anglès
+- **UI strings (català)**: hardcoded actualment, i18n post-beta
+- **Documentació interna** (specs, ADRs, aquest fitxer): anglès permès, català acceptable
+- **Comunicació amb l'usuari** (errors, missatges al xat): català
+- **Branques i commits**: anglès
+
+---
+
 ## Referència ràpida
 
 - Estat del projecte: `.pathguard/STATE.json` (llegit pel skill `pathguard-core-state`)
@@ -113,3 +153,4 @@ Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
 - Fase actual: `docs/phases/phase-status.md`
 - ADRs: `docs/decisions/`
 - Roadmap beta: `ROADMAP/beta-readiness.md`
+- Governança del projecte: `.opencode/governance/`
