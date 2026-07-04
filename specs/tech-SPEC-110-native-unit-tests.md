@@ -76,5 +76,5 @@ Audit `audit_native_layer.md` (issue 14) identifica zero tests unitaris natius. 
 
 ## 10. Referències
 - `audit_native_layer.md` secció 14
-- `.opencode/skills/pathguard-domain-android-plugin/SKILL.md`
-- `.opencode/skills/pathguard-domain-ios-plugin/SKILL.md`
+- `.opencode/skills/pathguard-agent-android/SKILL.md`
+- `.opencode/skills/pathguard-agent-ios/SKILL.md`

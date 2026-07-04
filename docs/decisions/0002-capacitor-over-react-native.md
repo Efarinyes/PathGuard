@@ -81,7 +81,7 @@ Arquitectura:
 
 ### Mitigacions
 - Skill `pathguard-domain-bridge-contract.md` com a font única
-- Tests cross-platform al skill `pathguard-domain-test-pyramid`
+- Tests cross-platform al skill `pathguard-agent-qa`
 - Field tests validatius
 
 ## Implementation

@@ -67,4 +67,4 @@ Tots els 7 escenaris han de passar amb ✅. Qualsevol ⚠️ o ❌ requereix:
 
 - Skill: `.opencode/skills/pathguard-domain-field-testing/SKILL.md`
 - Detall original: [`../archive/guia-proves-reals.md`](../archive/guia-proves-reals.md)
-- Piràmide de tests: `.opencode/skills/pathguard-domain-test-pyramid/SKILL.md`
+- Piràmide de tests: `.opencode/skills/pathguard-agent-qa/SKILL.md`
