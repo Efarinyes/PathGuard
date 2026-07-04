@@ -15,6 +15,8 @@ metadata:
     - pathguard-agent-devops
 ---
 
+<!-- ARXIVAT: fusionat amb pathguard-agent-devops el 2026-07-04 -->
+
 # CI/CD — Pipelines i operacions
 
 ## Pipelines

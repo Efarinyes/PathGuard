@@ -28,13 +28,13 @@ Aquest skill llegeix `.pathguard/STATE.json` i retorna:
 
 ## Com es resolen els skills
 
-Tots els 26 skills de PathGuard viuen a `.opencode/skills/<nom>/SKILL.md` com a fitxers plans (un directori per skill, format natiu opencode). Cap symlink, cap duplicació. La categoria es dedueix pel prefix del nom: `pathguard-core-*` (3), `pathguard-agent-*` (8), `pathguard-domain-*` (9), `pathguard-workflow-*` (6).
+Els 20 skills actius de PathGuard viuen a `.opencode/skills/<nom>/SKILL.md` com a fitxers plans (un directori per skill, format natiu opencode). Cap symlink, cap duplicació. La categoria es dedueix pel prefix del nom: `pathguard-core-*` (3), `pathguard-agent-*` (8), `pathguard-domain-*` (3), `pathguard-workflow-*` (6).
 
 | Categoria | Prefix al nom | Què conté |
 |---|---|---|
 | `core` | `pathguard-core-*` | 3 skills: `pathguard-core-state`, `pathguard-core-golden-rules`, `pathguard-core-conventions` |
-| `agent` | `pathguard-agent-*` | 8 skills de rol: frontend, backend, android, ios, platform, qa, devops, tech-lead |
-| `domain` | `pathguard-domain-*` | 9 skills de domini: stacks, plugins, CI/CD, testing |
+| `agent` | `pathguard-agent-*` | 8 skills de rol: frontend, backend, android, ios, platform, qa, devops, tech-lead (els skills d'agent frontend/backend/android/ios/qa/devops integren també el domini de stack/plugin/CI/testing) |
+| `domain` | `pathguard-domain-*` | 3 skills de domini pur: bridge-contract, capacitor-config, field-testing |
 | `workflow` | `pathguard-workflow-*` | 6 skills de workflow: SDD, branching, commit |
 
 Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
@@ -46,7 +46,7 @@ Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
 1. **Carrega `pathguard-core-state` SEMPRE primer.**
 2. **Carrega `pathguard-core-golden-rules` i `pathguard-core-conventions`** abans d'escriure codi o obrir branques.
 3. **Carrega el skill del teu rol** (`pathguard-agent-<rol>`) quan la tasca afecta el teu domini.
-4. **Carrega skills de domini** segons la zona tocada (ex: `pathguard-domain-ios-plugin` si toques Swift/CLLocationManager).
+4. **Carrega skills de domini** segons la zona tocada (ex: `pathguard-agent-ios` si toques Swift/CLLocationManager, o `pathguard-domain-bridge-contract` si toques el bridge TS).
 5. **Carrega skills de workflow** quan iniciïs un cicle SDD (`pathguard-workflow-sdd-create-spec`, etc.).
 6. **No carreguis `customize-opencode`** — és un skill built-in d'opencode per configurar la pròpia eina, no per treballar al projecte.
 

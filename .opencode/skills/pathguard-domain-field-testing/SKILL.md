@@ -12,7 +12,6 @@ metadata:
   agent_owner: qa
   prerequisites:
     - pathguard-agent-qa
-    - pathguard-test-pyramid
 ---
 
 # Field Testing — Procediment

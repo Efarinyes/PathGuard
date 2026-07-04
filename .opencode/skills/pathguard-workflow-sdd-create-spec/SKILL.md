@@ -10,8 +10,8 @@ metadata:
     - Iniciar qualsevol tasca que toqui ≥2 capes
   agent_owner: tech-lead
   prerequisites:
-    - pathguard-state
-    - pathguard-golden-rules
+    - pathguard-core-state
+    - pathguard-core-golden-rules
 ---
 
 # SDD — Crear una Spec
@@ -106,7 +106,7 @@ adr: <ADR-NNN>            # opcional
 
 ## Procés
 
-1. **Carregar** `pathguard-state` (saber on som)
+1. **Carregar** `pathguard-core-state` (saber on som)
 2. **Llegir** `specs/000-index.md` (trobar NNN disponible)
 3. **Redactar** la spec seguint el template
 4. **Actualitzar** `specs/000-index.md` afegint l'entrada

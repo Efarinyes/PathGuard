@@ -14,6 +14,8 @@ metadata:
     - pathguard-agent-frontend
 ---
 
+<!-- ARXIVAT: fusionat amb pathguard-agent-frontend el 2026-07-04 -->
+
 # Frontend Stack — Detall tècnic
 
 ## Versions exactes (v2.6.0-beta.1)

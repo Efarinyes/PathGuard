@@ -15,8 +15,7 @@ Aquest fitxer és la **porta d'entrada** al frontend. La informació detallada �
 | Skill | Quan |
 |---|---|
 | `.opencode/skills/pathguard-core-state/SKILL.md` | **SEMPRE** primer |
-| `.opencode/skills/pathguard-agent-frontend/SKILL.md` | Sempre (el teu rol) |
-| `.opencode/skills/pathguard-domain-frontend-stack/SKILL.md` | Quan necessitis detalls d'stack |
+| `.opencode/skills/pathguard-agent-frontend/SKILL.md` | Sempre (el teu rol; inclou detalls d'stack) |
 
 ## Regles d'or del projecte
 

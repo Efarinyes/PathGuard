@@ -13,8 +13,8 @@ metadata:
     - Crear tag/release
   agent_owner: devops
   prerequisites:
-    - pathguard-state
-    - pathguard-golden-rules
+    - pathguard-core-state
+    - pathguard-core-golden-rules
 ---
 
 # Agent DevOps / Release
@@ -47,14 +47,179 @@ docs/decisions/                (ADRs d'infra)
 
 ### 1. CI/CD
 
-| Pipeline | Quan | Què |
+| Workflow | Trigger | Què fa |
 |---|---|---|
-| `lint.yml` | Cada PR | ESLint frontend, ruff/black backend |
-| `test.yml` | Cada PR | pytest + vitest |
-| `build.yml` | Cada PR | next build + gradle assembleDebug |
-| `release.yml` | Tag `v*` | Build APK release + IPA + GitHub Release |
+| `lint.yml` | PR, push | ESLint, ruff, black |
+| `test.yml` | PR, push | pytest + vitest |
+| `build.yml` | PR, push | next build, gradle assembleDebug |
+| `release.yml` | Tag `v*` | APK release, IPA release, GitHub Release |
 
-### 2. Entorns
+## Estructura esperada
+
+```
+.github/workflows/
+├── lint.yml
+├── test.yml
+├── build.yml
+└── release.yml
+```
+
+## Pipeline de test (exemple)
+
+```yaml
+# .github/workflows/test.yml
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches: [develop, main]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+      - name: Run tests
+        run: |
+          cd backend
+          pytest tests/ -v
+
+  frontend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+      - name: Run tests
+        run: |
+          cd frontend
+          npm test
+      - name: Build
+        run: |
+          cd frontend
+          npm run build --webpack
+```
+
+## Pipeline de release
+
+```yaml
+# .github/workflows/release.yml
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+      - name: Build APK
+        run: |
+          cd frontend/android
+          ./gradlew assembleRelease
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release.apk
+          path: frontend/android/app/build/outputs/apk/release/app-release.apk
+
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+      - name: Sync Capacitor
+        run: |
+          cd frontend
+          npm ci
+          npx cap sync ios
+      - name: Build IPA
+        run: |
+          cd frontend/ios
+          xcodebuild -workspace App/App.xcworkspace -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release.ipa
+          path: frontend/ios/build/App.xcarchive
+
+  create-release:
+    needs: [build-android, build-ios]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            app-release.apk
+            app-release.ipa
+          generate_release_notes: true
+```
+
+### 2. Secrets
+
+| Secret | On | Ús |
+|---|---|---|
+| `MATCH_PASSWORD` | GitHub Secrets | iOS signing (Fastlane Match) |
+| `KEYSTORE_PASS` | GitHub Secrets | Android signing |
+| `KEY_ALIAS` | GitHub Secrets | Android signing |
+| `NEXT_PUBLIC_API_URL` | Vercel env | Frontend API URL |
+| `NEXT_PUBLIC_WS_URL` | Vercel env | Frontend WS URL |
+| `FRONTEND_URL` | Render env (CORS) | CORS allow origin |
+| `SENTRY_DSN` | Vercel/Render env | Error tracking |
+| `DATABASE_URL` | Render env | PostgreSQL connection |
+| `SECRET_KEY` | Render env | JWT signing |
+
+**Mai** secrets al codi. Mai al git. Sempre env vars.
+
+### 3. Build apps natives
+
+### Android APK
+```bash
+cd frontend/android
+./gradlew assembleDebug      # APK debug
+./gradlew assembleRelease    # APK release
+```
+
+### iOS IPA
+```bash
+cd frontend
+npm ci
+npx cap sync ios
+cd ios
+xcodebuild -workspace App/App.xcworkspace -scheme App \
+  -configuration Release \
+  -archivePath build/App.xcarchive
+```
+
+
+### 3.5 Entorns
 
 | Entorn | Backend | Frontend | DB |
 |---|---|---|---|
@@ -65,52 +230,7 @@ docs/decisions/                (ADRs d'infra)
 
 **Regla:** tests mai contra producció.
 
-### 3. Secrets
-
-**Mai** al codi. Mai al git. Sempre env vars.
-
-| Secret | On |
-|---|---|
-| `DATABASE_URL` | Render env (prod), `.env` (dev) |
-| `SECRET_KEY` (JWT) | Render env (prod), `.env` (dev) |
-| `NEXT_PUBLIC_API_URL` | Vercel env |
-| `NEXT_PUBLIC_WS_URL` | Vercel env |
-| `FRONTEND_URL` | Render env (CORS) |
-| `MATCH_PASSWORD` | GitHub Secrets (iOS signing) |
-| `KEYSTORE_PASS` | GitHub Secrets (Android signing) |
-| `SENTRY_DSN` | Vercel/Render env |
-
-### 4. Observabilitat
-
-| Eina | Ús |
-|---|---|
-| Render logs | Backend errors, access logs |
-| Vercel logs | Frontend errors, function logs |
-| Sentry (futur) | Error tracking centralitzat |
-| Custom logger | Estructurat (JSON) per poder agregar |
-
-**Backend logger:** `logger.info/warning/error` (mai `print()`).
-
-### 5. Build apps natives
-
-**Android APK:**
-```bash
-cd frontend/android
-./gradlew assembleDebug      # APK debug
-./gradlew assembleRelease    # APK release (signing config)
-```
-
-**iOS IPA:**
-```bash
-cd frontend
-npx cap sync ios
-cd ios
-xcodebuild -workspace App/App.xcworkspace -scheme App \
-  -configuration Release \
-  -archivePath build/App.xcarchive
-```
-
-### 6. Release flow
+### 3.6 Release flow
 
 1. Merge PR a `develop` → CI passa
 2. Merge a `main` → CI passa + build prod
@@ -121,23 +241,50 @@ xcodebuild -workspace App/App.xcworkspace -scheme App \
    - Publicar GitHub Release amb CHANGELOG
    - (Manual) Pujar a Play Console / App Store Connect
 
-### 7. Cold starts i limits
+### 4. Deploy web (auto via Vercel)
+
+Vercel detecta push a `main` i desplega automàticament.
+
+**Env vars a Vercel:**
+- `NEXT_PUBLIC_API_URL` — `https://pathguard-sjxy.onrender.com/api/v1`
+- `NEXT_PUBLIC_WS_URL` — `wss://pathguard-sjxy.onrender.com/api/v1/ws`
+
+### 5. Deploy backend (auto via Render)
+
+Render detecta push a `main` i desplega.
+
+**Env vars a Render:**
+- `DATABASE_URL` — PostgreSQL Supabase
+- `SECRET_KEY` — JWT signing
+- `FRONTEND_URL` — Vercel URL (CORS)
+- `ADDITIONAL_CORS_ORIGINS` — previews Vercel
+
+### 6. Cold starts i limits
 
 - **Render free tier:** spin-down 15 min inactivitat. Solució: cron ping cada 10 min.
+- **Vercel:** no aplica (serverless).
 - **Vercel free tier:** 100 GB bandwidth/mes. Suficient per beta.
 - **Supabase free tier:** 500 MB DB, 2 GB transfer. Suficient per beta.
+- **Supabase free tier:** pauses after 7 days inactivity on free project. Upgrade if needed.
+
+### 7. Observabilitat
+
+| Eina | Ús |
+|---|---|
+| Render logs | Backend errors |
+| Vercel logs | Frontend errors |
+| Sentry (futur) | Error tracking centralitzat |
+| Custom logger | Estructurat (JSON) |
+
+**Backend logger:** `logger.info/warning/error` (mai `print()`).
 
 ## Errors comuns
 
-❌ Secrets al codi o al git
+❌ Secrets al codi
 ❌ Tests contra producció
-❌ Hardcoded URLs a la pipeline
-❌ No monitoritzar errors (logs sense estructurar)
-❌ Tag sense changelog
-❌ Pipeline que triga >10 min (frustra)
-
-## Recursos
-
-- `.opencode/skills/pathguard-domain-cicd/SKILL.md` (detall pipelines)
-- `docs/guides/deployment.md` (procediment deploy)
-- `docs/decisions/` (ADRs d'infra)
+❌ Pipeline > 10 min
+❌ Build sense signing config
+❌ Tag sense CHANGELOG entry
+- ❌ Hardcoded URLs a la pipeline
+- ❌ No monitoritzar errors (logs sense estructurar)
+- ❌ Pipeline que triga >10 min (frustra)

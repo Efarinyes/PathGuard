@@ -16,13 +16,13 @@ Cada agent té un skill que defineix el seu domini, les zones on NO pot tocar, i
 
 | Rol | Agent skill | Skills de domini associats |
 |---|---|---|
-| **Frontend** | `pathguard-agent-frontend` | `pathguard-domain-frontend-stack` |
-| **Backend** | `pathguard-agent-backend` | `pathguard-domain-backend-stack` |
-| **Android** | `pathguard-agent-android` | `pathguard-domain-android-plugin` |
-| **iOS** | `pathguard-agent-ios` | `pathguard-domain-ios-plugin` |
+| **Frontend** | `pathguard-agent-frontend` | (skill fusionat: rol + stack) |
+| **Backend** | `pathguard-agent-backend` | (skill fusionat: rol + stack) |
+| **Android** | `pathguard-agent-android` | (skill fusionat: rol + plugin) |
+| **iOS** | `pathguard-agent-ios` | (skill fusionat: rol + plugin) |
 | **Platform Integration** | `pathguard-agent-platform` | `pathguard-domain-bridge-contract`, `pathguard-domain-capacitor-config` |
-| **QA** | `pathguard-agent-qa` | `pathguard-domain-test-pyramid`, `pathguard-domain-field-testing` |
-| **DevOps** | `pathguard-agent-devops` | `pathguard-domain-cicd` |
+| **QA** | `pathguard-agent-qa` | `pathguard-agent-qa` (skill fusionat), `pathguard-domain-field-testing` |
+| **DevOps** | `pathguard-agent-devops` | (skill fusionat: rol + CI/CD) |
 | **Tech Lead** | `pathguard-agent-tech-lead` | (accés a tots els altres) |
 
 Ubicació base: `.opencode/skills/_agents/`
@@ -49,17 +49,13 @@ Ubicació: `.opencode/skills/_workflow/`
 
 ## Per àrea de domini
 
+Els skills d'agent per a **Frontend**, **Backend**, **Android**, **iOS**, **QA** i **DevOps** han absorbit els domain skills de stack, plugin, test-pyramid i CI/CD. Els domain skills purs que romanen actius són:
+
 | Àrea | Skill | On aplica |
 |---|---|---|
-| Frontend stack | `pathguard-domain-frontend-stack` | Next.js, React, Tailwind v4, Leaflet, PWA |
-| Backend stack | `pathguard-domain-backend-stack` | FastAPI, SQLAlchemy, Pydantic, dual DB |
 | Bridge TS | `pathguard-domain-bridge-contract` | Contracte Capacitor plugin |
-| iOS plugin | `pathguard-domain-ios-plugin` | Swift, CLLocationManager, BufferStore |
-| Android plugin | `pathguard-domain-android-plugin` | Java, FusedLocationProvider, ForegroundService |
 | Capacitor config | `pathguard-domain-capacitor-config` | capacitor.config.ts/json |
-| Test pyramid | `pathguard-domain-test-pyramid` | pytest, Vitest, Playwright |
 | Field testing | `pathguard-domain-field-testing` | Procediment amb dispositius |
-| CI/CD | `pathguard-domain-cicd` | GitHub Actions, secrets, builds |
 
 Ubicació: `.opencode/skills/_domain/`
 
@@ -115,9 +111,8 @@ la spec SPEC-020 ja està implementada, validar
 
 1. Carrega `pathguard-core-state`
 2. Carrega `pathguard-workflow-sdd-validate` (workflow)
-3. Carrega `pathguard-agent-qa` (qui valida)
-4. Carrega `pathguard-domain-test-pyramid` (per verificar tests)
-5. Carrega `pathguard-domain-field-testing` (si cal validació de camp)
+3. Carrega `pathguard-agent-qa` (qui valida; inclou piràmide de tests)
+4. Carrega `pathguard-domain-field-testing` (si cal validació de camp)
 6. Carrega el skill de l'agent owner (per entendre el context)
 
 ## Manteniment d'aquest índex

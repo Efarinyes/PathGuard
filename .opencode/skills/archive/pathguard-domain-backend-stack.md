@@ -15,6 +15,8 @@ metadata:
     - pathguard-agent-backend
 ---
 
+<!-- ARXIVAT: fusionat amb pathguard-agent-backend el 2026-07-04 -->
+
 # Backend Stack — Detall tècnic
 
 ## Versions exactes

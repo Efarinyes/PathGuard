@@ -12,8 +12,10 @@ metadata:
   agent_owner: ios
   prerequisites:
     - pathguard-agent-ios
-    - pathguard-bridge-contract
+    - pathguard-domain-bridge-contract
 ---
+
+<!-- ARXIVAT: fusionat amb pathguard-agent-ios el 2026-07-04 -->
 
 # iOS Plugin — Detall tècnic
 
