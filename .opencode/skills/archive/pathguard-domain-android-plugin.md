@@ -15,6 +15,8 @@ metadata:
     - pathguard-domain-bridge-contract
 ---
 
+<!-- ARXIVAT: fusionat amb pathguard-agent-android el 2026-07-04 -->
+
 # Android Plugin — Detall tècnic
 
 ## Arquitectura (SRP estricte)
