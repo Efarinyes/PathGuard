@@ -12,10 +12,13 @@ import Network
 final class NetworkReachabilityMonitor {
     private var monitor: NWPathMonitor?
     private let queue = DispatchQueue(label: "com.pathguard.network-monitor")
+    private let lock = NSLock()
     private var _isConnected = false
 
     var isConnected: Bool {
-        queue.sync { _isConnected }
+        lock.lock()
+        defer { lock.unlock() }
+        return _isConnected
     }
 
     var onConnected: (() -> Void)?
@@ -30,18 +33,21 @@ final class NetworkReachabilityMonitor {
 
             let isSatisfied = path.status == .satisfied
 
-            self.queue.sync {
-                let previous = self._isConnected
-                self._isConnected = isSatisfied
+            // pathUpdateHandler already runs serially on `queue`, but we still
+            // protect `_isConnected` with a lock so external readers (getter,
+            // stop) see consistent state without risking deadlock via queue.sync.
+            self.lock.lock()
+            let previous = self._isConnected
+            self._isConnected = isSatisfied
+            self.lock.unlock()
 
-                if !previous && isSatisfied {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.onConnected?()
-                    }
-                } else if previous && !isSatisfied {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.onDisconnected?()
-                    }
+            if !previous && isSatisfied {
+                DispatchQueue.main.async { [weak self] in
+                    self?.onConnected?()
+                }
+            } else if previous && !isSatisfied {
+                DispatchQueue.main.async { [weak self] in
+                    self?.onDisconnected?()
                 }
             }
         }
@@ -53,7 +59,9 @@ final class NetworkReachabilityMonitor {
     func stop() {
         monitor?.cancel()
         monitor = nil
-        queue.sync { _isConnected = false }
+        lock.lock()
+        _isConnected = false
+        lock.unlock()
     }
 
     deinit {
