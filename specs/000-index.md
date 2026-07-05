@@ -34,6 +34,7 @@ Catàleg viu de totes les specs del projecte. Cada spec viu al seu propi fitxer 
 | [SPEC-040](tech-SPEC-040-bridge-contract-v2.md) | tech | Bridge LocationSync v2 — 6 mètodes, contracte canònic | platform-integration | approved | `refactor/SPEC-040-bridge-v2-ios` |
 | [SPEC-050](feature-SPEC-050-field-testing.md) | feature | Proves de camp amb dispositius reals | qa | draft | — |
 | [SPEC-130](tech-SPEC-130-fix-presence-and-recovered.md) | tech | Fix presència WS i flag is_recovered al plugin iOS | frontend+ios | draft | — |
+| [SPEC-140](integration-SPEC-140-native-ios-network-reachability-bridge.md) | integration | Native iOS network reachability bridge for WebSocket reconnect | platform-integration+ios+frontend | approved | `fix/SPEC-140-native-ios-network-reachability-bridge` |
 
 ### P1 — Beta readiness
 
