@@ -166,6 +166,27 @@ export function useWebSocket<T = unknown>(
         .then((listenerHandle) => {
           if (isMounted.current) {
             nativeNetworkListener = listenerHandle;
+            // SPEC-160 AC-2.1, AC-2.2: read the current network status
+            // immediately to cover the race condition where NWPathMonitor
+            // emitted its first event before the listener was registered.
+            if (typeof LocationSync.getNetworkStatus === 'function') {
+              LocationSync.getNetworkStatus()
+                .then((status) => {
+                  if (
+                    isMounted.current &&
+                    status.connected &&
+                    ws.current?.readyState !== WebSocket.OPEN &&
+                    ws.current?.readyState !== WebSocket.CONNECTING
+                  ) {
+                    reconnectAttempt.current = 0;
+                    connect();
+                  }
+                })
+                .catch(() => {
+                  // Best-effort. The health-ping polling will eventually
+                  // reconnect if the native side is unavailable.
+                });
+            }
           } else {
             listenerHandle.remove();
           }

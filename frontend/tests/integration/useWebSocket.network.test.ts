@@ -13,7 +13,7 @@ vi.mock('@capacitor/core', () => ({
 vi.mock('@/plugins/location-sync', () => ({
   default: {
     addListener: vi.fn(),
-    getNetworkStatus: vi.fn(),
+    getNetworkStatus: vi.fn(() => Promise.resolve({ connected: false })),
   },
 }));
 
