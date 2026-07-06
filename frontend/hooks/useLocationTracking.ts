@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
-import { Geolocation } from "@capacitor/geolocation";
 import LocationSync from "@/plugins/location-sync/src";
 import { getDistanceHaversine, estimateSpeed, Position } from "../lib/gpsUtils";
 import { GPS_MIN_DISTANCE_M, GPS_SPEED_IDLE_THRESHOLD_M_MIN, GPS_INTERVAL_IDLE_MS, GPS_INTERVAL_NORMAL_MS, GPS_INTERVAL_FAST_MS, GPS_TIMEOUT_MS, GPS_RETRY_DELAY_MS, API_BASE_URL } from "@/lib/config";
@@ -29,14 +28,9 @@ export const useLocationTracking = () => {
       } catch {
         // Plugin pot no estar iniciat — ignorar
       }
-    }
-
-    if (watchId.current !== null) {
-      if (isNative) {
-        Geolocation.clearWatch({ id: watchId.current as string });
-      } else {
-        navigator.geolocation.clearWatch(watchId.current as number);
-      }
+      watchId.current = null;
+    } else if (watchId.current !== null) {
+      navigator.geolocation.clearWatch(watchId.current as number);
       watchId.current = null;
     }
     if (timeoutId.current) {
@@ -104,20 +98,10 @@ export const useLocationTracking = () => {
     setError(null);
 
     if (isNative) {
-      const permResult = await Geolocation.checkPermissions();
-      if (permResult.location === "denied" || permResult.location === "prompt") {
-        const requestResult = await Geolocation.requestPermissions();
-        if (requestResult.location === "denied") {
-          setError("Permís d'ubicació denegat.");
-          return;
-        }
+      if (!trackingConfig) {
+        setError("Falten paràmetres de tracking (deviceToken, walkId) en mode nadiu.");
+        return;
       }
-    } else if (!navigator.geolocation) {
-      setError("GPS no disponible en aquest navegador.");
-      return;
-    }
-
-    if (isNative && trackingConfig) {
       try {
         await LocationSync.startTracking({
           serverUrl: API_BASE_URL,
@@ -128,60 +112,39 @@ export const useLocationTracking = () => {
         setIsTracking(true);
         isTrackingRef.current = true;
         return;
-      } catch {
-        setError("Error al iniciar el servei de localització nadiu.");
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Error desconegut";
+        setError(`Error al iniciar el servei de localització nadiu: ${message}`);
         return;
       }
+    }
+
+    if (!navigator.geolocation) {
+      setError("GPS no disponible en aquest navegador.");
+      return;
     }
 
     setIsTracking(true);
     isTrackingRef.current = true;
     lastSampleTime.current = Date.now();
 
-    if (isNative) {
-      try {
-        const callbackId = await Geolocation.watchPosition(
-          { enableHighAccuracy: true, timeout: GPS_TIMEOUT_MS },
-          (position, err) => {
-            if (err) {
-              setError(`GPS Error: ${err.message}`);
-              if (watchId.current !== null) {
-                Geolocation.clearWatch({ id: watchId.current as string });
-                watchId.current = null;
-              }
-              setTimeout(() => {
-                if (isTrackingRef.current) startTracking();
-              }, GPS_RETRY_DELAY_MS);
-              return;
-            }
-            if (position && position.coords) {
-              onPositionUpdate(position.coords.latitude, position.coords.longitude);
-            }
-          }
-        );
-        watchId.current = callbackId;
-      } catch {
-        setError("Error al iniciar el GPS natiu.");
-      }
-    } else {
-      const browserId = navigator.geolocation.watchPosition(
-        (pos) => {
-          onPositionUpdate(pos.coords.latitude, pos.coords.longitude);
-        },
-        (err) => {
-          setError(`GPS Error: ${err.message}`);
-          if (watchId.current !== null) {
-            navigator.geolocation.clearWatch(watchId.current as number);
-            watchId.current = null;
-          }
-          setTimeout(() => {
-            if (isTrackingRef.current) startTracking();
-          }, GPS_RETRY_DELAY_MS);
-        },
-        { enableHighAccuracy: true, timeout: GPS_TIMEOUT_MS }
-      );
-      watchId.current = browserId;
-    }
+    const browserId = navigator.geolocation.watchPosition(
+      (pos) => {
+        onPositionUpdate(pos.coords.latitude, pos.coords.longitude);
+      },
+      (err) => {
+        setError(`GPS Error: ${err.message}`);
+        if (watchId.current !== null) {
+          navigator.geolocation.clearWatch(watchId.current as number);
+          watchId.current = null;
+        }
+        setTimeout(() => {
+          if (isTrackingRef.current) startTracking();
+        }, GPS_RETRY_DELAY_MS);
+      },
+      { enableHighAccuracy: true, timeout: GPS_TIMEOUT_MS }
+    );
+    watchId.current = browserId;
 
     scheduleNextSample();
   }, [onPositionUpdate]);
