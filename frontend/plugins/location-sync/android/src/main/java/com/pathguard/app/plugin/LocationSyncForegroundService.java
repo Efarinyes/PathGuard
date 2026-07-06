@@ -2,9 +2,11 @@ package com.pathguard.app.plugin;
 
 import android.app.ActivityManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.os.PowerManager;
 
 import androidx.annotation.Nullable;
 
@@ -34,6 +36,7 @@ public class LocationSyncForegroundService extends Service {
     private LocationBuffer locationBuffer;
     private LocationHttpClient httpClient;
     private ScheduledExecutorService scheduler;
+    private PowerManager.WakeLock wakeLock;
     private String serverUrl;
     private String deviceToken;
     private int walkId;
@@ -62,6 +65,13 @@ public class LocationSyncForegroundService extends Service {
         NotificationHelper.createChannel(this);
         startForeground(NotificationHelper.NOTIFICATION_ID, NotificationHelper.buildNotification(this));
 
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "PathGuard:LocationSyncWakeLock");
+        wakeLock.setReferenceCounted(false);
+        wakeLock.acquire();
+
+        appInForeground.set(isAppProcessForeground());
+
         BufferStore bufferStore = new BufferStore(this);
         locationBuffer = new LocationBuffer(bufferStore);
         httpClient = new LocationHttpClient();
@@ -79,6 +89,13 @@ public class LocationSyncForegroundService extends Service {
             scheduler = Executors.newSingleThreadScheduledExecutor();
             scheduler.schedule(this::flushBuffer, 1, TimeUnit.SECONDS);
         }
+    }
+
+    private boolean isAppProcessForeground() {
+        ActivityManager.RunningAppProcessInfo processInfo = new ActivityManager.RunningAppProcessInfo();
+        ActivityManager.getMyMemoryState(processInfo);
+        return processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+            || processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
     }
 
     @Override
@@ -141,7 +158,7 @@ public class LocationSyncForegroundService extends Service {
 
     private void onPointAccepted(LocationPoint point) {
         point.isRecovered = locationBuffer.getLastFlushFailed() || !isAppInForeground();
-        locationBuffer.add(point);
+        locationBuffer.add(point, walkId);
     }
 
     private boolean isAppInForeground() {
@@ -219,6 +236,14 @@ public class LocationSyncForegroundService extends Service {
     @Override
     public void onDestroy() {
         stopTracking();
+        if (wakeLock != null && wakeLock.isHeld()) {
+            try {
+                wakeLock.release();
+            } catch (RuntimeException ignored) {
+                // Already released or invalid; ignore.
+            }
+            wakeLock = null;
+        }
         super.onDestroy();
     }
 
