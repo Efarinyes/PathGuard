@@ -8,6 +8,7 @@ public class LocationPoint implements Comparable<LocationPoint> {
     public long timestampMs;
     public String clientId;
     public boolean isRecovered;
+    public int walkId;
 
     public LocationPoint() {}
 
@@ -17,6 +18,16 @@ public class LocationPoint implements Comparable<LocationPoint> {
         this.timestampMs = timestampMs;
         this.clientId = clientId;
         this.isRecovered = false;
+        this.walkId = 0;
+    }
+
+    public LocationPoint(double latitude, double longitude, long timestampMs, String clientId, int walkId) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.timestampMs = timestampMs;
+        this.clientId = clientId;
+        this.isRecovered = false;
+        this.walkId = walkId;
     }
 
     @Override
@@ -31,6 +42,7 @@ public class LocationPoint implements Comparable<LocationPoint> {
         obj.addProperty("ts", timestampMs);
         obj.addProperty("cid", clientId);
         obj.addProperty("rec", isRecovered);
+        obj.addProperty("wid", walkId);
         return obj;
     }
 
@@ -41,6 +53,7 @@ public class LocationPoint implements Comparable<LocationPoint> {
         p.timestampMs = obj.get("ts").getAsLong();
         p.clientId = obj.get("cid").getAsString();
         p.isRecovered = obj.has("rec") && obj.get("rec").getAsBoolean();
+        p.walkId = obj.has("wid") ? obj.get("wid").getAsInt() : 0;
         return p;
     }
 }
