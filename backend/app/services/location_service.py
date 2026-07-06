@@ -203,6 +203,7 @@ class LocationService:
         if inserted_count > 0:
             db.commit()
             connection_manager.update_http_presence(patient.group_id)
+            await connection_manager.broadcast_patient_status(patient.group_id)
 
             # Update cache with LATEST point from batch
             last_point = points[-1]
