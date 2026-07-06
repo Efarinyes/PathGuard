@@ -11,10 +11,21 @@ public class LocationSyncPlugin: CAPPlugin, CAPBridgedPlugin {
         .init(name: "updateWalkId", returnType: CAPPluginReturnPromise),
         .init(name: "getStatus", returnType: CAPPluginReturnPromise),
         .init(name: "markBackgrounded", returnType: CAPPluginReturnPromise),
-        .init(name: "markForegrounded", returnType: CAPPluginReturnPromise)
+        .init(name: "markForegrounded", returnType: CAPPluginReturnPromise),
+        .init(name: "getNetworkStatus", returnType: CAPPluginReturnPromise)
     ]
 
     private let service = LocationSyncService()
+    private let networkMonitor = NetworkReachabilityMonitor()
+
+    override public func load() {
+        networkMonitor.onConnected = { [weak self] in
+            self?.notifyNetworkStatus(connected: true)
+        }
+        networkMonitor.onDisconnected = { [weak self] in
+            self?.notifyNetworkStatus(connected: false)
+        }
+    }
 
     @objc public func startTracking(_ call: CAPPluginCall) {
         NSLog("[LocationSyncPlugin] startTracking called")
@@ -28,11 +39,13 @@ public class LocationSyncPlugin: CAPPlugin, CAPBridgedPlugin {
 
         NSLog("[LocationSyncPlugin] Parameters: serverUrl=\(serverUrl), deviceToken=\(deviceToken), walkId=\(walkId)")
         service.start(walkId: walkId, deviceToken: deviceToken, serverUrl: serverUrl)
+        networkMonitor.start()
         call.resolve()
     }
 
     @objc public func stopTracking(_ call: CAPPluginCall) {
         service.stop()
+        networkMonitor.stop()
         call.resolve()
     }
 
@@ -62,5 +75,17 @@ public class LocationSyncPlugin: CAPPlugin, CAPBridgedPlugin {
     @objc public func markForegrounded(_ call: CAPPluginCall) {
         service.markForegrounded()
         call.resolve()
+    }
+
+    @objc public func getNetworkStatus(_ call: CAPPluginCall) {
+        call.resolve([
+            "connected": networkMonitor.isConnected
+        ])
+    }
+
+    private func notifyNetworkStatus(connected: Bool) {
+        notifyListeners("networkStatusChange", data: [
+            "connected": connected
+        ])
     }
 }

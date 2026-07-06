@@ -31,6 +31,9 @@ Guia instal·lació Xcode + Android Studio.pages
 # Android Studio project files
 .idea/
 
+# Swift Package Manager generated workspace state
+.swiftpm/
+
 # PathGuard agent runtime state
 # STATE.json és regenerable per sessió; STATE.example.json sí que es commiteja
 .pathguard/STATE.json
