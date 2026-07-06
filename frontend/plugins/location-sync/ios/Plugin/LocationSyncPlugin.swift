@@ -25,6 +25,7 @@ public class LocationSyncPlugin: CAPPlugin, CAPBridgedPlugin {
         networkMonitor.onDisconnected = { [weak self] in
             self?.notifyNetworkStatus(connected: false)
         }
+        networkMonitor.start()
     }
 
     @objc public func startTracking(_ call: CAPPluginCall) {
@@ -39,13 +40,11 @@ public class LocationSyncPlugin: CAPPlugin, CAPBridgedPlugin {
 
         NSLog("[LocationSyncPlugin] Parameters: serverUrl=\(serverUrl), deviceToken=\(deviceToken), walkId=\(walkId)")
         service.start(walkId: walkId, deviceToken: deviceToken, serverUrl: serverUrl)
-        networkMonitor.start()
         call.resolve()
     }
 
     @objc public func stopTracking(_ call: CAPPluginCall) {
         service.stop()
-        networkMonitor.stop()
         call.resolve()
     }
 
