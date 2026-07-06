@@ -34,7 +34,7 @@ public class LocationHttpClient {
             obj.addProperty("longitude", p.longitude);
             obj.addProperty("timestamp", isoFormatter.format(new Date(p.timestampMs)));
             obj.addProperty("client_id", p.clientId);
-            obj.addProperty("walk_id", walkId);
+            obj.addProperty("walk_id", p.walkId != 0 ? p.walkId : walkId);
             obj.addProperty("is_recovered", p.isRecovered);
             pointsArray.add(obj);
         }

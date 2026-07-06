@@ -44,6 +44,14 @@ public class LocationSyncPlugin extends Plugin {
             return;
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            boolean hasBackground = context.checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            if (!hasBackground) {
+                call.reject("Permís ACCESS_BACKGROUND_LOCATION no concedit. Cal 'Permetre tot el temps' a Configuració → Aplicacions → PathGuard → Ubicació.");
+                return;
+            }
+        }
+
         if (Build.VERSION.SDK_INT >= 34) {
             boolean hasFgsLocation = context.checkSelfPermission(Manifest.permission.FOREGROUND_SERVICE_LOCATION) == PackageManager.PERMISSION_GRANTED;
             if (!hasFgsLocation) {
