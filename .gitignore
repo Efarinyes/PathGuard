@@ -12,6 +12,10 @@ frontend/public/pathguard-sw*.js
 frontend/public/pathguard-sw *.js
 frontend/.env
 frontend/.env.local
+
+# Xcode / Capacitor local build state
+frontend/ios/.derived-data/
+frontend/plugins/location-sync/.swiftpm/
 .DS_Store
 *.pyc
 
@@ -34,3 +38,10 @@ Guia instal·lació Xcode + Android Studio.pages
 
 # Skill reorganization backups
 .opencode/skills.backup.*/
+
+# Xcode / Capacitor local build state
+frontend/ios/.derived-data/
+frontend/plugins/location-sync/.swiftpm/
+frontend/ios/App/App.xcodeproj/xcuserdata/
+frontend/ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
+frontend/ios/App/CapApp-SPM/.swiftpm/xcode/xcuserdata/
