@@ -36,6 +36,7 @@ Catàleg viu de totes les specs del projecte. Cada spec viu al seu propi fitxer 
 | [SPEC-130](tech-SPEC-130-fix-presence-and-recovered.md) | tech | Fix presència WS i flag is_recovered al plugin iOS | frontend+ios | draft | — |
 | [SPEC-140](integration-SPEC-140-native-ios-network-reachability-bridge.md) | integration | iOS native network reachability bridge for WebSocket reconnect (NWPathMonitor) | platform-integration+ios+frontend | draft (fusionada a develop 2026-07-06) | `fix/SPEC-140-native-ios-network-reachability-bridge` (merged) |
 | [SPEC-150](tech-SPEC-150-android-foreground-robustness.md) | tech | Android foreground service robustness for 2h walks (C-1..C-4) | android+frontend | draft | — |
+| [SPEC-160](tech-SPEC-160-ios-network-monitor-caregiver.md) | tech | iOS network monitor must start globally, not only during tracking (Bug 1+2 R-P0-NEW-1) | ios+platform-integration+frontend | draft | — |
 | [SPEC-140](integration-SPEC-140-native-ios-network-reachability-bridge.md) | integration | Native iOS network reachability bridge for WebSocket reconnect | platform-integration+ios+frontend | approved | `fix/SPEC-140-native-ios-network-reachability-bridge` |
 
 ### P1 — Beta readiness
