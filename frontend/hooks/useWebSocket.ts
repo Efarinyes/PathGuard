@@ -1,5 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { WS_BASE_URL, WS_FAST_RECONNECT_ATTEMPTS, WS_RECONNECT_BASE_DELAY_MS, WS_RECONNECT_MAX_DELAY_MS, WS_INFINITE_RETRY_DELAY_MS, WS_HEALTH_PING_INTERVAL_MS } from '@/lib/config';
+import { Capacitor } from '@capacitor/core';
+import LocationSync from '@/plugins/location-sync';
+import {
+  WS_BASE_URL,
+  WS_FAST_RECONNECT_ATTEMPTS,
+  WS_RECONNECT_BASE_DELAY_MS,
+  WS_RECONNECT_MAX_DELAY_MS,
+  WS_INFINITE_RETRY_DELAY_MS,
+  WS_HEALTH_PING_INTERVAL_MS,
+} from '@/lib/config';
 
 export interface UseWebSocketOptions {
   debounceMs?: number;
@@ -16,6 +25,11 @@ export interface UseWebSocketReturn<T> {
  * Handles React Strict Mode double-invoke, automatic reconnects with
  * exponential backoff, safe cleanup on unmount, and optional debouncing
  * to reduce re-renders from high-frequency messages.
+ *
+ * On iOS Capacitor, WKWebView does not reliably fire the `online` event and
+ * `navigator.onLine` can lie. We therefore also listen to the native
+ * `networkStatusChange` event from the LocationSync plugin, which uses
+ * NWPathMonitor to detect real connectivity changes.
  */
 export function useWebSocket<T = unknown>(
   enabled: boolean = true,
@@ -137,6 +151,31 @@ export function useWebSocket<T = unknown>(
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('online', handleOnline);
 
+    let nativeNetworkListener: { remove: () => void } | null = null;
+    if (Capacitor.getPlatform() === 'ios') {
+      LocationSync.addListener('networkStatusChange', (status) => {
+        if (!isMounted.current) return;
+        if (status.connected) {
+          reconnectAttempt.current = 0;
+          connect();
+        } else if (reconnectTimeout.current) {
+          clearTimeout(reconnectTimeout.current);
+          reconnectTimeout.current = null;
+        }
+      })
+        .then((listenerHandle) => {
+          if (isMounted.current) {
+            nativeNetworkListener = listenerHandle;
+          } else {
+            listenerHandle.remove();
+          }
+        })
+        .catch(() => {
+          // The native listener is best-effort. If the plugin is unavailable
+          // we still have the JS polling fallback.
+        });
+    }
+
     const healthPing = setInterval(() => {
       if (!isMounted.current) return;
       if (!enabled) return;
@@ -149,6 +188,11 @@ export function useWebSocket<T = unknown>(
       isMounted.current = false;
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('online', handleOnline);
+
+      if (nativeNetworkListener) {
+        nativeNetworkListener.remove();
+        nativeNetworkListener = null;
+      }
 
       clearInterval(healthPing);
 

@@ -29,6 +29,13 @@ public class LocationBuffer {
         }
     }
 
+    public synchronized void add(LocationPoint point, int walkId) {
+        if (point.walkId == 0) {
+            point.walkId = walkId;
+        }
+        add(point);
+    }
+
     public synchronized List<LocationPoint> drainAll() {
         List<LocationPoint> batch = new ArrayList<>();
         while (!buffer.isEmpty()) {

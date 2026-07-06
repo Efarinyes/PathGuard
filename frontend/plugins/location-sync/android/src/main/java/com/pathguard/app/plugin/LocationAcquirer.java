@@ -3,6 +3,8 @@ package com.pathguard.app.plugin;
 import android.content.Context;
 import android.location.Location;
 import android.os.Build;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -25,6 +27,7 @@ public class LocationAcquirer {
 
     private final FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
+    private HandlerThread callbackThread;
     private LocationPoint lastAcceptedPoint;
     private AcceptorCallback callback;
     private int walkId;
@@ -57,6 +60,9 @@ public class LocationAcquirer {
                 .setMinUpdateDistanceMeters(30)
                 .build();
 
+        callbackThread = new HandlerThread("LocationAcquirerCallback");
+        callbackThread.start();
+
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
@@ -71,10 +77,11 @@ public class LocationAcquirer {
             fusedLocationClient.requestLocationUpdates(
                     locationRequest,
                     locationCallback,
-                    Looper.getMainLooper()
+                    callbackThread.getLooper()
             );
         } catch (SecurityException e) {
             running = false;
+            shutdownCallbackThread();
         }
     }
 
@@ -84,7 +91,15 @@ public class LocationAcquirer {
             fusedLocationClient.removeLocationUpdates(locationCallback);
             locationCallback = null;
         }
+        shutdownCallbackThread();
         lastAcceptedPoint = null;
+    }
+
+    private void shutdownCallbackThread() {
+        if (callbackThread != null) {
+            callbackThread.quitSafely();
+            callbackThread = null;
+        }
     }
 
     private void processLocation(Location location) {
