@@ -14,12 +14,12 @@ Aquest fitxer és la **porta d'entrada** al frontend. La informació detallada �
 
 | Skill | Quan |
 |---|---|
-| `.opencode/skills/pathguard-core-state/SKILL.md` | **SEMPRE** primer |
-| `.opencode/skills/pathguard-agent-frontend/SKILL.md` | Sempre (el teu rol; inclou detalls d'stack) |
+| `.cursor/skills/pathguard-core-state/SKILL.md` | **SEMPRE** primer |
+| `.cursor/skills/pathguard-agent-frontend/SKILL.md` | Sempre (el teu rol; inclou detalls d'stack) |
 
 ## Regles d'or del projecte
 
-Veure `CONTEXT.md` (golden rules) i `.opencode/skills/pathguard-core-golden-rules/SKILL.md`.
+Veure `CONTEXT.md` (golden rules) i `.cursor/skills/pathguard-core-golden-rules/SKILL.md`.
 
 ## Errors comuns a evitar
 
@@ -54,6 +54,6 @@ npx playwright test       # E2E
 ## Quan tens dubtes
 
 1. Carrega `pathguard-core-state` (saber on som)
-2. Llegeix el skill del teu rol (`.opencode/skills/pathguard-agent-frontend/SKILL.md`)
+2. Llegeix el skill del teu rol (`.cursor/skills/pathguard-agent-frontend/SKILL.md`)
 3. Si la tasca és SDD, carrega el skill de workflow corresponent
 4. Si encara tens dubtes, pregunta al Tech Lead (no inventis)

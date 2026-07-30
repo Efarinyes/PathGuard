@@ -79,4 +79,4 @@ Actualment el deploy és manual:
 - Slack/Discord notifications
 
 ## 10. Referències
-- `.opencode/skills/pathguard-agent-devops/SKILL.md`
+- `.cursor/skills/pathguard-agent-devops/SKILL.md`

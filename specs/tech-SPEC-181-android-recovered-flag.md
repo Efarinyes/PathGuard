@@ -176,7 +176,7 @@ Aquesta spec només toca la capa Android:
 - `integration-SPEC-180-buffer-recovery-cross-platform.md`
 - `specs/tech-SPEC-130-fix-presence-and-recovered.md` (fix equivalent a iOS)
 - `specs/tech-SPEC-150-android-foreground-robustness.md`
-- `.opencode/skills/pathguard-agent-android/SKILL.md`
+- `.cursor/skills/pathguard-agent-android/SKILL.md`
 - `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationSyncForegroundService.java`
 - `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationBuffer.java`
 - `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/BufferStore.java`

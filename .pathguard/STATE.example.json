@@ -2,10 +2,10 @@
   "bootstrap": {
     "rule": "Mai no escriuis codi sense carregar primer el skill pathguard-core-state.",
     "first_skill_to_load": "pathguard-core-state",
-    "first_skill_path": ".opencode/skills/pathguard-core-state/SKILL.md",
+    "first_skill_path": ".cursor/skills/pathguard-core-state/SKILL.md",
     "what_this_skill_does": "Llegeix aquest fitxer STATE.json i retorna un resum estructurat: branca actual, agent actiu, spec activa, pròxim pas, bloquejos i pickup-point per la propera sessió.",
     "if_state_is_stale": "Si last_updated té més de 24h, pregunta a l'usuari o consulta git log per validar l'estat real abans d'actuar.",
-    "next_skill_to_load": "Segons la tasca — veure agents/INDEX.md o .opencode/skills/pathguard-core-conventions/SKILL.md",
+    "next_skill_to_load": "Segons la tasca — veure agents/INDEX.md o .cursor/skills/pathguard-core-conventions/SKILL.md",
     "how_to_resume": "Quan tornis a obrir sessió: 1) Comprova branca amb 'git branch --show-current'. 2) Llegeix les primeres 30 línies d'aquest fitxer. 3) Mira 'session.next_action' per saber què toca. 4) Si tens dubtes, obre el fitxer next_session_pickup d'aquest STATE.json.",
     "work_mode": "Sol. No calen PRs per canvis estructurals o de documentació. Per canvis de funcionalitat amb risc, crear branca + PR per revisió."
   },

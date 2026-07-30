@@ -148,10 +148,10 @@ Aquesta spec toca **4 agents** i requereix coordinació:
 
 ## 11. Referències
 - `audit_native_layer.md` (5 issues)
-- `.opencode/skills/pathguard-agent-ios/SKILL.md`
-- `.opencode/skills/pathguard-agent-android/SKILL.md`
-- `.opencode/skills/pathguard-domain-bridge-contract/SKILL.md`
-- `.opencode/skills/pathguard-agent-frontend/SKILL.md`
+- `.cursor/skills/pathguard-agent-ios/SKILL.md`
+- `.cursor/skills/pathguard-agent-android/SKILL.md`
+- `.cursor/skills/pathguard-domain-bridge-contract/SKILL.md`
+- `.cursor/skills/pathguard-agent-frontend/SKILL.md`
 
 ---
 

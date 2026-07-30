@@ -166,9 +166,9 @@ Aquesta spec toca **6 agents** i requereix coordinació:
 - `specs/tech-SPEC-130-fix-presence-and-recovered.md`
 - `specs/tech-SPEC-150-android-foreground-robustness.md`
 - `specs/tech-SPEC-040-bridge-contract-v2.md`
-- `.opencode/skills/pathguard-domain-bridge-contract/SKILL.md`
-- `.opencode/skills/pathguard-agent-ios/SKILL.md`
-- `.opencode/skills/pathguard-agent-android/SKILL.md`
+- `.cursor/skills/pathguard-domain-bridge-contract/SKILL.md`
+- `.cursor/skills/pathguard-agent-ios/SKILL.md`
+- `.cursor/skills/pathguard-agent-android/SKILL.md`
 - `frontend/plugins/location-sync/ios/Plugin/LocationBuffer.swift`
 - `frontend/plugins/location-sync/ios/Plugin/LocationSyncService.swift`
 - `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationBuffer.java`

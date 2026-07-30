@@ -1,6 +1,6 @@
 # PathGuard — Context
 
-**Regla d'or:** A l'inici de TOTA sessió, invoca `skill({ name: "pathguard-core-state" })` per obtenir branca, fase, spec activa, agent actiu, pròxim pas, bloquejos i pickup-point. Aquest skill llegeix `.pathguard/STATE.json`. Sense carregar-lo no s'ha d'escriure codi, obrir branques ni fer commits.
+**Regla d'or:** A l'inici de TOTA sessió, llegeix `.pathguard/STATE.json` i `.cursor/skills/pathguard-core-state/SKILL.md` per obtenir branca, fase, spec activa, agent actiu, pròxim pas, bloquejos i pickup-point. Sense carregar-lo no s'ha d'escriure codi, obrir branques ni fer commits.
 
 ---
 
@@ -17,7 +17,7 @@
 9. **No magic** — tot explícit (imports, tipus, estats).
 10. **Si la solució sembla un hack, està rebutjada.** Resol l'arrel.
 
-Detall: skill `pathguard-core-golden-rules` (a `.opencode/skills/pathguard-core-golden-rules/SKILL.md`)
+Detall: skill `pathguard-core-golden-rules` (a `.cursor/skills/pathguard-core-golden-rules/SKILL.md`)
 
 ---
 
@@ -33,7 +33,7 @@ Detall: skill `pathguard-core-golden-rules` (a `.opencode/skills/pathguard-core-
 | **Capacitor config** | `frontend/capacitor.config.ts` | Agent Platform Integration |
 | **Specs** | `specs/` | Tech Lead |
 | **ADRs** | `docs/decisions/` | Tech Lead |
-| **Agents i skills** | `.opencode/skills/` | Tech Lead |
+| **Agents i skills** | `.cursor/skills/` | Tech Lead |
 
 ---
 

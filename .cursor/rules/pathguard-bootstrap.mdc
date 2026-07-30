@@ -1,0 +1,16 @@
+---
+description: PathGuard session bootstrap — read project state before any code change
+alwaysApply: true
+---
+
+# PathGuard Bootstrap
+
+Before writing code, opening branches, or making commits:
+
+1. Read `.pathguard/STATE.json` and validate against `git branch --show-current`.
+2. If `last_updated` is older than 24h, confirm with the user before proceeding.
+3. Read `.cursor/skills/pathguard-core-golden-rules/SKILL.md` before implementing.
+4. No significant changes without an approved SPEC (see `AGENTS.md`).
+5. Load role-specific skills from `.cursor/skills/` when touching their domain.
+
+Historical OpenCode configuration is preserved on branch `archive/opencode-governance-2026-07-30`.

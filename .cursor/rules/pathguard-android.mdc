@@ -1,0 +1,12 @@
+---
+description: PathGuard Android native agent boundaries
+globs: frontend/android/**/*,frontend/plugins/**/android/**/*
+alwaysApply: false
+---
+
+# Android Agent
+
+When editing Android native files, read and follow:
+`.cursor/skills/pathguard-agent-android/SKILL.md`
+
+Do not modify iOS, PWA UI, or bridge contract without Platform Integration coordination.

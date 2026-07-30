@@ -1,18 +1,20 @@
-# AGENTS — Instruccions globals per a agents opencode a PathGuard
+# AGENTS — Instruccions globals per a agents Cursor a PathGuard
 
-Aquest fitxer és el **punt d'entrada obligatori** per a qualsevol agent opencode que treballi sobre aquest repositori. Complementa (no substitueix) `CONTEXT.md` i la resta de la documentació de governança.
+Aquest fitxer és el **punt d'entrada obligatori** per a qualsevol agent que treballi sobre aquest repositori. Complementa (no substitueix) `CONTEXT.md` i la resta de la documentació de governança.
+
+> **Històric OpenCode:** la configuració anterior (`.opencode/`) es conserva a la branca `archive/opencode-governance-2026-07-30`.
 
 ---
 
 ## Inicialització obligatòria dels agents
 
-Abans d'iniciar qualsevol tasca, qualsevol agent (independentment del model utilitzat) ha de seguir aquest procés.
+Abans d'iniciar qualsevol tasca, qualsevol agent ha de seguir aquest procés.
 
 ### Ordre de lectura
 
-1. `.opencode/governance/ARCHITECT.md`
-2. `.opencode/governance/MODEL_ROLES.md`
-3. `.opencode/governance/ORCHESTRATOR.md`
+1. `docs/governance/ARCHITECT.md`
+2. `docs/governance/MODEL_ROLES.md`
+3. `docs/governance/ORCHESTRATOR.md`
 4. `CONTEXT.md`
 5. La SPEC relacionada amb la tasca
 6. La documentació tècnica relacionada
@@ -36,13 +38,13 @@ Cap implementació hauria de començar sense haver completat aquest procés.
 
 ## Primera acció de cada sessió
 
-Un cop completada la inicialització, la primera crida de tool ha de ser:
+Un cop completada la inicialització:
 
-```
-skill({ name: "pathguard-core-state" })
-```
+1. Llegeix `.pathguard/STATE.json`
+2. Llegeix `.cursor/skills/pathguard-core-state/SKILL.md`
+3. Valida la branca amb `git branch --show-current`
 
-Aquest skill llegeix `.pathguard/STATE.json` i retorna:
+Retorna:
 
 - Branca actual
 - Fase del projecte
@@ -52,7 +54,7 @@ Aquest skill llegeix `.pathguard/STATE.json` i retorna:
 - Bloquejos
 - Pickup-point per continuar la propera sessió
 
-**No escriure codi, obrir branques ni fer commits** sense haver carregat aquest skill i validat l'estat.
+**No escriure codi, obrir branques ni fer commits** sense haver carregat l'estat i validat el context.
 
 ---
 
@@ -61,23 +63,19 @@ Aquest skill llegeix `.pathguard/STATE.json` i retorna:
 Els skills disponibles es troben a:
 
 ```
-.opencode/skills/
+.cursor/skills/
 ```
 
-L'orquestrador és responsable d'identificar quin o quins skills són els adequats per a cada tasca.
-
-No s'han d'invocar skills sense haver analitzat prèviament el context i les especificacions.
-
-Els 20 skills actius de PathGuard viuen a `.opencode/skills/<nom>/SKILL.md` com a fitxers plans (un directori per skill, format natiu opencode). Cap symlink, cap duplicació. La categoria es dedueix pel prefix del nom: `pathguard-core-*` (3), `pathguard-agent-*` (8), `pathguard-domain-*` (3), `pathguard-workflow-*` (6).
+Les rules de Cursor a `.cursor/rules/` activen automàticament el context per zona de fitxers. L'agent ha de llegir el skill complet quan treballi en aquell domini.
 
 | Categoria | Prefix al nom | Què conté |
 |---|---|---|
-| `core` | `pathguard-core-*` | 3 skills: `pathguard-core-state`, `pathguard-core-golden-rules`, `pathguard-core-conventions` |
-| `agent` | `pathguard-agent-*` | 8 skills de rol: frontend, backend, android, ios, platform, qa, devops, tech-lead (els skills d'agent frontend/backend/android/ios/qa/devops integren també el domini de stack/plugin/CI/testing) |
-| `domain` | `pathguard-domain-*` | 3 skills de domini pur: bridge-contract, capacitor-config, field-testing |
-| `workflow` | `pathguard-workflow-*` | 6 skills de workflow: SDD, branching, commit |
+| `core` | `pathguard-core-*` | 3 skills: state, golden-rules, conventions |
+| `agent` | `pathguard-agent-*` | 8 skills de rol |
+| `domain` | `pathguard-domain-*` | 3 skills: bridge-contract, capacitor-config, field-testing |
+| `workflow` | `pathguard-workflow-*` | 6 skills: SDD, branching, commit |
 
-Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
+Mapeig complet: `agents/INDEX.md`.
 
 ---
 
@@ -86,9 +84,8 @@ Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
 1. **Carrega `pathguard-core-state` SEMPRE primer.**
 2. **Carrega `pathguard-core-golden-rules` i `pathguard-core-conventions`** abans d'escriure codi o obrir branques.
 3. **Carrega el skill del teu rol** (`pathguard-agent-<rol>`) quan la tasca afecta el teu domini.
-4. **Carrega skills de domini** segons la zona tocada (ex: `pathguard-agent-ios` si toques Swift/CLLocationManager, o `pathguard-domain-bridge-contract` si toques el bridge TS).
-5. **Carrega skills de workflow** quan iniciïs un cicle SDD (`pathguard-workflow-sdd-create-spec`, etc.).
-6. **No carreguis `customize-opencode`** — és un skill built-in d'opencode per configurar la pròpia eina, no per treballar al projecte.
+4. **Carrega skills de domini** segons la zona tocada.
+5. **Carrega skills de workflow** quan iniciïs un cicle SDD.
 
 ---
 
@@ -119,7 +116,7 @@ Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
 | Capacitor config | `frontend/capacitor.config.ts` | Agent Platform Integration |
 | Specs | `specs/` | Tech Lead |
 | ADRs | `docs/decisions/` | Tech Lead |
-| Skills | `.opencode/skills/` | Tech Lead |
+| Skills | `.cursor/skills/` | Tech Lead |
 
 ---
 
@@ -146,11 +143,12 @@ Mapeig complet amb descripcions i prerequisits: `agents/INDEX.md`.
 
 ## Referència ràpida
 
-- Estat del projecte: `.pathguard/STATE.json` (llegit pel skill `pathguard-core-state`)
+- Estat del projecte: `.pathguard/STATE.json`
 - Mapa d'agents i skills: `agents/INDEX.md`
 - Catàleg de specs: `specs/000-index.md`
 - Índex de documentació: `docs/INDEX.md`
 - Fase actual: `docs/phases/phase-status.md`
 - ADRs: `docs/decisions/`
 - Roadmap beta: `ROADMAP/beta-readiness.md`
-- Governança del projecte: `.opencode/governance/`
+- Governança del projecte: `docs/governance/`
+- Migració OpenCode → Cursor: `docs/governance/MIGRATION-FROM-OPENCODE.md`

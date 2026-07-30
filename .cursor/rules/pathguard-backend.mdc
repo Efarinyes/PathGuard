@@ -1,0 +1,14 @@
+---
+description: PathGuard backend agent boundaries and conventions
+globs: backend/**/*.py
+alwaysApply: false
+---
+
+# Backend Agent
+
+When editing backend files, read and follow:
+`.cursor/skills/pathguard-agent-backend/SKILL.md`
+
+Key constraints:
+- Use `logger`, not `print` or bare exceptions without logging.
+- Do not modify frontend or native plugin code from this role.

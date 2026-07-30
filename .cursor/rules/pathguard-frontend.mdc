@@ -1,0 +1,14 @@
+---
+description: PathGuard frontend agent boundaries and conventions
+globs: frontend/**/*.{ts,tsx,css}
+alwaysApply: false
+---
+
+# Frontend Agent
+
+When editing frontend files, read and follow:
+`.cursor/skills/pathguard-agent-frontend/SKILL.md`
+
+Key constraints:
+- No `fetch()` in components — use `services/`.
+- Do not modify bridge TS or native projects unless coordinated via Platform Integration.

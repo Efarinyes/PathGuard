@@ -2,17 +2,17 @@
 
 Aquest índex és el **punt d'entrada** per a qualsevol agent o persona que treballa al projecte. Carrega el skill adequat segons la tasca.
 
+> Skills ubicats a `.cursor/skills/<nom>/SKILL.md`
+
 ## Carrega SEMPRE primer
 
 | Skill | Motiu | Ubicació |
 |---|---|---|
-| `pathguard-core-state` | Saber on som (branca, spec, fase, pickup) | `.opencode/skills/pathguard-core-state/SKILL.md` |
-| `pathguard-core-golden-rules` | Les 10 regles no negociables | `.opencode/skills/pathguard-core-golden-rules/SKILL.md` |
-| `pathguard-core-conventions` | Branques, commits, IDs, idioma | `.opencode/skills/pathguard-core-conventions/SKILL.md` |
+| `pathguard-core-state` | Saber on som (branca, spec, fase, pickup) | `.cursor/skills/pathguard-core-state/SKILL.md` |
+| `pathguard-core-golden-rules` | Les 10 regles no negociables | `.cursor/skills/pathguard-core-golden-rules/SKILL.md` |
+| `pathguard-core-conventions` | Branques, commits, IDs, idioma | `.cursor/skills/pathguard-core-conventions/SKILL.md` |
 
 ## Per rol d'agent
-
-Cada agent té un skill que defineix el seu domini, les zones on NO pot tocar, i els recursos.
 
 | Rol | Agent skill | Skills de domini associats |
 |---|---|---|
@@ -21,11 +21,11 @@ Cada agent té un skill que defineix el seu domini, les zones on NO pot tocar, i
 | **Android** | `pathguard-agent-android` | (skill fusionat: rol + plugin) |
 | **iOS** | `pathguard-agent-ios` | (skill fusionat: rol + plugin) |
 | **Platform Integration** | `pathguard-agent-platform` | `pathguard-domain-bridge-contract`, `pathguard-domain-capacitor-config` |
-| **QA** | `pathguard-agent-qa` | `pathguard-agent-qa` (skill fusionat), `pathguard-domain-field-testing` |
+| **QA** | `pathguard-agent-qa` | `pathguard-domain-field-testing` |
 | **DevOps** | `pathguard-agent-devops` | (skill fusionat: rol + CI/CD) |
 | **Tech Lead** | `pathguard-agent-tech-lead` | (accés a tots els altres) |
 
-Ubicació base: `.opencode/skills/_agents/`
+Ubicació base: `.cursor/skills/`
 
 ## Per workflow SDD
 
@@ -36,8 +36,6 @@ Ubicació base: `.opencode/skills/_agents/`
 | Implementar spec | `pathguard-workflow-sdd-implement` |
 | Validar spec | `pathguard-workflow-sdd-validate` |
 
-Ubicació: `.opencode/skills/_workflow/`
-
 ## Per acció concreta
 
 | Acció | Skill |
@@ -45,11 +43,7 @@ Ubicació: `.opencode/skills/_workflow/`
 | Obrir/modificar branca | `pathguard-workflow-branching` |
 | Fer commit | `pathguard-workflow-commit` |
 
-Ubicació: `.opencode/skills/_workflow/`
-
 ## Per àrea de domini
-
-Els skills d'agent per a **Frontend**, **Backend**, **Android**, **iOS**, **QA** i **DevOps** han absorbit els domain skills de stack, plugin, test-pyramid i CI/CD. Els domain skills purs que romanen actius són:
 
 | Àrea | Skill | On aplica |
 |---|---|---|
@@ -57,68 +51,32 @@ Els skills d'agent per a **Frontend**, **Backend**, **Android**, **iOS**, **QA**
 | Capacitor config | `pathguard-domain-capacitor-config` | capacitor.config.ts/json |
 | Field testing | `pathguard-domain-field-testing` | Procediment amb dispositius |
 
-Ubicació: `.opencode/skills/_domain/`
+## Com usar aquest sistema (Cursor)
 
-## Com usar aquest sistema
-
-### Pas 1: Carrega `pathguard-core-state` sempre
-A l'inici de cada sessió. Sense ell, no s'ha d'escriure codi.
+### Pas 1: Bootstrap
+La rule `.cursor/rules/pathguard-bootstrap.mdc` s'aplica sempre. Llegeix `.pathguard/STATE.json` abans de canvis.
 
 ### Pas 2: Identifica el teu rol
-Si ets una IA o una persona nova, identifica quin agent ets consultant la columna "Rol".
+Consulta la columna "Rol" i llegeix el skill corresponent.
 
-### Pas 3: Carrega el skill del teu agent
-Llegeix `.opencode/skills/_agents/pathguard-agent-<rol>.md`.
+### Pas 3: Rules per glob
+Quan edites fitxers d'un domini, Cursor carrega la rule associada (frontend, backend, android, ios, platform).
 
-### Pas 4: Carrega els skills de domini
-Segons la tasca concreta, llegeix els skills de domini aplicables.
-
-### Pas 5: Si és tasca SDD, carrega el skill de workflow
-- Estic creant una spec → `pathguard-workflow-sdd-create-spec`
-- Estic revisant → `pathguard-workflow-sdd-review-spec`
-- Estic implementant → `pathguard-workflow-sdd-implement`
-- Estic validant → `pathguard-workflow-sdd-validate`
+### Pas 4: Workflows SDD
+Carrega explícitament el skill de workflow quan creïs, revisis, implementis o validis specs.
 
 ## Convencions dels skills
 
-- **Ubicació:** `.opencode/skills/<categoria>/<nom>.md`
-- **Format:** Markdown amb frontmatter YAML
-- **Camps del frontmatter:**
-  - `name` — identificador únic
-  - `description` — què fa i quan carregar (1-2 frases)
-  - `triggers` — llista de situacions que activen el skill
-  - `agent_owner` — qui el pot carregar (`*` per tots)
-  - `prerequisites` — altres skills que cal tenir carregats
+- **Ubicació:** `.cursor/skills/<nom>/SKILL.md`
+- **Format:** Markdown amb frontmatter YAML (`name`, `description`)
+- **Workflows:** `disable-model-invocation: true` — carregar explícitament
 
-## Exemple d'invocació
+## Afegir un skill nou
 
-```
-vull afegir una nova funcionalitat X que toca backend i frontend
-```
+1. Crear `.cursor/skills/<nom>/SKILL.md` amb frontmatter Cursor
+2. Actualitzar aquest índex
+3. Si cal, afegir rule a `.cursor/rules/` amb globs adequats
 
-1. Carrega `pathguard-core-state` (saber on som)
-2. Carrega `pathguard-workflow-sdd-create-spec` (workflow)
-3. Carrega `pathguard-agent-tech-lead` (revisarà la spec)
-4. Carrega `pathguard-agent-backend` (si la spec toca backend)
-5. Carrega `pathguard-agent-frontend` (si la spec toca frontend)
-6. Carrega `pathguard-domain-bridge-contract` (si toca el bridge TS)
+## Històric
 
-## Exemple de validació
-
-```
-la spec SPEC-020 ja està implementada, validar
-```
-
-1. Carrega `pathguard-core-state`
-2. Carrega `pathguard-workflow-sdd-validate` (workflow)
-3. Carrega `pathguard-agent-qa` (qui valida; inclou piràmide de tests)
-4. Carrega `pathguard-domain-field-testing` (si cal validació de camp)
-6. Carrega el skill de l'agent owner (per entendre el context)
-
-## Manteniment d'aquest índex
-
-Quan s'afegeix un nou skill:
-
-1. Crear el fitxer `.opencode/skills/<categoria>/<nom>.md`
-2. Afegir l'entrada a aquest INDEX
-3. Notificar al Tech Lead per revisió
+La configuració OpenCode original (`.opencode/skills/`, `.opencode/governance/`) es conserva a la branca `archive/opencode-governance-2026-07-30`.
