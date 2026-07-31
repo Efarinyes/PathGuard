@@ -38,6 +38,7 @@ Guia instal·lació Xcode + Android Studio.pages
 # STATE.json és regenerable per sessió; STATE.example.json sí que es commiteja
 .pathguard/STATE.json
 .pathguard/skills/_runtime/
+.pathguard/session-notes/
 
 # Skill reorganization backups
 .opencode/skills.backup.*/
