@@ -92,5 +92,5 @@ Arquitectura:
 
 ## References
 
-- `.opencode/skills/pathguard-domain-capacitor-config/SKILL.md`
+- `.cursor/skills/pathguard-domain-capacitor-config/SKILL.md`
 - [Capacitor docs](https://capacitorjs.com/docs)

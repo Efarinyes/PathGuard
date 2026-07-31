@@ -109,9 +109,9 @@ Si un dispositiu es perd o el token filtra, no hi ha manera d'invalidar-lo. Per 
 
 ## 10. Referències
 - `audit_native_layer.md` secció 4 (R-P0-4)
-- `.opencode/skills/_domain/pathguard-backend-models.md`
-- `.opencode/skills/pathguard-domain-capacitor-config/SKILL.md`
-- `.opencode/skills/pathguard-domain-bridge-contract/SKILL.md`
+- `.cursor/skills/pathguard-agent-backend/SKILL.md`
+- `.cursor/skills/pathguard-domain-capacitor-config/SKILL.md`
+- `.cursor/skills/pathguard-domain-bridge-contract/SKILL.md`
 
 ---
 

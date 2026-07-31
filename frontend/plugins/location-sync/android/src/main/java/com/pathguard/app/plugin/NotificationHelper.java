@@ -10,17 +10,17 @@ import androidx.core.app.NotificationCompat;
 
 public class NotificationHelper {
 
-    public static final String CHANNEL_ID = "location_tracking";
+    public static final String CHANNEL_ID = "pathguard_walk";
     public static final int NOTIFICATION_ID = 1;
 
     public static void createChannel(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "PathGuard",
+                    "Passeig PathGuard",
                     NotificationManager.IMPORTANCE_MIN
             );
-            channel.setDescription("Notificació del servei de localització");
+            channel.setDescription("Només mentre duri el passeig");
             channel.setSound(null, null);
             channel.enableVibration(false);
             channel.enableLights(false);
@@ -33,12 +33,14 @@ public class NotificationHelper {
     }
 
     public static Notification buildNotification(Context context) {
+        int icon = context.getApplicationInfo().icon;
         return new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setContentTitle("Passeig actiu")
+                .setContentTitle("Bon passeig")
                 .setContentText(null)
-                .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+                .setSmallIcon(icon)
                 .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_MIN)
+                .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setSilent(true)
                 .setShowWhen(false)
                 .build();

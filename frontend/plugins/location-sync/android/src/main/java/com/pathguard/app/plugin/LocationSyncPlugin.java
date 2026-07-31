@@ -18,6 +18,7 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 public class LocationSyncPlugin extends Plugin {
 
     private static final int REQUEST_POST_NOTIFICATIONS = 1001;
+    private static final int REQUEST_FINE_LOCATION = 1002;
 
     private PluginCall pendingStartCall;
     private String pendingServerUrl;
@@ -35,45 +36,95 @@ public class LocationSyncPlugin extends Plugin {
             return;
         }
 
+        pendingStartCall = call;
+        pendingServerUrl = serverUrl;
+        pendingDeviceToken = deviceToken;
+        pendingWalkId = walkId;
+
+        if (!ensurePermissionsAndStart()) {
+            // Waiting for permission dialog; call resolved/rejected in callback.
+        }
+    }
+
+    /**
+     * FGS with foregroundServiceType=location does not require ACCESS_BACKGROUND_LOCATION
+     * when started from the foreground with while-in-use location granted (Android 10+).
+     */
+    private boolean ensurePermissionsAndStart() {
         Context context = getContext();
 
-        boolean hasFine = context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-        boolean hasCoarse = context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-        if (!hasFine && !hasCoarse) {
-            call.reject("Permís d'ubicació no concedit. Cal ACCESS_FINE_LOCATION o ACCESS_COARSE_LOCATION.");
-            return;
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            boolean hasBackground = context.checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED;
-            if (!hasBackground) {
-                call.reject("Permís ACCESS_BACKGROUND_LOCATION no concedit. Cal 'Permetre tot el temps' a Configuració → Aplicacions → PathGuard → Ubicació.");
-                return;
+        if (!hasLocationPermission(context)) {
+            if (getActivity() == null) {
+                rejectPending("No es pot demanar el permís d'ubicació sense activitat activa.");
+                return false;
             }
+            ActivityCompat.requestPermissions(
+                getActivity(),
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                REQUEST_FINE_LOCATION
+            );
+            return false;
         }
 
         if (Build.VERSION.SDK_INT >= 34) {
-            boolean hasFgsLocation = context.checkSelfPermission(Manifest.permission.FOREGROUND_SERVICE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            boolean hasFgsLocation = context.checkSelfPermission(Manifest.permission.FOREGROUND_SERVICE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
             if (!hasFgsLocation) {
-                call.reject("Permís FOREGROUND_SERVICE_LOCATION no concedit.");
-                return;
+                rejectPending("Permís FOREGROUND_SERVICE_LOCATION no concedit.");
+                return false;
             }
         }
 
         if (Build.VERSION.SDK_INT >= 33) {
-            boolean hasNotifications = context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+            boolean hasNotifications = context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED;
             if (!hasNotifications) {
-                pendingStartCall = call;
-                pendingServerUrl = serverUrl;
-                pendingDeviceToken = deviceToken;
-                pendingWalkId = walkId;
-                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_POST_NOTIFICATIONS);
-                return;
+                if (getActivity() == null) {
+                    rejectPending("No es pot demanar el permís de notificacions sense activitat activa.");
+                    return false;
+                }
+                ActivityCompat.requestPermissions(
+                    getActivity(),
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    REQUEST_POST_NOTIFICATIONS
+                );
+                return false;
             }
         }
 
-        doStartTracking(serverUrl, deviceToken, walkId);
-        call.resolve();
+        completePendingStart();
+        return true;
+    }
+
+    private static boolean hasLocationPermission(Context context) {
+        boolean hasFine = context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED;
+        boolean hasCoarse = context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED;
+        return hasFine || hasCoarse;
+    }
+
+    private void completePendingStart() {
+        if (pendingStartCall == null || pendingServerUrl == null || pendingDeviceToken == null || pendingWalkId == null) {
+            return;
+        }
+        doStartTracking(pendingServerUrl, pendingDeviceToken, pendingWalkId);
+        pendingStartCall.resolve();
+        clearPendingStart();
+    }
+
+    private void rejectPending(String message) {
+        if (pendingStartCall != null) {
+            pendingStartCall.reject(message);
+        }
+        clearPendingStart();
+    }
+
+    private void clearPendingStart() {
+        pendingStartCall = null;
+        pendingServerUrl = null;
+        pendingDeviceToken = null;
+        pendingWalkId = null;
     }
 
     private void doStartTracking(String serverUrl, String deviceToken, Integer walkId) {
@@ -89,18 +140,24 @@ public class LocationSyncPlugin extends Plugin {
     @Override
     protected void handleRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.handleRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (pendingStartCall == null) {
+            return;
+        }
+
+        if (requestCode == REQUEST_FINE_LOCATION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                ensurePermissionsAndStart();
+            } else {
+                rejectPending("Permís d'ubicació no concedit. Cal permetre l'accés a la ubicació per iniciar el passeig.");
+            }
+            return;
+        }
+
         if (requestCode == REQUEST_POST_NOTIFICATIONS) {
-            if (pendingStartCall != null) {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    doStartTracking(pendingServerUrl, pendingDeviceToken, pendingWalkId);
-                    pendingStartCall.resolve();
-                } else {
-                    pendingStartCall.reject("Permís de notificacions denegat. El servei en primer pla no podrà mostrar notificacions.");
-                }
-                pendingStartCall = null;
-                pendingServerUrl = null;
-                pendingDeviceToken = null;
-                pendingWalkId = null;
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                ensurePermissionsAndStart();
+            } else {
+                rejectPending("Permís de notificacions denegat. El servei en primer pla no podrà mostrar la icona discreta del passeig.");
             }
         }
     }

@@ -24,7 +24,7 @@ interface Notification {
  */
 export default function PatientWalkController() {
   const { deviceToken, activeWalkId, sosEnabled, setSosEnabled } = useAppState();
-  const { isTracking, currentPosition, startTracking, stopTracking } = useLocationTracking();
+  const { isTracking, currentPosition, error: trackingError, startTracking, stopTracking } = useLocationTracking();
   const { isWalking, isLoading, handleStartWalk, handleStopWalk } = useWalkSession();
   const [notification, setNotification] = useState<Notification | null>(null);
   const notifCounter = useRef(0);
@@ -66,6 +66,11 @@ export default function PatientWalkController() {
       stopTracking();
     }
   }, [isWalking, isTracking, deviceToken, activeWalkId, startTracking, stopTracking]);
+
+  useEffect(() => {
+    if (!trackingError || !isWalking) return;
+    showNotification(trackingError, 'warning');
+  }, [trackingError, isWalking]);
 
   // Push updates to API when the hook emits a valid, filtered point
   useEffect(() => {

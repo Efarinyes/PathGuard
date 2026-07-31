@@ -166,8 +166,8 @@ Aquesta spec toca 2 agents:
 - `docs/decisions/0006-centralized-permissions.md` (ADR-0006) — permisos centralitzats al plugin.
 - `specs/integration-SPEC-020-consolidate-gps-capture.md` (SPEC-020) — C-3 ja previst a 020.4, però no implementat.
 - `specs/tech-SPEC-040-bridge-contract-v2.md` (SPEC-040) — contracte immutable, no es toca.
-- `.opencode/skills/pathguard-agent-android/SKILL.md` — guia del plugin Android.
-- `.opencode/skills/pathguard-agent-frontend/SKILL.md` — guia del frontend.
+- `.cursor/skills/pathguard-agent-android/SKILL.md` — guia del plugin Android.
+- `.cursor/skills/pathguard-agent-frontend/SKILL.md` — guia del frontend.
 - `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationSyncForegroundService.java` — fitxer a modificar.
 - `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationAcquirer.java` — fitxer a modificar.
 - `frontend/hooks/useLocationTracking.ts` — fitxer a modificar.

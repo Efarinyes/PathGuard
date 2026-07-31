@@ -81,5 +81,5 @@ El contracte actual a `frontend/plugins/location-sync/src/index.ts` ja té 6 mè
 
 ## 10. Referències
 - `audit_native_layer.md` (multi-referència)
-- `.opencode/skills/pathguard-domain-bridge-contract/SKILL.md`
+- `.cursor/skills/pathguard-domain-bridge-contract/SKILL.md`
 - SPEC-020, SPEC-030

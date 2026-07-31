@@ -94,4 +94,4 @@ manager.requestWhenInUseAuthorization()
 
 - SPEC-020 (Consolidar captura GPS), subtask 020.6
 - `audit_native_layer.md` secció 6 (R-P0-5)
-- `.opencode/skills/pathguard-domain-bridge-contract/SKILL.md`
+- `.cursor/skills/pathguard-domain-bridge-contract/SKILL.md`

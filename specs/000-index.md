@@ -38,7 +38,9 @@ Catàleg viu de totes les specs del projecte. Cada spec viu al seu propi fitxer 
 | [SPEC-150](tech-SPEC-150-android-foreground-robustness.md) | tech | Android foreground service robustness for 2h walks (C-1..C-4) | android+frontend | draft | — |
 | [SPEC-160](tech-SPEC-160-ios-network-monitor-caregiver.md) | tech | iOS network monitor must start globally, not only during tracking (Bug 1+2 R-P0-NEW-1) | ios+platform-integration+frontend | draft | — |
 | [SPEC-170](tech-SPEC-170-caregiver-presence-http-broadcast.md) | tech | Caregiver presence updates from HTTP batch uploads | backend | draft | — |
-| [SPEC-140](integration-SPEC-140-native-ios-network-reachability-bridge.md) | integration | Native iOS network reachability bridge for WebSocket reconnect | platform-integration+ios+frontend | approved | `fix/SPEC-140-native-ios-network-reachability-bridge` |
+| [SPEC-180](integration-SPEC-180-buffer-recovery-cross-platform.md) | integration | Persistent location buffer and is_recovered correctness across app lifecycle | platform-integration+ios+android+frontend+backend+qa | draft | `fix/SPEC-180-buffer-recovery-cross-platform` |
+| [SPEC-181](tech-SPEC-181-android-recovered-flag.md) | tech | Fix Android is_recovered override and buffer hysteresis | android | draft | `fix/SPEC-181-android-recovered-flag` |
+| [SPEC-182](tech-SPEC-182-ios-buffer-validation.md) | tech | Validate iOS persistent buffer and is_recovered on app restart | ios | draft | `fix/SPEC-182-ios-buffer-validation` |
 
 ### P1 — Beta readiness
 
@@ -66,7 +68,7 @@ Cap encara.
 
 ## Com crear una nova spec
 
-1. Carrega `.opencode/skills/pathguard-workflow-sdd-create-spec/SKILL.md`
+1. Carrega `.cursor/skills/pathguard-workflow-sdd-create-spec/SKILL.md`
 2. Segueix el template
 3. Troba el següent NNN disponible per tipus
 4. Crea `specs/<type>-SPEC-NNN-kebab-case-titol.md`
@@ -82,6 +84,6 @@ Cap encara.
 
 ## Referències
 
-- Workflow: `.opencode/skills/pathguard-workflow-sdd-create-spec/SKILL.md`
-- Template: `.opencode/skills/pathguard-workflow-sdd-create-spec/SKILL.md` (secció Template)
-- Review: `.opencode/skills/pathguard-workflow-sdd-review-spec/SKILL.md`
+- Workflow: `.cursor/skills/pathguard-workflow-sdd-create-spec/SKILL.md`
+- Template: `.cursor/skills/pathguard-workflow-sdd-create-spec/SKILL.md` (secció Template)
+- Review: `.cursor/skills/pathguard-workflow-sdd-review-spec/SKILL.md`

@@ -85,7 +85,7 @@ El fitxer `LocationSyncPlugin.java` encara referencia `LocationSyncForegroundSer
 
 ## 10. Referències
 - `audit_native_layer.md` secció 1 (R-P0-1)
-- `.opencode/skills/pathguard-agent-android/SKILL.md`
+- `.cursor/skills/pathguard-agent-android/SKILL.md`
 - Última versió vàlida: `main` branch
 
 ---

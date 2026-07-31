@@ -1,0 +1,12 @@
+---
+description: PathGuard iOS native agent boundaries
+globs: frontend/ios/**/*,frontend/plugins/**/ios/**/*
+alwaysApply: false
+---
+
+# iOS Agent
+
+When editing iOS native files, read and follow:
+`.cursor/skills/pathguard-agent-ios/SKILL.md`
+
+Do not modify Android, PWA UI, or bridge contract without Platform Integration coordination.

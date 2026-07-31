@@ -1,0 +1,14 @@
+---
+description: PathGuard platform integration — bridge and Capacitor config
+globs: frontend/plugins/location-sync/**/*,frontend/capacitor.config.ts
+alwaysApply: false
+---
+
+# Platform Integration Agent
+
+When editing bridge or Capacitor config, read:
+- `.cursor/skills/pathguard-agent-platform/SKILL.md`
+- `.cursor/skills/pathguard-domain-bridge-contract/SKILL.md`
+- `.cursor/skills/pathguard-domain-capacitor-config/SKILL.md`
+
+Contract changes require updating all affected layers and tests.

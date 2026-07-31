@@ -62,4 +62,4 @@ Audit `audit_native_layer.md` (issue 13) identifica que `Info.plist` té `armv7`
 
 ## 10. Referències
 - `audit_native_layer.md` secció 13
-- `.opencode/skills/pathguard-agent-ios/SKILL.md`
+- `.cursor/skills/pathguard-agent-ios/SKILL.md`
