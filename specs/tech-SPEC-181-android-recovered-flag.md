@@ -124,8 +124,9 @@ Aquesta spec només toca la capa Android:
 - [x] No es canvien constants GPS, permisos, ni el format JSON del payload.
 
 ### AC-6 — Prova de camp (sense mode avió)
-- [ ] Al Redmi: passeig amb **kill app + reobrir** (o tram a la butxaca que forci buffer) → els punts que s’havien persistit/enviat via buffer tenen `is_recovered = true`; els enviats en viu tenen `false`.
-- [ ] Mode avió **no** és criteri d’acceptació (fora d’abast beta — decisió producte 2026-08-01).
+- [~] Smoke 2026-08-01 (Redmi, APK post-`0f9d71d`, **sense moviment**): kill app → caregiver «Passeig actiu - Sense cobertura» (taronja, amb latència); reobrir → «En línia» (verd). Presència OK. `is_recovered` **no validable** sense punts GPS nous.
+- [ ] Pendent: passeig amb moviment + butxaca i/o kill/reopen → verificar flags `is_recovered` a BD.
+- [x] Mode avió **no** és criteri d’acceptació (fora d’abast beta — decisió producte 2026-08-01).
 
 ## 6. Riscos identificats
 
