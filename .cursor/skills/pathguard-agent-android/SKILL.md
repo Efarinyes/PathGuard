@@ -337,14 +337,13 @@ Caldria:
 
 **Dispositiu:** Redmi (testat parcialment 2026-06-10)
 
-**Escenaris:**
-1. Walk 15 min
-2. Mode avió 5 min
-3. Screen-off 30 min
-4. Kill app
-5. Reobrir (recuperar walkId)
+**Escenaris (beta — sense mode avió):**
+1. Walk 15 min (app activa)
+2. Butxaca / screen-off 15–30 min (**prioritari** — Doze/OEM)
+3. Kill app + reobrir (recuperar walkId + en línia)
+4. Walk ~45–60 min tipic de producte
 
-**Criteri d'èxit:** zero pèrdua, ruta coherent.
+**Criteri d'èxit:** densitat de punts acceptable a la butxaca; zero pèrdua massiva; ruta coherent.
 
 ## Errors comuns
 

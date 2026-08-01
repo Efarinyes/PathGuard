@@ -154,7 +154,7 @@ Aquesta spec toca **6 agents** i requereix coordinació:
 
 ## 9. Out of scope
 
-- Mode avió (l’usuari ha explicitat que no és un escenari prioritari ni habitual).
+- Mode avió — **fora d’abast per a gate beta** (decisió producte 2026-08-01). No usar com a criteri de prova ni nord de specs.
 - Nou mètode al bridge (el contracte actual ja suporta `is_recovered`).
 - Canvis al protocol WebSocket de presència (ja cobert per SPEC-130, SPEC-140, SPEC-160).
 - Foreground notification iOS (post-beta).

@@ -138,11 +138,11 @@ Aquesta spec toca 2 agents:
 - **Tests Vitest:** baseline 108/108 → objectiu 110/110 (2 nous escenaris a C-3).
 - **Tests JUnit:** no existeixen al plugin (deute tècnic SPEC-110) — fora d'abast.
 - **Tests backend:** 152/152 sense canvis (no s'ha tocat el backend).
-- **Field test (Redmi):** passeig 2 hores amb:
-  - Screen-off als 5 min
-  - Mode avió 5 min a la meitat
-  - 1 kill app al 75% del passeig
-  - Criteri d'èxit: 0 pèrdua de punts, tots al mapa del cuidador.
+- **Field test (Redmi) — target producte ~45–60 min (no 2h, no mode avió):**
+  - Screen-off / butxaca des dels primers minuts (escenari crític)
+  - 1 kill app + reobrir a mitja passejada
+  - Criteri d'èxit: densitat de punts acceptable a la butxaca; 0 pèrdua massiva; mapa cuidador coherent.
+  - Mode avió: **fora d’abast** per a gate beta (decisió producte 2026-08-01).
 - **Cross-capa:** format JSON del payload Android idèntic al d'iOS.
 - **QA sign-off:** tots els AC verificats, tests passen, field test documentat.
 
@@ -195,3 +195,9 @@ Aquesta spec toca 2 agents:
 **Observació de camp:** el sistema Android sembla reduir la freqüència o aturar l'adquisició GPS quan el mòbil entra en repòs, encara amb l'app oberta i FGS actiu. Cal prova controlada Fase 3 (30–60 min + 15–30 min pantalla apagada) abans de marcar SPEC-150 com `validated`.
 
 **Relació amb SPEC-181:** els blocs `is_recovered=true` durant repòs són coherents amb la semàntica de producte (veure SPEC-180 §11); el problema obert aquí és la **densitat de punts**, no el flag.
+
+### Prioritat producte (2026-08-01)
+
+- Target: passejos curts ≤ ~1h; telèfon a la butxaca.
+- Gate beta: butxaca/screen-off + kill/reopen. **Sense mode avió.**
+- Backlog candidat (no implementat): keep-alive periòdic no invasiva durant passeig actiu; opcionalment **caregiver → force location** (wake + flush buffer sota demanda). Veure pla post-GPS.

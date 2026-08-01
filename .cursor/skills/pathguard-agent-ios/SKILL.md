@@ -407,14 +407,13 @@ xcodebuild -workspace App/App.xcworkspace -scheme App -configuration Debug
 
 **Dispositiu:** iPhone 8 (iOS 15+) + iPhone recent (iOS 17+)
 
-**Escenaris:**
+**Escenaris (beta — sense mode avió):**
 1. Walk 15 min en zona urbana
-2. Mode avió 5 min → reconnectar
-3. Screen-off 30 min
-4. Kill app (swipe away) → reobrir
-5. SOS (mantenir 3s)
+2. Butxaca / screen-off 15–30 min
+3. Kill app (swipe away) → reobrir + estat en línia
+4. SOS (mantenir 3s)
 
-**Criteri d'èxit:** zero pèrdua de punts, mapa coherent, `is_recovered` correcte.
+**Criteri d'èxit:** densitat de punts acceptable; mapa coherent; `is_recovered` coherent amb buffer.
 
 ## Errors comuns
 

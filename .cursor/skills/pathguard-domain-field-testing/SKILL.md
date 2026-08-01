@@ -11,6 +11,17 @@ description: >-
 Read these skills first:
 - `pathguard-agent-qa`
 
+## Producte (beta)
+
+PathGuard beta = **passejos curts** (~15–60 min): patient surt a donar una volta; caregiver veu si tot va bé i on és.
+
+El telèfon del patient sol anar **a la butxaca** (pantalla apagada / repòs). Això és l’escenari real a validar.
+
+### Fora d’abast per a Beta estable
+
+- **Mode avió** — no és un cas d’ús de producte ni criteri de gate beta. No l’utilitzar en proves de release. (Històricament s’havia usat com a proxy de laboratori; s’abandona.)
+- Passejos de 2h+ — fora del target de producte actual.
+
 ## Dispositius
 
 | Rol | Dispositiu | OS | Versió |
@@ -22,71 +33,58 @@ Read these skills first:
 | Cuidador | Ordinador (Chrome) | — | latest |
 | Cuidador (PWA) | Safari mòbil | — | latest |
 
-## Escenaris mínims (per release)
+## Escenaris mínims (per release / Beta)
 
-### 1. Walk normal
-**Durada:** 15 min
-**Ruta:** coneguda (5-10 punts GPS esperables)
+### 1. Walk normal (app activa)
+**Durada:** 15 min  
+**Ruta:** coneguda (5-10 punts GPS esperables)  
 **Passos:**
 1. Obrir `/patient` al dispositiu
 2. Iniciar walk
-3. Caminar la ruta
+3. Caminar la ruta (pantalla encesa o app en primer pla)
 4. Aturar walk
 5. Verificar punts al mapa del cuidador
 
 **Criteri d'èxit:**
 - Tots els punts al mapa
 - Ruta coherent (sense zigzags evidents)
-- Zero `is_recovered` (tot live)
+- Majoritàriament `is_recovered=false` (transmissió en viu)
 - Distància acumulada raonable
 
-### 2. Pèrdua de cobertura
-**Durada:** 5 min offline + 5 min recovery
+### 2. Telèfon a la butxaca (repòs / screen-off) — **crític Android**
+**Durada:** 20–40 min total (mínim 15 min amb pantalla apagada)  
 **Passos:**
 1. Iniciar walk
-2. Caminar 5 min
-3. Activar mode avió 5 min
-4. Desactivar mode avió
-5. Caminar 5 min més
-6. Aturar walk
+2. Caminar 2–3 min amb app visible
+3. Apagar pantalla i posar el telèfon a la butxaca / penjat
+4. Continuar el passeig
+5. Encendre pantalla, aturar walk
+6. Verificar BD + mapa cuidador
 
 **Criteri d'èxit:**
-- Punts offline marcats `is_recovered=true`
-- Segment recovered pintat discontinu al mapa
-- Zero pèrdua de punts
-- Total de punts ≈ 12-15 min de walk
+- Flux de punts **continu o amb densitat acceptable** durant repòs (sense forats de molts minuts)
+- Cuidador veu actualitzacions o, si hi ha retard, els punts arriben en ordre cronològic
+- Cap pèrdua massiva de trams
 
-### 3. Screen-off (Doze / background)
-**Durada:** 30 min
-**Passos:**
-1. Iniciar walk
-2. Apagar pantalla
-3. Caminar 30 min amb pantalla apagada
-4. Encendre pantalla
-5. Aturar walk
+> Prioritat producte 2026-08-01: aquest escenari importa més que qualsevol simulació de xarxa artificial.
 
-**Criteri d'èxit:**
-- Punts seguits durant screen-off
-- Cuidador veu actualitzacions en temps real (si WS viu)
-- Si WS mor, caregiver veu `gps_online` (no `offline`)
-
-### 4. Kill app (swipe away)
-**Durada:** 15 min
+### 3. Kill app + reobrir (passeig actiu)
+**Durada:** 15 min  
 **Passos:**
 1. Iniciar walk
 2. Swipe away (tancar app)
-3. Caminar 2 min
+3. Esperar 1–2 min (telèfon en repòs)
 4. Reobrir app
-5. Verificar que walk continua
+5. Verificar que walk continua i caregiver torna a “en línia”
 
 **Criteri d'èxit:**
 - `walkId` recuperat
-- Punts enviats durant kill
-- App reconnecta automàticament
-- Walk reprèn sense intervenció
+- Estat cuidador: torna a en línia després de reobrir
+- Punts pendents al buffer s’envien; poden ser `is_recovered=true` si s’havien persistit
+- Walk reprèn sense intervenció manual extra
 
-### 5. SOS
-**Durada:** 5 min
+### 4. SOS
+**Durada:** 5 min  
 **Passos:**
 1. Walk actiu
 2. Cuidador monitoritza
@@ -98,8 +96,8 @@ Read these skills first:
 - Modal apareix al cuidador < 2s
 - Localització del SOS visible
 
-### 6. Multi-caregiver
-**Durada:** 10 min
+### 5. Multi-caregiver
+**Durada:** 10 min  
 **Passos:**
 1. 2 cuidadors al grup
 2. Walk actiu
@@ -109,15 +107,15 @@ Read these skills first:
 - Broadcast arriba a tots
 - Cap cuidador queda desfasat
 
-### 7. Bateria (walk llarg)
-**Durada:** 1h
+### 6. Bateria (passeig tipic)
+**Durada:** ~45–60 min (límit producte)  
 **Passos:**
-1. Walk 1h amb intervals adaptatius
+1. Walk amb intervals normals, majoritàriament a la butxaca
 2. Mesurar consum
 
 **Criteri d'èxit:**
-- Consum raonable (< 5% per 30 min)
-- Cap pèrdua de punts per bateria
+- Consum raonable per a un passeig d’1h
+- Cap pèrdua de punts atribuïble a bateria baixa en condicions normals
 
 ## Reporting
 
@@ -137,14 +135,13 @@ Per cada prova de camp, documentar a `docs/field-tests/<data>-<escenari>.md`:
 - **is_recovered:** M/N
 - **Issues trobats:**
   - <issue 1>
-  - <issue 2>
 - **Evidència:**
   - [Screenshot/GIF/Log](path)
 ```
 
 ## Issues trobats a camp
 
-Si es troba un issue, crear ticket a `specs/` (format `bug-NNN-...`) i:
+Si es troba un issue, crear ticket a `specs/` i:
 
 1. Documentar reproducció
 2. Assignar agent
@@ -153,12 +150,19 @@ Si es troba un issue, crear ticket a `specs/` (format `bug-NNN-...`) i:
 
 ## Criteri "Beta Ready"
 
-Tots els 7 escenaris han de passar amb ✅. Qualsevol ⚠️ o ❌ requereix:
+Escenaris **1–4** han de passar amb ✅ (5–6 desitjables). Qualsevol ⚠️ o ❌ a 1–4 requereix:
 - Decisió de tech-lead (tolerable per beta o no)
 - Si no tolerable: spec + fix + retest
 
+## Backlog producte (no gate beta actual)
+
+Idees prioritaries post-/peri-beta (veure pla post-GPS):
+
+1. **Keep-alive Android no invasiva** durant passeig actiu (despertar periòdic en segon pla / FGS robust davant OEM Doze).
+2. **Caregiver → force location**: demanar al patient que enviï ubicació actual + flush del buffer (wake PathGuard sota demanda).
+
 ## Resources
 
-- `docs/guides/real-world-testing.md` (guia pràctica)
+- `docs/guides/real-world-testing.md` (guia pràctica; pot contenir històric)
 - `docs/field-tests/` (reports històrics)
-- `audit_native_layer.md` (issues coneguts)
+- `.pathguard/session-notes/PLA-POST-GPS-2026-07.md`

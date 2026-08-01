@@ -66,9 +66,9 @@ QA no implementa la spec — **verifica que els AC es compleixen**.
 |---|---|---|
 | Inici/aturada de walk | Crític | Test e2e + manual |
 | SOS activat | Crític | Test e2e + manual + so audible |
-| Pèrdua de cobertura | Crític | Test e2e + manual amb mode avió |
+| Telèfon a la butxaca / screen-off | Crític | Manual al dispositiu (Android prioritari) |
 | Kill app amb walk actiu | Crític | Manual al dispositiu |
-| Persistència del buffer | Crític | Test integration + manual |
+| Persistència del buffer | Crític | Test integration + kill/reopen |
 | Registre de família | Alt | Test e2e golden path |
 | Activació de dispositiu | Alt | Test e2e + manual |
 | Login cuidador | Alt | Test e2e |
@@ -95,12 +95,13 @@ QA no implementa la spec — **verifica que els AC es compleixen**.
 **Escenaris mínims:**
 
 1. **Walk normal** — 15 min, ruta coneguda, verificar punts al mapa
-2. **Pèrdua de cobertura** — mode avió 5 min, reconnectar, verificar `is_recovered`
-3. **Screen-off** — 30 min amb pantalla apagada, verificar punts seguits
-4. **Kill app** — swipe away durant walk, reobrir, verificar recuperació de `walkId`
-5. **SOS** — mantenir 3s, verificar so + modal al cuidador
-6. **Multi-caregiver** — 2 cuidadors al grup, verificar broadcast
-7. **Bateria** — walk de 1h, verificar consum acceptable
+2. **Butxaca / screen-off** — 15–30 min pantalla apagada (escenari real de producte)
+3. **Kill app** — swipe away durant walk, reobrir, verificar `walkId` + estat en línia
+4. **SOS** — mantenir 3s, verificar so + modal al cuidador
+5. **Multi-caregiver** — 2 cuidadors al grup, verificar broadcast
+6. **Bateria** — walk ~45–60 min (límit producte), verificar consum acceptable
+
+**Fora de gate beta:** mode avió (no és cas d’ús de producte).
 
 Veure el procediment complet a `.cursor/skills/pathguard-domain-field-testing/SKILL.md`.
 
