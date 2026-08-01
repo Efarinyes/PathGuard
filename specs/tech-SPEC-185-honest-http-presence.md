@@ -71,6 +71,9 @@ Mentrestant `get_presence_status()` ja calcula `online | gps_online | limbo | of
 - [ ] Kill app sense HTTP → caregiver acaba en offline/limbo (taronja), no verd fals. (field)
 - [ ] Kill app amb FGS enviant batches → caregiver pot mostrar `gps_online` després del batch. (field)
 
+### AC-6 — No enganxar-se a `limbo`
+- [x] Frontend re-deriva presence per edat de l’última ubicació (`derivePresenceStatus`): >300s → `offline` («Sense cobertura»), encara sense nous events WS.
+
 ## 6. Riscos
 
 - **R1:** Clients antics esperen `patient_offline` — mitigació: handler frontend es manté; nous events són `patient_status`.

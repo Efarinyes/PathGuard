@@ -4,6 +4,7 @@ import { useAppState } from './useAppState';
 import { LocationPayload } from '../services/locationService';
 import { walkService } from '../services/walkService';
 import { WalkEventProcessor, WalkState, WalkAction } from '../lib/WalkEventProcessor';
+import { derivePresenceStatus } from '../lib/derivePresenceStatus';
 import type { PresenceStatus } from '../lib/wsEventTypes';
 
 export interface UseLivePatientLocationReturn extends WalkState {
@@ -35,11 +36,18 @@ export function useLivePatientLocation(
   );
 
   const [isPatientConnected, setIsPatientConnected] = useState(false);
+  /** Last presence hint from WS; display status is re-derived from location age. */
+  const [wsPresence, setWsPresence] = useState<PresenceStatus>('offline');
   const [presenceStatus, setPresenceStatus] = useState<PresenceStatus>('offline');
   const [watchersCount, setWatchersCount] = useState(0);
   const [latestSosData, setLatestSosData] = useState<{ patient_id: number; walk_id: number | null; sos_count: number; timestamp: string } | null>(null);
   const lastProcessedSosCount = useRef<number>(0);
   const hasReceivedStatus = useRef(false);
+
+  const applyPresenceHint = (status: PresenceStatus) => {
+    setWsPresence(status);
+    hasReceivedStatus.current = true;
+  };
 
   // 1. Snapshot Recovery: Fetch active walk state (REST Initial Load)
   async function rehydrateState(isReconnect = false) {
@@ -116,10 +124,7 @@ export function useLivePatientLocation(
           setWatchersCount(classified.payload.watchers_count);
         }
         if (typeof classified.payload.patient_status === 'string') {
-          const status = classified.payload.patient_status as PresenceStatus;
-          setPresenceStatus(status);
-          setIsPatientConnected(status !== 'offline' && status !== 'limbo');
-          hasReceivedStatus.current = true;
+          applyPresenceHint(classified.payload.patient_status as PresenceStatus);
         }
         break;
       }
@@ -135,23 +140,17 @@ export function useLivePatientLocation(
       }
 
       case 'patient_online': {
-        setIsPatientConnected(true);
-        setPresenceStatus('online');
-        hasReceivedStatus.current = true;
+        applyPresenceHint('online');
         break;
       }
 
       case 'patient_offline': {
-        setIsPatientConnected(false);
-        setPresenceStatus('offline');
-        hasReceivedStatus.current = true;
+        applyPresenceHint('offline');
         break;
       }
 
       case 'patient_status': {
-        setPresenceStatus(classified.status);
-        setIsPatientConnected(classified.status !== 'offline' && classified.status !== 'limbo');
-        hasReceivedStatus.current = true;
+        applyPresenceHint(classified.status);
         break;
       }
 
@@ -186,6 +185,22 @@ export function useLivePatientLocation(
       }
     }
   }, [lastMessage, onSOSAlert]);
+
+  // Re-age presence locally so limbo/gps_online do not stick after last HTTP/WS event.
+  useEffect(() => {
+    const refresh = () => {
+      const derived = derivePresenceStatus(
+        wsPresence,
+        walkState.currentLocation?.timestamp
+      );
+      setPresenceStatus(derived);
+      setIsPatientConnected(derived !== 'offline' && derived !== 'limbo');
+    };
+
+    refresh();
+    const timer = setInterval(refresh, 1000);
+    return () => clearInterval(timer);
+  }, [wsPresence, walkState.currentLocation?.timestamp]);
 
   return {
     ...walkState,
