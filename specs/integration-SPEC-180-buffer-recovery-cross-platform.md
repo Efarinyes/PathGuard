@@ -181,3 +181,36 @@ Aquesta spec toca **6 agents** i requereix coordinació:
 - Aquesta spec és l’"umbrella" que coordina SPEC-181 (Android) i SPEC-182 (iOS).
 - L’objectiu mínim és que els registres a la base de dades siguin corrects; la visualització al mapa és un plus important però secundari.
 - El permís "sempre" és necessari per a un comportament robust; la implementació ha de respectar la privacitat i només rastrejar durant passeigs actius.
+
+## 11. Field test notes (2026-08-01)
+
+**Walk 144** (Android Redmi, ~35 min, sense mode avió) — validació parcial post-fix GPS (`f96ae5c`).
+
+| Mètrica | Resultat |
+|---|---|
+| Punts BD | 19 (IDs 940–958) |
+| Mapa cuidador | OK — separació visual blau (live) vs taronja discontinu (recovered) |
+| `is_recovered=false` | 10 punts (inici + tram final) |
+| `is_recovered=true` | 9 punts contíguos (~10:08–10:16 UTC) durant repòs del telèfon |
+
+### Semàntica acordada (revisió producte 2026-08-01)
+
+**No confondre** «només fallada de xarxa» amb «només mode avió». La definició operativa per al cuidador és:
+
+| `is_recovered` | Significat per al producte |
+|---|---|
+| `false` | Punt enviat en **transmissió en viu** mentre l'app està activa en primer pla amb xarxa OK |
+| `true` | Punt **emmagatzemat al buffer local** (repòs/segon pla, flush fallit, reobertura app) i enviat després |
+
+Per tant, el bloc 942–950 del walk 144 **pot ser comportament esperat** si el telèfon estava en repòs i els punts es van bufferitzar abans d'enviar-se — no és automàticament un error de dades.
+
+### Implementació pendent (SPEC-181, no iniciada 2026-08-01)
+
+El codi Android actual marca `isRecovered` a `onPointAccepted` amb el proxy `!isAppInForeground()` (no amb «ha passat realment pel buffer»). SPEC-181 ha de **refinar el mecanisme** (com iOS SPEC-130), no necessàriament canviar el resultat observable en escenaris de repòs.
+
+**Decisió de sessió:** implementació SPEC-181 **aparcada** fins després de Fase 1 (higiene repo). Prioritat següent: Fase 2 del pla post-GPS.
+
+### Limitacions observades (fora d'aquesta spec)
+
+- Forats GPS llargs en repòs (950→951 ~7 min) → veure SPEC-150 / R-P0-ANDROID-1.
+- Mapa sense indicadors de direcció → backlog UX (no bloqueja SPEC-180).

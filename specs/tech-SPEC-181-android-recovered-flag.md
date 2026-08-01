@@ -180,3 +180,31 @@ Aquesta spec només toca la capa Android:
 - `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationSyncForegroundService.java`
 - `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationBuffer.java`
 - `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/BufferStore.java`
+
+## 11. Field test notes (2026-08-01)
+
+**Walk 144** — 9/19 punts amb `is_recovered=true` (942–950) durant repòs del telèfon, sense mode avió.
+
+### Semàntica acordada (no implementar encara)
+
+La revisió de producte del 2026-08-01 clarifica que **aquests punts no són necessàriament «mal etiquetats»**:
+
+- `true` = punt que ha passat pel **buffer local** (repòs, flush fallit, persistència) abans d'arribar al backend.
+- `false` = transmissió **en viu** amb app en primer pla i xarxa OK.
+
+El mapa del cuidador (blau sòlid vs taronja discontinu) reflecteix correctament el flag emmagatzemat.
+
+### Què ha de corregir SPEC-181 (quan s'implementi)
+
+No eliminar el flag `true` en repòs; **canviar com s'estableix**:
+
+1. **Eliminar** `point.isRecovered = getLastFlushFailed() || !isAppInForeground()` a `onPointAccepted`.
+2. Marcar `isRecovered = true` només quan el punt **entra al buffer per persistència/flush fallit** o es **carrega des de disc** (constructor `LocationBuffer`).
+3. Corregir histèresi invertida a `onFlushFailure` / `onFlushSuccess` (AC-3).
+
+Això alinea el mecanisme amb iOS (SPEC-130) i amb `integration-SPEC-180` AC-1, sense contradir l'expectativa del cuidador en repòs.
+
+### Estat de planificació
+
+- **2026-08-01:** implementació **aparcada** per prioritat Fase 1 (higiene repo).
+- **Proper pas:** Fase 2 del pla `.pathguard/session-notes/PLA-POST-GPS-2026-07.md`.

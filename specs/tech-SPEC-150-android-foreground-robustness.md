@@ -179,4 +179,19 @@ Aquesta spec toca 2 agents:
 - Aquesta spec no toca iOS. Si després calen canvis iOS, seran specs separades.
 - L'ordre d'implementació és important: C-1 (manifest) primer, després C-2 (WakeLock), després C-4 (walkId), finalment C-3 (PWA). C-3 depèn conceptualment de C-1+C-2 perquè el plugin ha de ser robust perquè la PWA no necessiti fallback.
 - El field test al Redmi és l'última línia de validació. Si el test falla, no es fusiona a main.
-- ADR-0006 està `proposed`; aquesta spec proposa el seu sign-off simultani.
+- ADR-0006 està `proposed`; aquesta spec proposa el sign-off simultani.
+
+## 11. Field test notes (2026-08-01)
+
+**Walk 144** — passeig real ~35 min (Android Redmi, permís «mentre s'utilitza», post-fix `4b1c9eb` / merge `f96ae5c`).
+
+| Criteri | Resultat |
+|---|---|
+| GPS transmet / mapa / BD | **OK** — 19 punts, mapa cuidador estable |
+| C-1 gate background | **REVISAT OK** — `startTracking` no bloqueja amb while-in-use |
+| Continuïtat GPS en repòs | **Sospita KO** — forats llargs (950→951 ~7 min, 951→952 ~8 min) |
+| Passeig 2h screen-off | **Pendent** — no tancat |
+
+**Observació de camp:** el sistema Android sembla reduir la freqüència o aturar l'adquisició GPS quan el mòbil entra en repòs, encara amb l'app oberta i FGS actiu. Cal prova controlada Fase 3 (30–60 min + 15–30 min pantalla apagada) abans de marcar SPEC-150 com `validated`.
+
+**Relació amb SPEC-181:** els blocs `is_recovered=true` durant repòs són coherents amb la semàntica de producte (veure SPEC-180 §11); el problema obert aquí és la **densitat de punts**, no el flag.
