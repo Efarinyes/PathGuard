@@ -41,8 +41,10 @@ Catàleg viu de totes les specs del projecte. Cada spec viu al seu propi fitxer 
 | [SPEC-160](tech-SPEC-160-ios-network-monitor-caregiver.md) | tech | iOS network monitor must start globally, not only during tracking (Bug 1+2 R-P0-NEW-1) | ios+platform-integration+frontend | approved | mergejat a `main` |
 | [SPEC-170](tech-SPEC-170-caregiver-presence-http-broadcast.md) | tech | Caregiver presence updates from HTTP batch uploads | backend | approved | mergejat a `main` |
 | [SPEC-180](integration-SPEC-180-buffer-recovery-cross-platform.md) | integration | Persistent location buffer and is_recovered correctness across app lifecycle | platform-integration+ios+android+frontend+backend+qa | draft | pendent implementació (post-beta parcial) |
-| [SPEC-181](tech-SPEC-181-android-recovered-flag.md) | tech | Fix Android is_recovered override and buffer hysteresis | android | implementing | `fix/SPEC-181-android-recovered-flag` — AC-1..5 OK; pendent AC-6 field test |
+| [SPEC-181](tech-SPEC-181-android-recovered-flag.md) | tech | Fix Android is_recovered override and buffer hysteresis | android | implementing | mergejat; AC-6 field exhaustiu pendent |
 | [SPEC-182](tech-SPEC-182-ios-buffer-validation.md) | tech | Validate iOS persistent buffer and is_recovered on app restart | ios | draft | pendent (post-beta) |
+| [SPEC-183](tech-SPEC-183-android-walk-keepalive.md) | tech | Android FGS walk keepalive (flush + stale GPS probe) | android | draft | implementar si Metric A (butxaca) falla |
+| [SPEC-185](tech-SPEC-185-honest-http-presence.md) | tech | Honest HTTP presence when patient WebSocket dies | backend+frontend | implementing | fix backend; field AC-5 pendent |
 
 ### P1 — Beta readiness
 
@@ -59,6 +61,7 @@ Catàleg viu de totes les specs del projecte. Cada spec viu al seu propi fitxer 
 | [SPEC-100](feature-SPEC-100-i18n.md) | feature | i18n: CA/ES/EN | frontend | draft | — |
 | [SPEC-110](tech-SPEC-110-native-unit-tests.md) | tech | Tests unitaris natius (XCTest + JUnit) | ios+android+qa | draft | — |
 | [SPEC-120](tech-SPEC-120-presence-redis.md) | tech | WebSocket presence via Redis (post-beta) | backend+devops | draft | — |
+| [SPEC-184](feature-SPEC-184-caregiver-force-location.md) | feature | Caregiver force location (push) | multi | draft | **APARCAT** — no implementar fins fallada OEM SPEC-183 |
 
 ---
 

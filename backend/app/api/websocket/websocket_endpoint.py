@@ -38,9 +38,9 @@ async def websocket_endpoint(
         await snapshot_service.send_snapshot(websocket, db, group_id)
 
     if role == "patient":
-        if connection_manager.get_patient_status(group_id) != "online":
-            connection_manager.set_patient_online(group_id)
-            await connection_manager.broadcast_to_group(group_id, {"type": "patient_online"})
+        connection_manager.set_patient_online(group_id)
+        await connection_manager.broadcast_to_group(group_id, {"type": "patient_online"})
+        await connection_manager.broadcast_patient_status(group_id)
 
     try:
         if role == "patient":
@@ -52,28 +52,23 @@ async def websocket_endpoint(
             logger.info("Connection closed normally for %s in group %s", role, group_id)
         else:
             logger.warning("WebSocket disconnect for %s in group %s: code=%s", role, group_id, e.code)
-        connection_manager.disconnect(websocket, group_id, role)
-
-        if role == "caregiver":
-            await connection_manager.broadcast_watchers_update(group_id)
-
-        if role == "patient":
-            if not connection_manager.patient_connections.get(group_id):
-                if connection_manager.get_patient_status(group_id) == "online":
-                    connection_manager.set_patient_offline(group_id)
-                    await connection_manager.broadcast_to_group(group_id, {"type": "patient_offline"})
+        await _on_socket_gone(websocket, group_id, role)
     except Exception as e:
         logger.error("Unexpected error for %s in group %s: %s", role, group_id, str(e))
-        connection_manager.disconnect(websocket, group_id, role)
+        await _on_socket_gone(websocket, group_id, role)
 
-        if role == "caregiver":
-            await connection_manager.broadcast_watchers_update(group_id)
 
-        if role == "patient":
-            if not connection_manager.patient_connections.get(group_id):
-                if connection_manager.get_patient_status(group_id) == "online":
-                    connection_manager.set_patient_offline(group_id)
-                    await connection_manager.broadcast_to_group(group_id, {"type": "patient_offline"})
+async def _on_socket_gone(websocket: WebSocket, group_id: int, role: str) -> None:
+    """Remove socket and emit honest 4-state presence (not hard patient_offline)."""
+    connection_manager.disconnect(websocket, group_id, role)
+
+    if role == "caregiver":
+        await connection_manager.broadcast_watchers_update(group_id)
+        return
+
+    if role == "patient" and not connection_manager.patient_connections.get(group_id):
+        connection_manager.set_patient_offline(group_id)
+        await connection_manager.broadcast_patient_status(group_id)
 
 
 async def _handle_patient_loop(websocket: WebSocket, group_id: int):
@@ -82,14 +77,22 @@ async def _handle_patient_loop(websocket: WebSocket, group_id: int):
             data = await asyncio.wait_for(websocket.receive_json(), timeout=HEARTBEAT_TIMEOUT_SECONDS)
 
             if data.get("type") == "heartbeat":
-                if connection_manager.get_patient_status(group_id) != "online":
-                    connection_manager.set_patient_online(group_id)
-                    await connection_manager.broadcast_to_group(group_id, {"type": "patient_online"})
+                connection_manager.set_patient_online(group_id)
+                await connection_manager.broadcast_to_group(group_id, {"type": "patient_online"})
+                await connection_manager.broadcast_patient_status(group_id)
 
         except asyncio.TimeoutError:
-            if connection_manager.get_patient_status(group_id) == "online":
+            # Drop zombie WS so get_presence_status can return gps_online/limbo/offline
+            logger.info("Patient heartbeat timeout group=%s — recomputing presence", group_id)
+            connection_manager.disconnect(websocket, group_id, "patient")
+            if not connection_manager.patient_connections.get(group_id):
                 connection_manager.set_patient_offline(group_id)
-                await connection_manager.broadcast_to_group(group_id, {"type": "patient_offline"})
+            await connection_manager.broadcast_patient_status(group_id)
+            try:
+                await websocket.close()
+            except Exception:
+                pass
+            return
 
 
 @router.get("/")

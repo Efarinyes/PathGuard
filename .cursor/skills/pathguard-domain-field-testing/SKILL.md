@@ -117,6 +117,16 @@ El telèfon del patient sol anar **a la butxaca** (pantalla apagada / repòs). A
 - Consum raonable per a un passeig d’1h
 - Cap pèrdua de punts atribuïble a bateria baixa en condicions normals
 
+## Mètriques de reactivació (obligatori en proves butxaca / kill)
+
+Separar sempre tres eixos (plantilla: `docs/field-tests/TEMPLATE-reactivation-metrics.md`):
+
+| Mètrica | Què mesura | Decideix |
+|---|---|---|
+| **A — Densitat GPS** | Punts BD / forats >3 min | SPEC-183 keepalive si ❌ |
+| **B — Estat UI** | verd / gps_online / taronja | SPEC-185 presence si taronja amb mapa OK |
+| **C — Mapa** | Avança durant butxaca? | Correlació A+B |
+
 ## Reporting
 
 Per cada prova de camp, documentar a `docs/field-tests/<data>-<escenari>.md`:
