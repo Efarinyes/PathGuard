@@ -55,3 +55,11 @@ Pròxim pas: Implementar estructura .pathguard/ + skills
 Bloquejos: cap
 Pickup: Continuar amb SPEC-010 un cop Fase 0 validada
 ```
+
+## 7. Tancament de sessió
+
+Quan l'usuari acaba una sessió o diu «tancar sessió»:
+
+1. Carrega **`pathguard-workflow-session-close`** (no només actualitzis STATE manualment).
+2. Aquest skill escriu `.pathguard/STATE.json` amb `session.status: closed` i `next_session_pickup` complet.
+3. La propera sessió torna a començar amb aquest skill (§1–§6).

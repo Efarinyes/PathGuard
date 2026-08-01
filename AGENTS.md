@@ -73,7 +73,7 @@ Les rules de Cursor a `.cursor/rules/` activen automàticament el context per zo
 | `core` | `pathguard-core-*` | 3 skills: state, golden-rules, conventions |
 | `agent` | `pathguard-agent-*` | 8 skills de rol |
 | `domain` | `pathguard-domain-*` | 3 skills: bridge-contract, capacitor-config, field-testing |
-| `workflow` | `pathguard-workflow-*` | 6 skills: SDD, branching, commit |
+| `workflow` | `pathguard-workflow-*` | 7 skills: SDD, branching, commit, **session-close** |
 
 Mapeig complet: `agents/INDEX.md`.
 

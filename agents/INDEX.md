@@ -35,6 +35,7 @@ Ubicació base: `.cursor/skills/`
 | Revisar spec | `pathguard-workflow-sdd-review-spec` |
 | Implementar spec | `pathguard-workflow-sdd-implement` |
 | Validar spec | `pathguard-workflow-sdd-validate` |
+| **Tancar sessió** | `pathguard-workflow-session-close` |
 
 ## Per acció concreta
 
@@ -42,6 +43,7 @@ Ubicació base: `.cursor/skills/`
 |---|---|
 | Obrir/modificar branca | `pathguard-workflow-branching` |
 | Fer commit | `pathguard-workflow-commit` |
+| **Tancar sessió / actualitzar STATE** | `pathguard-workflow-session-close` |
 
 ## Per àrea de domini
 
