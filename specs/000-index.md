@@ -41,7 +41,7 @@ Catàleg viu de totes les specs del projecte. Cada spec viu al seu propi fitxer 
 | [SPEC-160](tech-SPEC-160-ios-network-monitor-caregiver.md) | tech | iOS network monitor must start globally, not only during tracking (Bug 1+2 R-P0-NEW-1) | ios+platform-integration+frontend | approved | mergejat a `main` |
 | [SPEC-170](tech-SPEC-170-caregiver-presence-http-broadcast.md) | tech | Caregiver presence updates from HTTP batch uploads | backend | approved | mergejat a `main` |
 | [SPEC-180](integration-SPEC-180-buffer-recovery-cross-platform.md) | integration | Persistent location buffer and is_recovered correctness across app lifecycle | platform-integration+ios+android+frontend+backend+qa | draft | pendent implementació (post-beta parcial) |
-| [SPEC-181](tech-SPEC-181-android-recovered-flag.md) | tech | Fix Android is_recovered override and buffer hysteresis | android | draft | pendent — veure §11 walk 144 |
+| [SPEC-181](tech-SPEC-181-android-recovered-flag.md) | tech | Fix Android is_recovered override and buffer hysteresis | android | implementing | `fix/SPEC-181-android-recovered-flag` — AC-1..5 OK; pendent AC-6 field test |
 | [SPEC-182](tech-SPEC-182-ios-buffer-validation.md) | tech | Validate iOS persistent buffer and is_recovered on app restart | ios | draft | pendent (post-beta) |
 
 ### P1 — Beta readiness

@@ -9,7 +9,7 @@ import com.google.gson.JsonObject;
 
 import java.util.PriorityQueue;
 
-public class BufferStore {
+public class BufferStore implements BufferPersistence {
     private static final String PREF_FILE = "pathguard_tracking";
     private static final String PREF_BUFFER = "pending_buffer";
     private static final String PREF_LAST_FLUSH_FAILED = "last_flush_failed";

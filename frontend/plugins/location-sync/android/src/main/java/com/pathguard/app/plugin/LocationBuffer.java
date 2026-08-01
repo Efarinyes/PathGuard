@@ -8,11 +8,11 @@ public class LocationBuffer {
     private static final int BUFFER_MAX_SIZE = 200;
     private static final int RECOVERY_STREAK_THRESHOLD = 3;
     private final PriorityQueue<LocationPoint> buffer;
-    private final BufferStore store;
+    private final BufferPersistence store;
     private boolean lastFlushFailed;
     private int recoveryStreak;
 
-    public LocationBuffer(BufferStore store) {
+    public LocationBuffer(BufferPersistence store) {
         this.store = store;
         this.buffer = store.load();
         this.lastFlushFailed = store.getLastFlushFailed();
@@ -45,17 +45,23 @@ public class LocationBuffer {
     }
 
     public void onFlushFailure(List<LocationPoint> batch) {
-        recoveryStreak = 0;
-        lastFlushFailed = true;
+        recoveryStreak++;
+        if (recoveryStreak >= RECOVERY_STREAK_THRESHOLD) {
+            lastFlushFailed = true;
+        }
+        for (LocationPoint point : batch) {
+            point.isRecovered = true;
+        }
         buffer.addAll(batch);
-        store.save(buffer, true, recoveryStreak);
+        while (buffer.size() > BUFFER_MAX_SIZE) {
+            buffer.poll();
+        }
+        store.save(buffer, lastFlushFailed, recoveryStreak);
     }
 
     public void onFlushSuccess() {
-        recoveryStreak++;
-        if (recoveryStreak >= RECOVERY_STREAK_THRESHOLD) {
-            lastFlushFailed = false;
-        }
+        recoveryStreak = 0;
+        lastFlushFailed = false;
         store.clear();
     }
 
@@ -65,6 +71,10 @@ public class LocationBuffer {
 
     public boolean getLastFlushFailed() {
         return lastFlushFailed;
+    }
+
+    public int getRecoveryStreak() {
+        return recoveryStreak;
     }
 
     public void setLastFlushFailed(boolean failed) {

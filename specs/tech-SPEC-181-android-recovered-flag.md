@@ -2,7 +2,7 @@
 id: tech-SPEC-181
 title: Fix Android is_recovered override and buffer hysteresis
 type: tech
-status: draft
+status: implementing
 priority: P0
 created: 2026-07-07
 author: tech-lead
@@ -95,33 +95,33 @@ Aquesta spec només toca la capa Android:
 ## 5. Criteris d’acceptació
 
 ### AC-1 — Eliminar sobreescriptura de `isRecovered`
-- [ ] `LocationSyncForegroundService.onPointAccepted` només crida `locationBuffer.add(point, walkId)`.
-- [ ] No hi ha cap assignació a `point.isRecovered` a `LocationSyncForegroundService`.
+- [x] `LocationSyncForegroundService.onPointAccepted` només crida `locationBuffer.add(point, walkId)`.
+- [x] No hi ha cap assignació a `point.isRecovered` a `LocationSyncForegroundService`.
 
 ### AC-2 — `LocationBuffer` marca punts persistits com a recuperats
-- [ ] Al constructor de `LocationBuffer`, després de `store.load()`, tots els punts carregats tenen `isRecovered = true`.
+- [x] Al constructor de `LocationBuffer`, després de `store.load()`, tots els punts carregats tenen `isRecovered = true`.
 
 ### AC-3 — Histèresi correcta
-- [ ] `onFlushFailure(List<LocationPoint> batch)`:
+- [x] `onFlushFailure(List<LocationPoint> batch)`:
   - Incrementa `recoveryStreak`.
   - Estableix `lastFlushFailed = true` només si `recoveryStreak >= RECOVERY_STREAK_THRESHOLD`.
   - Re-afageix el batch al buffer amb `isRecovered = true`.
   - Persisteix el buffer.
-- [ ] `onFlushSuccess()`:
+- [x] `onFlushSuccess()`:
   - Estableix `recoveryStreak = 0`.
   - Estableix `lastFlushFailed = false`.
   - Neteja el buffer persistit.
 
 ### AC-4 — Tests JUnit
-- [ ] `test_initWithStoredPoints_marksAllRecovered`: carregar buffer amb punts → tots `isRecovered = true`.
-- [ ] `test_addNewPoint_isNotRecovered`: afegir punt nou → `isRecovered = false`.
-- [ ] `test_onFlushFailure_reAddsBatchAsRecovered`: flush fallit → punts re-afegits `isRecovered = true`.
-- [ ] `test_recoveryStreak_incrementsOnFailure`: 3 failures consecutius → `lastFlushFailed = true`.
-- [ ] `test_recoveryStreak_resetsOnSuccess`: 2 failures + 1 success → `lastFlushFailed = false`, `recoveryStreak = 0`.
+- [x] `test_initWithStoredPoints_marksAllRecovered`: carregar buffer amb punts → tots `isRecovered = true`.
+- [x] `test_addNewPoint_isNotRecovered`: afegir punt nou → `isRecovered = false`.
+- [x] `test_onFlushFailure_reAddsBatchAsRecovered`: flush fallit → punts re-afegits `isRecovered = true`.
+- [x] `test_recoveryStreak_incrementsOnFailure`: 3 failures consecutius → `lastFlushFailed = true`.
+- [x] `test_recoveryStreak_resetsOnSuccess`: 2 failures + 1 success → `lastFlushFailed = false`, `recoveryStreak = 0`.
 
 ### AC-5 — Cap regressió
-- [ ] `./gradlew assembleDebug` compila (o documenta perquè falla per motius d’entorn).
-- [ ] No es canvien constants GPS, permisos, ni el format JSON del payload.
+- [x] `./gradlew :pathguard-location-sync:testDebugUnitTest` — 5/5 OK (JDK Android Studio a `/Volumes/Extern_Idoia/...`).
+- [x] No es canvien constants GPS, permisos, ni el format JSON del payload.
 
 ### AC-6 — Prova de camp
 - [ ] Al Redmi, amb permís "sempre", sortir i reobrir l’app durant un passeig → els primers punts enviats després de la reobertura tenen `is_recovered = true`.
@@ -206,5 +206,5 @@ Això alinea el mecanisme amb iOS (SPEC-130) i amb `integration-SPEC-180` AC-1, 
 
 ### Estat de planificació
 
-- **2026-08-01:** implementació **aparcada** per prioritat Fase 1 (higiene repo).
-- **Proper pas:** Fase 2 del pla `.pathguard/session-notes/PLA-POST-GPS-2026-07.md`.
+- **2026-08-01 (matí):** implementació aparcada per prioritat Fase 1 (higiene repo).
+- **2026-08-01 (tarda):** Fase 2 implementada a `fix/SPEC-181-android-recovered-flag`. AC-1..AC-5 OK. Pendent AC-6 field test + merge `main` + APK nou.

@@ -157,18 +157,7 @@ public class LocationSyncForegroundService extends Service {
     }
 
     private void onPointAccepted(LocationPoint point) {
-        point.isRecovered = locationBuffer.getLastFlushFailed() || !isAppInForeground();
         locationBuffer.add(point, walkId);
-    }
-
-    private boolean isAppInForeground() {
-        if (appInForeground.get()) {
-            return true;
-        }
-        ActivityManager.RunningAppProcessInfo processInfo = new ActivityManager.RunningAppProcessInfo();
-        ActivityManager.getMyMemoryState(processInfo);
-        return processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
-            || processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
     }
 
     private void startTracking() {
