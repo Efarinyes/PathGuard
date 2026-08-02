@@ -87,6 +87,14 @@ Refs: SPEC-NNN"
 git push origin <branca>
 ```
 
+## Autoria (obligatori)
+
+- **Author i Committer:** sempre la identitat del propietari del repo (`Efarinyes <efarinyes@gmail.com>` via `~/.gitconfig`).
+- **Prohibit** trailers `Co-authored-by: Cursor <cursoragent@cursor.com>` o `Made-with: Cursor`.
+- Hook del repo: `.githooks/commit-msg` (activar amb `git config core.hooksPath .githooks`).
+- A Cursor IDE: **Settings → Agent (o Git & PRs) → Attribution → OFF**.
+- Després de cada `git commit` fet per l’agent: verificar `git log -1 --format=fuller` i el body — si hi ha trailer Cursor, esborrar-lo amb amend **només** si el commit encara no s’ha pusheat.
+
 ## Regles
 
 1. **Mai** `git add -A` sense revisar (pot afegir fitxers secrets o .DS_Store)
@@ -95,6 +103,7 @@ git push origin <branca>
 4. **Mai** `--force` (excepte rebase local no pushat)
 5. **Sempre** un commit per canvi lògic
 6. **Sempre** reference a SPEC-NNN si aplica
+7. **Mai** deixar atribució Cursor al missatge de commit
 
 ## Validació pre-commit
 

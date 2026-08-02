@@ -46,6 +46,55 @@ public class LocationBufferTest {
     }
 
     @Test
+    public void test_addDeferred_marksRecoveredAndPersists() {
+        LocationBuffer buffer = new LocationBuffer(store);
+        LocationPoint point = new LocationPoint(41.5, 2.4, 2_500L, "cid-2b");
+
+        buffer.addDeferred(point, 42);
+
+        assertEquals(1, store.savedSize());
+        assertTrue(store.lastSavedWasRecovered());
+        assertEquals(42, store.lastSavedWalkId());
+
+        List<LocationPoint> drained = buffer.drainAll();
+        assertEquals(1, drained.size());
+        assertTrue(drained.get(0).isRecovered);
+        assertEquals(42, drained.get(0).walkId);
+    }
+
+    @Test
+    public void test_markPendingRecoveredAndPersist_flagsQueue() {
+        LocationBuffer buffer = new LocationBuffer(store);
+        LocationPoint live = new LocationPoint(41.5, 2.4, 2_600L, "cid-2c");
+        buffer.add(live, 7);
+        assertFalse(live.isRecovered);
+
+        buffer.markPendingRecoveredAndPersist();
+
+        assertEquals(1, store.savedSize());
+        assertTrue(store.lastSavedWasRecovered());
+
+        LocationBuffer reloaded = new LocationBuffer(store);
+        List<LocationPoint> drained = reloaded.drainAll();
+        assertEquals(1, drained.size());
+        assertTrue(drained.get(0).isRecovered);
+    }
+
+    @Test
+    public void test_persist_survivesReloadAsRecovered() {
+        LocationBuffer buffer = new LocationBuffer(store);
+        LocationPoint point = new LocationPoint(41.5, 2.4, 2_700L, "cid-2d");
+        point.isRecovered = true;
+        buffer.add(point, 9);
+        buffer.persist();
+
+        LocationBuffer reloaded = new LocationBuffer(store);
+        assertEquals(1, reloaded.size());
+        List<LocationPoint> drained = reloaded.drainAll();
+        assertTrue(drained.get(0).isRecovered);
+    }
+
+    @Test
     public void test_onFlushFailure_reAddsBatchAsRecovered() {
         LocationBuffer buffer = new LocationBuffer(store);
         LocationPoint point = new LocationPoint(41.5, 2.4, 3_000L, "cid-3");
@@ -97,9 +146,17 @@ public class LocationBufferTest {
         assertTrue(store.cleared);
     }
 
+    @Test
+    public void test_staleGpsPolicy_thresholds() {
+        assertTrue(LocationAcquirer.shouldRequestFreshFix(90_000L, 90_000L));
+        assertTrue(LocationAcquirer.shouldRequestFreshFix(120_000L, 90_000L));
+        assertFalse(LocationAcquirer.shouldRequestFreshFix(89_999L, 90_000L));
+        assertTrue(LocationAcquirer.shouldRequestFreshFix(Long.MAX_VALUE, 90_000L));
+    }
+
     /** In-memory BufferPersistence for JVM unit tests (no Android Context). */
     private static final class FakeBufferPersistence implements BufferPersistence {
-        private final PriorityQueue<LocationPoint> seeded = new PriorityQueue<>();
+        private PriorityQueue<LocationPoint> seeded = new PriorityQueue<>();
         private boolean lastFlushFailed;
         private int recoveryStreak;
         boolean cleared;
@@ -108,16 +165,41 @@ public class LocationBufferTest {
             seeded.add(point);
         }
 
+        int savedSize() {
+            return seeded.size();
+        }
+
+        boolean lastSavedWasRecovered() {
+            if (seeded.isEmpty()) return false;
+            for (LocationPoint p : seeded) {
+                if (!p.isRecovered) return false;
+            }
+            return true;
+        }
+
+        int lastSavedWalkId() {
+            if (seeded.isEmpty()) return 0;
+            return seeded.peek().walkId;
+        }
+
         @Override
         public void save(PriorityQueue<LocationPoint> buffer, boolean lastFlushFailed, int recoveryStreak) {
             this.lastFlushFailed = lastFlushFailed;
             this.recoveryStreak = recoveryStreak;
+            this.seeded = new PriorityQueue<>();
+            for (LocationPoint p : buffer) {
+                this.seeded.add(copyPoint(p));
+            }
             cleared = false;
         }
 
         @Override
         public PriorityQueue<LocationPoint> load() {
-            return new PriorityQueue<>(seeded);
+            PriorityQueue<LocationPoint> copy = new PriorityQueue<>();
+            for (LocationPoint p : seeded) {
+                copy.add(copyPoint(p));
+            }
+            return copy;
         }
 
         @Override
@@ -136,6 +218,14 @@ public class LocationBufferTest {
             lastFlushFailed = false;
             recoveryStreak = 0;
             cleared = true;
+        }
+
+        private static LocationPoint copyPoint(LocationPoint src) {
+            LocationPoint copy = new LocationPoint(
+                    src.latitude, src.longitude, src.timestampMs, src.clientId);
+            copy.walkId = src.walkId;
+            copy.isRecovered = src.isRecovered;
+            return copy;
         }
     }
 }

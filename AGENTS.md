@@ -77,6 +77,15 @@ Les rules de Cursor a `.cursor/rules/` activen automàticament el context per zo
 
 Mapeig complet: `agents/INDEX.md`.
 
+### Principi operatiu (obligatori)
+
+**Les feines es fan amb els skills disponibles quan són útils.** No inventar un flux paral·lel ni “fer-ho de memòria” si existeix un skill de rol, domini o workflow que cobreix la tasca.
+
+- Abans d’implementar: identifica quins skills apliquen (`agents/INDEX.md` + taula d’amunt) i **llegeix-los**.
+- Un agent generalista no substitueix el skill del rol propietari (Android, iOS, backend, etc.).
+- Skills de workflow (`session-close`, commit, branching, SDD) quan toqui aquell pas — no saltar-los.
+- Si cap skill encaixa, continua amb `AGENTS.md` + SPEC; si el gap es repeteix, proposa un skill nou (Tech Lead).
+
 ---
 
 ## Convencions d'ús dels skills
@@ -85,7 +94,7 @@ Mapeig complet: `agents/INDEX.md`.
 2. **Carrega `pathguard-core-golden-rules` i `pathguard-core-conventions`** abans d'escriure codi o obrir branques.
 3. **Carrega el skill del teu rol** (`pathguard-agent-<rol>`) quan la tasca afecta el teu domini.
 4. **Carrega skills de domini** segons la zona tocada.
-5. **Carrega skills de workflow** quan iniciïs un cicle SDD.
+5. **Carrega skills de workflow** quan iniciïs un cicle SDD (o commit / tancament de sessió).
 
 ---
 
@@ -138,6 +147,16 @@ Mapeig complet: `agents/INDEX.md`.
 - **Documentació interna** (specs, ADRs, aquest fitxer): anglès permès, català acceptable
 - **Comunicació amb l'usuari** (errors, missatges al xat): català
 - **Branques i commits**: anglès
+
+## Autoria Git
+
+El repositori i el projecte són del propietari. Els agents escriuen codi sota les seves indicacions; **no** apareixen com a autors ni co-autors a GitHub.
+
+- Author/Committer = identitat local del propietari (`user.name` / `user.email` a `~/.gitconfig`).
+- Sense `Co-authored-by: Cursor` ni `Made-with: Cursor` als commits.
+- Protecció al repo: `.githooks/commit-msg` + `git config core.hooksPath .githooks`.
+- A Cursor: desactivar **Settings → Agent / Git & PRs → Attribution**.
+- Detall operatiu: skill `pathguard-workflow-commit`.
 
 ---
 

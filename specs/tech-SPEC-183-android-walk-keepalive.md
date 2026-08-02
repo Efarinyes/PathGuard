@@ -2,7 +2,7 @@
 id: tech-SPEC-183
 title: Android FGS walk keepalive (flush + stale GPS probe)
 type: tech
-status: draft
+status: implementing
 priority: P0
 created: 2026-08-01
 author: tech-lead
@@ -27,7 +27,7 @@ Pla de reactivació PathGuard (2026-08-01): el patient porta el telèfon a la bu
 
 **Prioritat:** patient auto keep-alive. Caregiver force (SPEC-184) aparcat post-beta.
 
-**Gate de camp:** usar [TEMPLATE-reactivation-metrics.md](../docs/field-tests/TEMPLATE-reactivation-metrics.md). Implementar aquesta spec si Metric A (densitat) és ⚠️/❌.
+**Decisió 2026-08-02:** implementar **mínim** junt amb SPEC-186/187 (branca `fix/SPEC-186-187-android-buffer-notif-keepalive`) sense esperar Metric A — complementa el buffer diferit. Field Metric A segueix sent el gate de validació, no el de començar a codificar.
 
 ## 3. Problema
 
@@ -48,21 +48,21 @@ Només Android plugin:
 ## 5. Criteris d’acceptació
 
 ### AC-1 — Scope walk-only
-- [ ] Keep-alive només actiu entre `START` i `STOP` del FGS (walk actiu).
-- [ ] Cap notificació / vibració / Activity nova.
+- [x] Keep-alive només actiu entre `START` i `STOP` del FGS (walk actiu).
+- [x] Cap notificació / vibració / Activity nova.
 
 ### AC-2 — Flush periòdic natiu
-- [ ] Flush del buffer almenys cada ≤60s mentre el servei corre (ja ~30s; documentar i mantenir).
+- [x] Flush del buffer almenys cada ≤60s mentre el servei corre (`KEEP_ALIVE_INTERVAL_SECONDS = 30`).
 
 ### AC-3 — Stale GPS probe
-- [ ] Si no s’ha acceptat cap punt en `STALE_GPS_THRESHOLD_MS` (proposta: 90–120s) durant walk actiu, demanar one-shot / reiniciar request de location sense matar el FGS.
-- [ ] Constant explícita (no magic number inline).
+- [x] Si no s’ha acceptat cap punt en `STALE_GPS_THRESHOLD_MS` (90s) durant walk actiu, `getCurrentLocation` one-shot.
+- [x] Constant explícita al FGS / política a `LocationAcquirer.shouldRequestFreshFix`.
 
 ### AC-4 — Stop net
-- [ ] `STOP` cancel·la timers i allibera WakeLock com ara.
+- [x] `STOP` cancel·la timers i allibera WakeLock com ara.
 
 ### AC-5 — Tests
-- [ ] Almenys 1 test unitari de la política “stale → probe” (extraient funció pura si cal).
+- [x] JUnit `test_staleGpsPolicy_thresholds` a `LocationBufferTest`.
 
 ### AC-6 — Field
 - [ ] Redmi, 30–45 min butxaca: Metric A ✅ o millora mesurable vs walk 144.
@@ -76,7 +76,7 @@ Només Android plugin:
 
 ## 7. Pla d’implementació
 
-**Branca:** `fix/SPEC-183-android-walk-keepalive` des de `develop`
+**Branca:** `fix/SPEC-186-187-android-buffer-notif-keepalive` des de `develop` (inclou 183 mínim)
 
 1. Agent Android: constants + timer/ stale probe al FGS / Acquirer.
 2. Tests JUnit.

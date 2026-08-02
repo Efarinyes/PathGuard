@@ -1,0 +1,14 @@
+#!/bin/sh
+# PathGuard: commits belong to the repo owner only.
+# Strip Cursor Agent attribution trailers injected into the commit message.
+MSG_FILE="$1"
+if [ ! -f "$MSG_FILE" ]; then
+  exit 0
+fi
+# macOS/BSD sed: -i ''
+sed -i '' \
+  -e '/Co-authored-by:.*cursoragent@cursor\.com/d' \
+  -e '/Co-authored-by: Cursor/d' \
+  -e '/Made-with: Cursor/d' \
+  "$MSG_FILE"
+exit 0

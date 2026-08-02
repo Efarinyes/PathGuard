@@ -2,6 +2,8 @@
 
 Aquest índex és el **punt d'entrada** per a qualsevol agent o persona que treballa al projecte. Carrega el skill adequat segons la tasca.
 
+> **Principi:** les feines es fan amb els skills disponibles quan són útils (detall a `AGENTS.md` → Skills). No inventar un flux paral·lel si ja hi ha skill de rol, domini o workflow.
+>
 > Skills ubicats a `.cursor/skills/<nom>/SKILL.md`
 
 ## Carrega SEMPRE primer

@@ -49,6 +49,38 @@ public class LocationAcquirer {
         return running;
     }
 
+    /** Milliseconds since last accepted point, or Long.MAX_VALUE if none. */
+    public long millisSinceLastAccepted() {
+        if (lastAcceptedPoint == null) {
+            return Long.MAX_VALUE;
+        }
+        return System.currentTimeMillis() - lastAcceptedPoint.timestampMs;
+    }
+
+    /** Pure policy: whether a soft GPS probe should run (unit-tested). */
+    static boolean shouldRequestFreshFix(long millisSinceLastAccepted, long staleThresholdMs) {
+        return millisSinceLastAccepted >= staleThresholdMs;
+    }
+
+    /**
+     * Soft wake: request a single fresh fix if the stream has gone stale.
+     * Does not replace the ongoing requestLocationUpdates subscription.
+     */
+    public void requestFreshLocationIfStale(long staleThresholdMs) {
+        if (!running || fusedLocationClient == null) return;
+        if (!shouldRequestFreshFix(millisSinceLastAccepted(), staleThresholdMs)) return;
+        try {
+            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                    .addOnSuccessListener(location -> {
+                        if (location != null) {
+                            processLocation(location);
+                        }
+                    });
+        } catch (SecurityException ignored) {
+            // Permission revoked mid-walk — ignore
+        }
+    }
+
     public void start(AcceptorCallback callback) {
         if (running) return;
         this.callback = callback;

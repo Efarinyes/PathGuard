@@ -36,6 +36,29 @@ public class LocationBuffer {
         add(point);
     }
 
+    /**
+     * Point captured while live pipeline is not trusted (UI background / rest).
+     * Marks recovered and persists so kill/reopen still delivers the segment.
+     */
+    public synchronized void addDeferred(LocationPoint point, int walkId) {
+        point.isRecovered = true;
+        add(point, walkId);
+        persist();
+    }
+
+    /** Persist current queue (does not clear). */
+    public synchronized void persist() {
+        store.save(buffer, lastFlushFailed, recoveryStreak);
+    }
+
+    /** Mark all pending points as recovered and persist (e.g. on background). */
+    public synchronized void markPendingRecoveredAndPersist() {
+        for (LocationPoint p : buffer) {
+            p.isRecovered = true;
+        }
+        persist();
+    }
+
     public synchronized List<LocationPoint> drainAll() {
         List<LocationPoint> batch = new ArrayList<>();
         while (!buffer.isEmpty()) {
@@ -79,5 +102,9 @@ public class LocationBuffer {
 
     public void setLastFlushFailed(boolean failed) {
         this.lastFlushFailed = failed;
+    }
+
+    public synchronized int size() {
+        return buffer.size();
     }
 }

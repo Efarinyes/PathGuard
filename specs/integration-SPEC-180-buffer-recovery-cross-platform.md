@@ -204,13 +204,17 @@ Aquesta spec toca **6 agents** i requereix coordinació:
 
 Per tant, el bloc 942–950 del walk 144 **pot ser comportament esperat** si el telèfon estava en repòs i els punts es van bufferitzar abans d'enviar-se — no és automàticament un error de dades.
 
-### Implementació pendent (SPEC-181, no iniciada 2026-08-01)
+### Implementació Android (actualitzat 2026-08-02)
 
-El codi Android actual marca `isRecovered` a `onPointAccepted` amb el proxy `!isAppInForeground()` (no amb «ha passat realment pel buffer»). SPEC-181 ha de **refinar el mecanisme** (com iOS SPEC-130), no necessàriament canviar el resultat observable en escenaris de repòs.
+- **SPEC-181:** mergejada — ja no es sobreescriu `isRecovered` al flush en viu amb el proxy foreground.
+- **SPEC-186:** buffer diferit — punts amb UI no foreground → `addDeferred` (`isRecovered=true` + persist); `MARK_BACKGROUNDED` / `onTaskRemoved` / `onDestroy` persisteixen.
+- **SPEC-187:** notificació FGS visible (canal `pathguard_walk_v2`).
+- **SPEC-183 (mínim):** keep-alive flush 30s + sonda GPS si stale ≥90s.
+- **SPEC-182 (iOS):** diferida conscientment (sense accés a iPhone); no bloqueja avanç Android.
 
-**Decisió de sessió:** implementació SPEC-181 **aparcada** fins després de Fase 1 (higiene repo). Prioritat següent: Fase 2 del pla post-GPS.
+**Walk 151** (2026-08-02): 14 punts, tots `is_recovered=false` després de kill×2 — confirma que sense persist en adormida el tram diferit no es veu; SPEC-186 adreça això.
 
 ### Limitacions observades (fora d'aquesta spec)
 
-- Forats GPS llargs en repòs (950→951 ~7 min) → veure SPEC-150 / R-P0-ANDROID-1.
+- Forats GPS llargs en repòs (950→951 ~7 min) → SPEC-183 keep-alive + field Metric A.
 - Mapa sense indicadors de direcció → backlog UX (no bloqueja SPEC-180).

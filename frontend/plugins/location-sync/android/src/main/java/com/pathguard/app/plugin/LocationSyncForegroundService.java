@@ -5,6 +5,8 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ServiceInfo;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 
@@ -26,6 +28,10 @@ public class LocationSyncForegroundService extends Service {
     private static final String PREF_WALK_ID = "active_walk_id";
     private static final String PREF_DEVICE_TOKEN = "device_token";
     private static final String PREF_SERVER_URL = "server_url";
+
+    /** Keep-alive tick: flush + optional stale GPS probe (SPEC-183 minimal). */
+    private static final long KEEP_ALIVE_INTERVAL_SECONDS = 30;
+    private static final long STALE_GPS_THRESHOLD_MS = 90_000;
 
     private static boolean running = false;
     private static int pointsSent = 0;
@@ -63,7 +69,7 @@ public class LocationSyncForegroundService extends Service {
     public void onCreate() {
         super.onCreate();
         NotificationHelper.createChannel(this);
-        startForeground(NotificationHelper.NOTIFICATION_ID, NotificationHelper.buildNotification(this));
+        startForegroundWithType(NotificationHelper.buildNotification(this));
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "PathGuard:LocationSyncWakeLock");
@@ -91,11 +97,30 @@ public class LocationSyncForegroundService extends Service {
         }
     }
 
+    private void startForegroundWithType(android.app.Notification notification) {
+        if (Build.VERSION.SDK_INT >= 34) {
+            startForeground(
+                    NotificationHelper.NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+            );
+        } else {
+            startForeground(NotificationHelper.NOTIFICATION_ID, notification);
+        }
+    }
+
     private boolean isAppProcessForeground() {
         ActivityManager.RunningAppProcessInfo processInfo = new ActivityManager.RunningAppProcessInfo();
         ActivityManager.getMyMemoryState(processInfo);
         return processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
             || processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
+    }
+
+    private boolean isAppInForeground() {
+        if (appInForeground.get()) {
+            return true;
+        }
+        return isAppProcessForeground();
     }
 
     @Override
@@ -140,6 +165,9 @@ public class LocationSyncForegroundService extends Service {
 
                 case "MARK_BACKGROUNDED":
                     appInForeground.set(false);
+                    if (locationBuffer != null) {
+                        locationBuffer.markPendingRecoveredAndPersist();
+                    }
                     break;
 
                 case "MARK_FOREGROUNDED":
@@ -157,7 +185,12 @@ public class LocationSyncForegroundService extends Service {
     }
 
     private void onPointAccepted(LocationPoint point) {
-        locationBuffer.add(point, walkId);
+        if (!isAppInForeground()) {
+            // Deferred delivery: rest / UI not trusted as live pipeline
+            locationBuffer.addDeferred(point, walkId);
+        } else {
+            locationBuffer.add(point, walkId);
+        }
     }
 
     private void startTracking() {
@@ -171,7 +204,7 @@ public class LocationSyncForegroundService extends Service {
             flushBuffer();
         }
 
-        startPeriodicFlush();
+        startKeepAlive();
     }
 
     private void stopTracking() {
@@ -182,23 +215,38 @@ public class LocationSyncForegroundService extends Service {
         } else {
             flushBuffer();
         }
-        stopPeriodicFlush();
+        stopKeepAlive();
     }
 
-    private void startPeriodicFlush() {
+    private void startKeepAlive() {
         if (scheduler == null || scheduler.isShutdown()) {
             scheduler = Executors.newSingleThreadScheduledExecutor();
         }
-        scheduler.scheduleAtFixedRate(this::flushBuffer, 5, 30, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(
+                this::keepAliveTick,
+                5,
+                KEEP_ALIVE_INTERVAL_SECONDS,
+                TimeUnit.SECONDS
+        );
     }
 
-    private void stopPeriodicFlush() {
+    private void stopKeepAlive() {
         if (scheduler != null && !scheduler.isShutdown()) {
             scheduler.shutdown();
             scheduler = null;
         }
     }
 
+    private void keepAliveTick() {
+        try {
+            flushBuffer();
+            if (acquirer != null && acquirer.isRunning()) {
+                acquirer.requestFreshLocationIfStale(STALE_GPS_THRESHOLD_MS);
+            }
+        } catch (Exception ignored) {
+            // Keep scheduler alive
+        }
+    }
 
     private void flushBuffer() {
         try {
@@ -222,8 +270,21 @@ public class LocationSyncForegroundService extends Service {
         }
     }
 
+    private void persistForProcessDeath() {
+        if (locationBuffer != null && !locationBuffer.isEmpty()) {
+            locationBuffer.markPendingRecoveredAndPersist();
+        }
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        persistForProcessDeath();
+        super.onTaskRemoved(rootIntent);
+    }
+
     @Override
     public void onDestroy() {
+        persistForProcessDeath();
         stopTracking();
         if (wakeLock != null && wakeLock.isHeld()) {
             try {

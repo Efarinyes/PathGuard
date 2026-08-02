@@ -40,11 +40,13 @@ Catàleg viu de totes les specs del projecte. Cada spec viu al seu propi fitxer 
 | [SPEC-150](tech-SPEC-150-android-foreground-robustness.md) | tech | Android foreground service robustness for 2h walks (C-1..C-4) | android+frontend | implementing | mergejat a `main`; C-1 revisat 2026-07-31 (`4b1c9eb`); field test walk 144 parcial |
 | [SPEC-160](tech-SPEC-160-ios-network-monitor-caregiver.md) | tech | iOS network monitor must start globally, not only during tracking (Bug 1+2 R-P0-NEW-1) | ios+platform-integration+frontend | approved | mergejat a `main` |
 | [SPEC-170](tech-SPEC-170-caregiver-presence-http-broadcast.md) | tech | Caregiver presence updates from HTTP batch uploads | backend | approved | mergejat a `main` |
-| [SPEC-180](integration-SPEC-180-buffer-recovery-cross-platform.md) | integration | Persistent location buffer and is_recovered correctness across app lifecycle | platform-integration+ios+android+frontend+backend+qa | draft | pendent implementació (post-beta parcial) |
+| [SPEC-180](integration-SPEC-180-buffer-recovery-cross-platform.md) | integration | Persistent location buffer and is_recovered correctness across app lifecycle | platform-integration+ios+android+frontend+backend+qa | draft | Android via 181+186; iOS (182) diferit |
 | [SPEC-181](tech-SPEC-181-android-recovered-flag.md) | tech | Fix Android is_recovered override and buffer hysteresis | android | implementing | mergejat; AC-6 field exhaustiu pendent |
-| [SPEC-182](tech-SPEC-182-ios-buffer-validation.md) | tech | Validate iOS persistent buffer and is_recovered on app restart | ios | draft | pendent (post-beta) |
-| [SPEC-183](tech-SPEC-183-android-walk-keepalive.md) | tech | Android FGS walk keepalive (flush + stale GPS probe) | android | draft | implementar si Metric A (butxaca) falla |
+| [SPEC-182](tech-SPEC-182-ios-buffer-validation.md) | tech | Validate iOS persistent buffer and is_recovered on app restart | ios | draft | **DIFERIT** — sense iPhone ara; post Android field |
+| [SPEC-183](tech-SPEC-183-android-walk-keepalive.md) | tech | Android FGS walk keepalive (flush + stale GPS probe) | android | implementing | mínim a branca fix/SPEC-186-187; field Metric A pendent |
 | [SPEC-185](tech-SPEC-185-honest-http-presence.md) | tech | Honest HTTP presence when patient WebSocket dies | backend+frontend | implementing | fix backend; field AC-5 pendent |
+| [SPEC-186](tech-SPEC-186-android-deferred-buffer.md) | tech | Android deferred buffer on rest/kill → is_recovered | android | implementing | branca fix/SPEC-186-187; field kill pendent |
+| [SPEC-187](tech-SPEC-187-android-fgs-notification-visibility.md) | tech | Android FGS notification visible on lock screen | android | implementing | canal pathguard_walk_v2; field Redmi pendent |
 
 ### P1 — Beta readiness
 
