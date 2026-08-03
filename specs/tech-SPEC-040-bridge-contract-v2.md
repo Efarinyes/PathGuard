@@ -80,6 +80,6 @@ El contracte actual a `frontend/plugins/location-sync/src/index.ts` ja té 6 mè
 - Breaking changes a la signatura (v3 si cal, no en aquesta spec)
 
 ## 10. Referències
-- `audit_native_layer.md` (multi-referència)
+- `docs/archive/audit_native_layer.md` (multi-referència)
 - `.cursor/skills/pathguard-domain-bridge-contract/SKILL.md`
 - SPEC-020, SPEC-030

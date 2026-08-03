@@ -23,7 +23,7 @@ adr: null
 Corregir `UIRequiredDeviceCapabilities` a `Info.plist` canviant `armv7` per `arm64` (o eliminant la clau) per evitar advertències o rebuig a l'App Store.
 
 ## 2. Context
-Audit `audit_native_layer.md` (issue 13) identifica que `Info.plist` té `armv7` però l'iPhone 8 (test device) és `arm64`. Pot generar advertències d'App Store.
+Audit `docs/archive/audit_native_layer.md` (issue 13) identifica que `Info.plist` té `armv7` però l'iPhone 8 (test device) és `arm64`. Pot generar advertències d'App Store.
 
 ## 3. Problema
 - `armv7` no s'aplica a dispositius moderns
@@ -61,5 +61,5 @@ Audit `audit_native_layer.md` (issue 13) identifica que `Info.plist` té `armv7`
 - Altres keys de `Info.plist`
 
 ## 10. Referències
-- `audit_native_layer.md` secció 13
+- `docs/archive/audit_native_layer.md` secció 13
 - `.cursor/skills/pathguard-agent-ios/SKILL.md`

@@ -32,7 +32,7 @@ Tancar dos bugs P0 descoberts durant el field test de Fase 1 al iPhone 8:
 - Plugin iOS (`LocationSyncService.swift`) implementat al commit 23b6536.
 - Validat al iPhone 8 que: mapa, pèrdua de connexió, kill app, `is_recovered`
   (parcial, amb el bug descobert).
-- Audit `docs/audit/audit_native_layer.md` actualitzat amb R-P0-NEW-1,
+- Audit `docs/archive/audit_native_layer.md` actualitzat amb R-P0-NEW-1,
   R-P0-NEW-2, R-P0-NEW-3.
 - Pendent Fase 1: validació Android i desbloqueig del R-P0-NEW-2
   (fora de l'abast d'aquesta spec).
@@ -142,7 +142,7 @@ El bug és l'**sobreescriptura innecessària** a `onPointAccepted`.
 ### General
 - [ ] AC-10: Cap regressió a tests existents (Vitest 108/108, XCTest
   baseline).
-- [ ] AC-11: `docs/audit/audit_native_layer.md` actualitzat:
+- [ ] AC-11: `docs/archive/audit_native_layer.md` actualitzat:
   R-P0-NEW-1 marcat com a `resolved`, R-P0-NEW-3 afegit i marcat com
   a `resolved`. R-P0-NEW-2 queda obert amb nota que va a spec
   independent.
@@ -209,7 +209,7 @@ El bug és l'**sobreescriptura innecessària** a `onPointAccepted`.
      - Test onFlushSuccess: `recoveryStreak = 0`, `lastFlushFailed = false`.
 
 3. **Docs** (agent `tech-lead`):
-   - 130.9: Actualitzar `docs/audit/audit_native_layer.md`:
+   - 130.9: Actualitzar `docs/archive/audit_native_layer.md`:
      - Marcar R-P0-NEW-1 com a `resolved` (amb link a aquesta spec).
      - Afegir R-P0-NEW-3 (que ja estava identificat però no documentat)
        i marcar-lo com a `resolved`.
@@ -262,7 +262,7 @@ El bug és l'**sobreescriptura innecessària** a `onPointAccepted`.
   `LocationBuffer`.
 
 ## 10. Referències
-- `docs/audit/audit_native_layer.md` — R-P0-NEW-1, R-P0-NEW-2,
+- `docs/archive/audit_native_layer.md` — R-P0-NEW-1, R-P0-NEW-2,
   R-P0-NEW-3.
 - `.pathguard/STATE.json` secció `open_issues_from_audit`.
 - `frontend/hooks/useWebSocket.ts:130-138` — listener online actual

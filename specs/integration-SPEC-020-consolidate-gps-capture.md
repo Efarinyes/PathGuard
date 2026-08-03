@@ -23,7 +23,7 @@ adr: 0004
 # Spec: Consolidar captura GPS cross-platform
 
 ## 1. Objectiu
-Resoldre els 5 issues crítics identificats a `audit_native_layer.md` relacionats amb la captura GPS al frontend, plugin iOS, i coherència entre capes. Garantir zero pèrdua de punts, 1 sola font de GPS, i comportament uniforme Android/iOS.
+Resoldre els 5 issues crítics identificats a `docs/archive/audit_native_layer.md` relacionats amb la captura GPS al frontend, plugin iOS, i coherència entre capes. Garantir zero pèrdua de punts, 1 sola font de GPS, i comportament uniforme Android/iOS.
 
 ## 2. Context
 L'auditoria de 2026-06-16 ha identificat 5 issues P0-P1 que bloquegen la beta:
@@ -147,7 +147,7 @@ Aquesta spec toca **4 agents** i requereix coordinació:
 - Foreground notification iOS (post-beta)
 
 ## 11. Referències
-- `audit_native_layer.md` (5 issues)
+- `docs/archive/audit_native_layer.md` (5 issues)
 - `.cursor/skills/pathguard-agent-ios/SKILL.md`
 - `.cursor/skills/pathguard-agent-android/SKILL.md`
 - `.cursor/skills/pathguard-domain-bridge-contract/SKILL.md`

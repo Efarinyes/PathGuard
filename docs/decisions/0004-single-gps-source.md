@@ -94,5 +94,5 @@ A més, **centralitzar permisos** al plugin (no al frontend).
 ## References
 
 - SPEC-020 (Consolidar captura GPS)
-- `audit_native_layer.md` secció 3 (R-P0-3)
+- `../archive/audit_native_layer.md` secció 3 (R-P0-3)
 - `.cursor/skills/pathguard-domain-bridge-contract/SKILL.md`

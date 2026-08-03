@@ -121,7 +121,8 @@ open App.xcworkspace
 
 ## Més informació
 
-- [`../CONTEXT.md`](../../CONTEXT.md) — Golden rules
-- [`../docs/architecture/overview.md`](../architecture/overview.md) — Visió arquitectònica
-- [`../docs/guides/real-world-testing.md`](real-world-testing.md) — Proves de camp
-- [`../docs/guides/deployment.md`](deployment.md) — Deploy
+- [`../../CONTEXT.md`](../../CONTEXT.md) — Golden rules
+- [`../architecture/overview.md`](../architecture/overview.md) — Visió arquitectònica
+- [`native-ide-setup.md`](native-ide-setup.md) — Xcode + Android Studio
+- [`real-world-testing.md`](real-world-testing.md) — Proves de camp
+- [`deployment.md`](deployment.md) — Deploy

@@ -22,7 +22,7 @@ adr: pending
 Migrar la presència WebSocket i els `group_rooms` d'in-memory a **Redis Pub/Sub** per permetre escalat horitzontal a múltiples workers.
 
 ## 2. Context
-Audit `audit_native_layer.md` (issue 5) i `technical_audit.md` (AR-2): `ConnectionManager` manté connexions, presència, `last_http_location_at` en memòria dins un sol procés. Si el backend escala a múltiples workers, cada instància tindrà el seu propi estat i els broadcasts no arribaran a tots.
+Audit `docs/archive/audit_native_layer.md` (issue 5) i `technical_audit.md` (AR-2): `ConnectionManager` manté connexions, presència, `last_http_location_at` en memòria dins un sol procés. Si el backend escala a múltiples workers, cada instància tindrà el seu propi estat i els broadcasts no arribaran a tots.
 
 ## 3. Problema
 - Escalat horitzontal limitat
@@ -66,5 +66,5 @@ Audit `audit_native_layer.md` (issue 5) i `technical_audit.md` (AR-2): `Connecti
 - Redis Sentinel HA (post-MVP)
 
 ## 10. Referències
-- `audit_native_layer.md` secció 5
+- `docs/archive/audit_native_layer.md` secció 5
 - `.audit_archive/technical_audit.md` (AR-2)

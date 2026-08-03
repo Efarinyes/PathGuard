@@ -27,7 +27,7 @@ Durant el treball de la capa iOS, la branca `feat/ios-native-layer` té el plugi
 - `LocationHttpClient.java` — esborrat
 - `LocationSyncForegroundService.java` — esborrat
 
-El fitxer `LocationSyncPlugin.java` encara referencia `LocationSyncForegroundService.class`, per la qual cosa la branca **no pot compilar Android**. Audit confirmat a `audit_native_layer.md` (R-P0-1, severitat CRÍTICA).
+El fitxer `LocationSyncPlugin.java` encara referencia `LocationSyncForegroundService.class`, per la qual cosa la branca **no pot compilar Android**. Audit confirmat a `docs/archive/audit_native_layer.md` (R-P0-1, severitat CRÍTICA).
 
 ## 3. Problema
 - Cap build APK funciona des de la branca actual
@@ -84,7 +84,7 @@ El fitxer `LocationSyncPlugin.java` encara referencia `LocationSyncForegroundSer
 - Modificar funcionalitat existent
 
 ## 10. Referències
-- `audit_native_layer.md` secció 1 (R-P0-1)
+- `docs/archive/audit_native_layer.md` secció 1 (R-P0-1)
 - `.cursor/skills/pathguard-agent-android/SKILL.md`
 - Última versió vàlida: `main` branch
 

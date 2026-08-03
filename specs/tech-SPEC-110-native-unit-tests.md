@@ -24,7 +24,7 @@ adr: null
 Establir suites de tests unitaris natius per a iOS (XCTest) i Android (JUnit) cobrint els components crítics del plugin LocationSync.
 
 ## 2. Context
-Audit `audit_native_layer.md` (issue 14) identifica zero tests unitaris natius. Regressions difícil de detectar. Cost alt de validació manual.
+Audit `docs/archive/audit_native_layer.md` (issue 14) identifica zero tests unitaris natius. Regressions difícil de detectar. Cost alt de validació manual.
 
 ## 3. Problema
 - Regressions no detectades
@@ -75,6 +75,6 @@ Audit `audit_native_layer.md` (issue 14) identifica zero tests unitaris natius. 
 - Integration tests cross-platform (post-beta)
 
 ## 10. Referències
-- `audit_native_layer.md` secció 14
+- `docs/archive/audit_native_layer.md` secció 14
 - `.cursor/skills/pathguard-agent-android/SKILL.md`
 - `.cursor/skills/pathguard-agent-ios/SKILL.md`

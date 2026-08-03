@@ -104,4 +104,4 @@ Aconseguir una **beta testable en entorn real** amb:
 - [`../specs/000-index.md`](../specs/000-index.md) — Catàleg de specs
 - [`../docs/phases/phase-status.md`](../docs/phases/phase-status.md) — Estat per fase
 - [`../docs/architecture/overview.md`](../docs/architecture/overview.md) — Visió arquitectònica
-- `audit_native_layer.md` — 15 issues identificats
+- `../docs/archive/audit_native_layer.md` — 15 issues identificats

@@ -229,5 +229,5 @@ Això bloqueja el milestone `beta-ready`.
 - `frontend/hooks/useWebSocket.ts` — hook afectat.
 - `frontend/plugins/location-sync/src/index.ts` — contracte TS del bridge.
 - `frontend/plugins/location-sync/ios/Plugin/LocationSyncPlugin.swift` — plugin iOS.
-- `docs/audit/audit_native_layer.md` — quan existeixi, actualitzar amb
+- `docs/archive/audit_native_layer.md` — quan existeixi, actualitzar amb
   R-P0-NEW-1 marcat com a resolt per SPEC-140.

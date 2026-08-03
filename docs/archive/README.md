@@ -8,6 +8,8 @@ Per a la documentació activa, veure `../INDEX.md`.
 ## Què hi ha aquí
 
 - `action-plan.md` — Pla d'acció consolidat (Fase 1-5 + G), reemplaçat per specs/SDD
+- `audit_native_layer.md` — Auditoria capa nativa 2026-06 (mogut des de l’arrel, R1a 2026-08-03)
+- `ROADMAP-TESTS.md` — Matriu de tests 2026-06 (mogut des de l’arrel, R1a 2026-08-03)
 - `auditoria-*.md` — Auditories de pipeline, presència, cobertura, GPS/mapa
 - `completed-sprints.md` — Resum de sprints completats
 - `DOCUMENT-REVIEW.md` — Neteja documental 2026-06
@@ -30,4 +32,5 @@ Per a la documentació activa, veure `../INDEX.md`.
 ## Històric d'arxivat
 
 - 2026-06-30 — Arxivat en la primera fase de reestructuració documental (Fase 0).
+- 2026-08-03 — R1a: `audit_native_layer.md` i `ROADMAP-TESTS.md` moguts des de l’arrel del repo.
 -->

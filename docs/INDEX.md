@@ -8,9 +8,18 @@ Aquest és l'**ÍNDEX** de tota la documentació del projecte. Si ets una IA o u
 |---|---|
 | [`architecture/`](architecture/) | Visió general, fluxos de dades, diagrames |
 | [`decisions/`](decisions/) | Architecture Decision Records (ADRs) |
-| [`guides/`](guides/) | Guies pràctiques (getting started, deploy, testing) |
+| [`guides/`](guides/) | Guies pràctiques (getting started, deploy, IDEs natius, testing) |
 | [`phases/`](phases/) | Estat per fase del projecte |
 | [`archive/`](archive/) | Documents antics (només lectura) |
+
+### Guies ràpides
+
+| Guia | Contingut |
+|---|---|
+| [`guides/getting-started.md`](guides/getting-started.md) | Setup local backend/frontend |
+| [`guides/native-ide-setup.md`](guides/native-ide-setup.md) | Xcode + Android Studio |
+| [`guides/deployment.md`](guides/deployment.md) | Deploy |
+| [`guides/real-world-testing.md`](guides/real-world-testing.md) | Proves de camp |
 
 ## Porta d'entrada per a IA / nous agents
 
@@ -23,7 +32,8 @@ Aquest és l'**ÍNDEX** de tota la documentació del projecte. Si ets una IA o u
 
 1. [`../../README.md`](../../README.md) — Visió general
 2. [`guides/getting-started.md`](guides/getting-started.md) — Setup local
-3. [`architecture/overview.md`](architecture/overview.md) — Com funciona
+3. [`guides/native-ide-setup.md`](guides/native-ide-setup.md) — Xcode / Android Studio (si cal natiu)
+4. [`architecture/overview.md`](architecture/overview.md) — Com funciona
 
 ## Històric (només lectura)
 

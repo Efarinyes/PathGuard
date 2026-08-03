@@ -1,3 +1,9 @@
+<!--
+ARXIVAT — 2026-08-03 (R1a higiene arrel).
+Auditoria inicial capa nativa (2026-06-16). Només lectura.
+La feina oberta viu a specs/ i docs/INDEX.md.
+-->
+
 # AUDITORIA INICIAL — Capa Nativa i Arquitectura Híbrida PathGuard
 
 **Data:** 2026-06-16  

@@ -20,7 +20,7 @@ adr: pending  # ADR-0005 a redactar
 # Spec: Revocació de device_token (owner)
 
 ## 1. Objectiu
-Permetre que el **owner** d'una família pugui **revocar el `device_token`** d'un dispositiu pacient des del dashboard. Resoldre el risc de seguretat identificat a `audit_native_layer.md` (R-P0-4).
+Permetre que el **owner** d'una família pugui **revocar el `device_token`** d'un dispositiu pacient des del dashboard. Resoldre el risc de seguretat identificat a `docs/archive/audit_native_layer.md` (R-P0-4).
 
 ## 2. Context
 El `device_token` actual:
@@ -108,7 +108,7 @@ Si un dispositiu es perd o el token filtra, no hi ha manera d'invalidar-lo. Per 
 - Suport multi-device (post-beta)
 
 ## 10. Referències
-- `audit_native_layer.md` secció 4 (R-P0-4)
+- `docs/archive/audit_native_layer.md` secció 4 (R-P0-4)
 - `.cursor/skills/pathguard-agent-backend/SKILL.md`
 - `.cursor/skills/pathguard-domain-capacitor-config/SKILL.md`
 - `.cursor/skills/pathguard-domain-bridge-contract/SKILL.md`

@@ -102,7 +102,7 @@
 | R-P0-4 | Alta | `device_token` permanent sense revocació |
 | R-P0-5 | Mitjana | Permisos iOS: doble petició |
 
-Veure `audit_native_layer.md` per detalls.
+Veure `../archive/audit_native_layer.md` per detalls.
 
 ## Decissions actives
 
@@ -116,4 +116,4 @@ Veure `audit_native_layer.md` per detalls.
 - [`../architecture/overview.md`](../architecture/overview.md)
 - [`../../specs/000-index.md`](../../specs/000-index.md)
 - [`../../ROADMAP/beta-readiness.md`](../../ROADMAP/beta-readiness.md)
-- `audit_native_layer.md` (15 troballes)
+- `../archive/audit_native_layer.md` (15 troballes)

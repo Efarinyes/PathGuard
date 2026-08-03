@@ -85,5 +85,5 @@ if (isNative) {
 ## References
 
 - SPEC-030 (Revocació de device_token)
-- `audit_native_layer.md` secció 4 (R-P0-4)
+- `../archive/audit_native_layer.md` secció 4 (R-P0-4)
 - [Capacitor Preferences docs](https://capacitorjs.com/docs/apis/preferences)

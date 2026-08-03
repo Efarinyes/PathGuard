@@ -1,3 +1,9 @@
+<!--
+ARXIVAT — 2026-08-03 (R1a higiene arrel).
+Matriu de tests històrica (2026-06). Només lectura.
+Baseline actual de tests: AGENTS.md + skills QA.
+-->
+
 # ROADMAP-TESTS — PathGuard Test Matrix & Safety Gates
 
 **Data:** 2026-06-05
