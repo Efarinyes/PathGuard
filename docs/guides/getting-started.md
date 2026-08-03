@@ -74,7 +74,7 @@ PathGuard-project/
 │   ├── phases/            # Estat per fase
 │   └── archive/           # Documents antics (només lectura)
 ├── agents/                 # Mapa d'agents i skills
-├── ROADMAP/                # Milestones, beta-readiness
+├── ROADMAP/                # beta-readiness, post-beta
 ├── .pathguard/             # Sistema d'agents i skills
 │   ├── STATE.example.json
 │   └── skills/            # Skills activables

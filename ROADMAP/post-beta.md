@@ -1,70 +1,30 @@
-# PathGuard — Roadmap Post-Beta
+# PathGuard — Després de la beta
 
-Què ve després de la beta `v2.7.0-beta.1`?
+Què ve **després** de `v2.7.0-beta.1` (Android-first). No són gates de la beta actual.
 
-## Categoria 1 — Internacionalització (P2)
+Les specs citades viuen a `specs/archive/` fins que es reactivin.
 
-| Espec | Títol | Owner |
-|---|---|---|
-| SPEC-100 | i18n: CA/ES/EN | Frontend |
+## Qualitat i plataforma (P2)
 
-Permet obrir a mercats ES/EN. Cookie-based detection + manual override.
+| Spec | Títol |
+|---|---|
+| SPEC-100 | i18n CA/ES/EN |
+| SPEC-110 | Tests unitaris natius (XCTest + JUnit) |
+| SPEC-120 | Presence WebSocket via Redis (multi-worker) |
+| SPEC-030 | Revocació `device_token` |
+| SPEC-060 / 080 | CI/CD i release process |
 
-## Categoria 2 — Qualitat i tests (P2)
+## UX (P2 — TBD post-feedback)
 
-| Espec | Títol | Owner |
-|---|---|---|
-| SPEC-110 | Tests unitaris natius (XCTest + JUnit) | iOS + Android + QA |
+- Petició de trucada calmada (pla local session-notes; no spec encara)
+- Geofencing, push natives, widget — només si el feedback de beta ho demana
 
-Cobertura > 70% als plugins natius. Detectar regressions abans de field tests.
+## Més enllà (P3+)
 
-## Categoria 3 — Escalat i operacions (P2)
-
-| Espec | Títol | Owner |
-|---|---|---|
-| SPEC-120 | WebSocket presence via Redis | Backend + DevOps |
-
-Permet múltiples workers a Render. Resiliència millorada.
-
-## Categoria 4 — Millores UX (P2)
-
-TBD després de feedback de beta. Possibles:
-
-- Predicció de ruta (ML)
-- Geofencing (avisar quan surt d'una zona)
-- Notificacions push natives
-- Widget Android/iOS
-- Compartir ubicació amb enllaç temporal
-
-## Categoria 5 — Plataforma (P3+)
-
-- iPad layout natiu
-- Apple Watch / Wear OS
-- Android Auto / CarPlay
-- Integració amb Siri / Google Assistant
-
-## Categoria 6 — Seguretat i privacitat (P3+)
-
-- E2E encryption (cap avall)
-- Auto-delete walks antics
-- Export/import de dades
-- GDPR compliance (DPO tools)
-
-## Després de la 3.0.0
-
-- Model de negoci (freemium, subscripció)
-- Marketing
-- Suport multi-idioma
-- Localització a altres països
-
-## Decissions pendents
-
-- Monetització? Subscripció? B2C vs B2B?
-- Marca blanca?
-- Plataformes addicionals (web standalone sense PWA)?
+- iPad / wearables / E2E encryption / GDPR tooling / model de negoci
 
 ## Referències
 
-- [`beta-readiness.md`](beta-readiness.md) — Cronograma beta
-- [`milestones.md`](milestones.md) — Versions
-- [`../specs/000-index.md`](../specs/000-index.md) — Catàleg de specs
+- [`beta-readiness.md`](beta-readiness.md) — gates de la beta ara
+- [`../specs/000-index.md`](../specs/000-index.md) — specs actives
+- [`../docs/EVOLUTION.md`](../docs/EVOLUTION.md) — història del projecte

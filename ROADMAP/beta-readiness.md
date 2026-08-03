@@ -1,107 +1,85 @@
-# PathGuard — Beta Readiness Roadmap
+# PathGuard — Beta readiness
+
+**Última actualització:** 2026-08-03  
+**Target:** `v2.7.0-beta.1` (beta externa testable)  
+**Estat del dia a dia:** `.pathguard/STATE.json` · història: [`docs/EVOLUTION.md`](../docs/EVOLUTION.md)
 
 ## Objectiu
 
-Aconseguir una **beta testable en entorn real** amb:
-- PWA funcional
-- Capa Android funcional
-- Capa iOS funcional
-- Backend estable
-- Documentació completa
-- Procediments de camp validats
+Una beta que un familiar real pugui usar amb tranquil·litat:
 
-## Cronograma
+- Pacient Android: passeig amb pantalla apagada / butxaca, GPS fiable
+- Cuidador (PWA): mapa i presència honestos
+- Backend estable (Render + Supabase)
+- Procediment de camp clar (sense rituals falsos)
 
-| Setmana | Fase | Espec principal | Entregable |
-|---|---|---|---|
-| 1 | Fase 0 — Estructura | (ja fet en aquesta PR) | Skills, agents, specs, docs |
-| 1 | Fase 1 — Restaurar Android | SPEC-010 | Android torna a compilar |
-| 2 | Fase 2 — Consolidar GPS | SPEC-020 | 1 mode GPS, 0 pèrdua |
-| 3 | Fase 3 — Revocació token | SPEC-030 | Owner pot revocar |
-| 3 | Fase 4 — Bridge contract v2 | SPEC-040 | Contracte canònic |
-| 4 | Fase 5 — Proves de camp | SPEC-050 | 7 reports |
-| 4 | Fase 6 — CI/CD | SPEC-060 | Pipelines |
-| 4 | Fase 7 — Release beta | — | `v2.7.0-beta.1` |
+**iOS natiu:** diferit (SPEC-182) — no bloqueja una beta Android-first.
 
-**Total estimat:** 4-5 setmanes des de l'inici de Fase 1.
+## Gates oberts (ara)
 
-## Checklist Beta Ready
+| Gate | Spec / lloc | Estat |
+|---|---|---|
+| `is_recovered` només des del buffer real | SPEC-188 | Mergejat — **field AC-6 pendent** |
+| Notif FGS visible (lock screen) | SPEC-187 | Smoke OK — tancar amb camp |
+| Presència HTTP honesta | SPEC-185 | Field pendent |
+| Keepalive FGS (si cal post-188) | SPEC-183 | Revisió després del camp |
+| Buffer / recovered umbrella | SPEC-180 | Alineat amb 188 |
+| iOS buffer | SPEC-182 | **Diferit** |
 
-### Funcionalitat
-- [ ] PWA registra, activa, monitoritza, SOS
-- [ ] Android: build APK debug + release
-- [ ] iOS: build IPA debug + release
-- [ ] Backend: tests 152/152 (o més)
-- [ ] Frontend: tests 108/108 (o més)
-- [ ] Field tests 7/7 escenaris
+Catàleg viu: [`specs/000-index.md`](../specs/000-index.md).
 
-### Seguretat
-- [ ] `device_token` revocable (SPEC-030)
-- [ ] Permisos OS correctes (iOS WhenInUse → Always)
-- [ ] CORS correcte (orígens explícits)
-- [ ] Secrets a env vars (no al codi)
+## Checklist Beta Ready (honesta)
 
-### Operacions
-- [ ] CI pipeline (PR validation)
-- [ ] CD pipeline (auto-deploy)
-- [ ] Release process (tag → artifacts)
-- [ ] Observabilitat (logs, errors)
-- [ ] Cold start acceptable
+### Ja en bona forma
+- [x] PWA: registre, activació, monitoratge, SOS (baseline producte)
+- [x] Backend / frontend tests baseline (152 / 108 — excepcions preexistents documentades)
+- [x] Una font GPS natiu (ADR-0004) + bridge LocationSync
+- [x] Docs d’entrada: `AGENTS.md`, `CONTEXT.md`, `docs/EVOLUTION.md`, skills Cursor
+- [x] Specs magres + `specs/archive/`
+- [x] ADRs 0001–0006 acceptats
 
-### Documentació
-- [ ] CONTEXT.md slim
-- [ ] agents/INDEX.md complet
-- [ ] Skills operatius
-- [ ] Specs SDD vives
-- [ ] ADRs per decisions clau
-- [ ] docs/archive/ immutable
+### Pendents de camp / producte
+- [ ] Field post–SPEC-188: majoria `is_recovered=false` amb pantalla apagada + notif ON; taronja només recuperació real
+- [ ] Presència cuidador coherent (WS + HTTP + aging) en el mateix passeig
+- [ ] APK de col·laboradors amb plugin actual (`f896660`+)
+- [ ] Sign-off QA “Beta Ready” (única autoritat)
 
-### Cross-platform
-- [ ] Bridge contract canònic (SPEC-040)
-- [ ] 1 font GPS (SPEC-020)
-- [ ] Permisos centralitzats
-- [ ] Tokens a Capacitor Preferences
-- [ ] Format de dades coherent (TS ↔ iOS ↔ Android ↔ Backend)
+### Explicitament fora del gate beta Android-first
+- [ ] iOS IPA + field (SPEC-182)
+- [ ] Revocació `device_token` (SPEC-030 — backlog)
+- [ ] CI/CD complet (SPEC-060/080 — backlog)
+- [ ] i18n / tests natius / Redis presence (post-beta — veure `post-beta.md`)
 
 ## Riscos residuals
 
-| Risc | Probabilitat | Impacte | Mitigació |
-|---|---|---|---|
-| Field tests troben issues nous | Alta | Mitjà | Buffer de 2 setmanes al cronograma |
-| Apple rebutja app per permisos | Baixa | Alt | Seguir guidelines Apple (WhenInUse primer) |
-| Android OEM killing | Mitjana | Mitjà | WakeLock + foreground service |
-| Render cold start | Mitjana | Baix | Cron ping cada 10 min |
-
-## Mètriques d'èxit
-
-| Mètrica | Objectiu | Mesurat |
-|---|---|---|
-| Pèrdua de punts en offline | 0% | ⏳ |
-| Duplicats a DB | 0 | ⏳ |
-| Falsos offline screen-off | 0% | ⏳ |
-| Tests backend | ≥152 | 152 ✅ |
-| Tests frontend | ≥108 | 108 ✅ |
-| Field tests | 7/7 ✅ | ⏳ |
-| Build APK debug | exit | ⏳ |
-| Build IPA debug | exit | ⏳ |
+| Risc | Mitigació |
+|---|---|
+| OEM Android mata el FGS | Notif visible + keepalive; field real, no només unit tests |
+| Semàntica mapa (ambre) confon | Regla PD-RECOVERED-ONLY-FROM-BUFFER + camp 188 |
+| Cold start Render | Acceptat / ping si cal; no bloqueja beta petita |
+| Sense iPhone | Beta Android-first; iOS quan hi hagi dispositiu |
 
 ## Sign-off
 
-| Rol | Sign-off per |
+| Rol | Què signa |
 |---|---|
-| **QA** | "Beta Ready" (única autoritat) |
-| Tech Lead | Validació cross-capa i ADRs |
-| Owner del projecte | Acceptació per release pública |
+| **QA** | “Beta Ready” |
+| Tech Lead | Cross-capa / ADRs |
+| Owner | Acceptació per usuaris externs |
 
-## Decissions pendents (ADRs)
+## Versions (resum)
 
-- ADR-0004 — Única font de GPS (pendent per SPEC-020)
-- ADR-0005 — Tokens a Capacitor Preferences (pendent per SPEC-030)
-- ADR-0006 — Permisos centralitzats al plugin (pendent per SPEC-020.6)
+| Versió | Nota |
+|---|---|
+| v2.6.x | PWA + Postgres + primer natiu |
+| **v2.7.0-beta.1** | Target — Android camp + PWA cuidador |
+| Després | `post-beta.md` |
+
+Detall narratiu: `docs/EVOLUTION.md`. Canvis versionats (parcial): `CHANGELOG.md`.
 
 ## Referències
 
-- [`../specs/000-index.md`](../specs/000-index.md) — Catàleg de specs
-- [`../docs/phases/phase-status.md`](../docs/phases/phase-status.md) — Estat per fase
-- [`../docs/architecture/overview.md`](../docs/architecture/overview.md) — Visió arquitectònica
-- `../docs/archive/audit_native_layer.md` — 15 issues identificats
+- [`post-beta.md`](post-beta.md) — després de la beta
+- [`../docs/phases/phase-status.md`](../docs/phases/phase-status.md)
+- [`../docs/architecture/overview.md`](../docs/architecture/overview.md)
+- Skill camp: `.cursor/skills/pathguard-domain-field-testing/SKILL.md`
