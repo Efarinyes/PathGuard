@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Cobert per skill field-testing -->
 ---
 id: feature-SPEC-050
 title: Proves de camp amb dispositius reals
 type: feature
-status: draft
+status: archived
 priority: P0
 created: 2026-06-30
 author: tech-lead
@@ -17,8 +18,7 @@ blocked_by:
   - SPEC-020
 replaces: docs/archive/guia-proves-reals.md
 supersedes: null
-adr: null
----
+adr: null---
 
 # Spec: Proves de camp amb dispositius reals
 

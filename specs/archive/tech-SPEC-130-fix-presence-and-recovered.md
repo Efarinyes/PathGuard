@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Implementada / mergejada; arxivada 2026-08-03 (higiene specs) -->
 ---
 id: tech-SPEC-130
 title: Fix presència WS i flag is_recovered al plugin iOS
 type: tech
-status: draft
+status: archived
 priority: P0
 created: 2026-07-03
 author: tech-lead
@@ -13,8 +14,7 @@ reviewer: tech-lead
 blocked_by: []
 replaces: null
 supersedes: null
-adr: null
----
+adr: null---
 
 # Spec: Fix presència WS i flag is_recovered al plugin iOS
 

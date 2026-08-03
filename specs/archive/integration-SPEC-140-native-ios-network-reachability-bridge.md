@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Implementada / mergejada; arxivada 2026-08-03 (higiene specs) -->
 ---
 id: integration-SPEC-140
 title: Native iOS network reachability bridge for WebSocket reconnect
 type: integration
-status: implementing
+status: archived
 priority: P0
 created: 2026-07-05
 author: tech-lead
@@ -16,8 +17,7 @@ blocked_by:
 replaces: null
 supersedes:
   - tech-SPEC-130 # R-P0-NEW-1 scope only; R-P0-NEW-3 remains resolved by SPEC-130
-adr: null
----
+adr: null---
 
 # Spec: Native iOS network reachability bridge for WebSocket reconnect
 
@@ -222,10 +222,10 @@ Això bloqueja el milestone `beta-ready`.
 ## 10. Referències
 
 - `.pathguard/STATE.json` — `open_issues_from_audit.R-P0-NEW-1`.
-- `specs/tech-SPEC-130-fix-presence-and-recovered.md` — intent anterior de
+- `tech-SPEC-130-fix-presence-and-recovered.md` — intent anterior de
   R-P0-NEW-1 (polling JS). SPEC-140 en substitueix l'abast de R-P0-NEW-1;
   R-P0-NEW-3 roman resolt per SPEC-130.
-- `specs/tech-SPEC-040-bridge-contract-v2.md` — contracte base del bridge.
+- `tech-SPEC-040-bridge-contract-v2.md` — contracte base del bridge.
 - `frontend/hooks/useWebSocket.ts` — hook afectat.
 - `frontend/plugins/location-sync/src/index.ts` — contracte TS del bridge.
 - `frontend/plugins/location-sync/ios/Plugin/LocationSyncPlugin.swift` — plugin iOS.

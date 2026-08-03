@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Implementada / mergejada; arxivada 2026-08-03 (higiene specs) -->
 ---
 id: tech-SPEC-170
 title: Caregiver presence updates from HTTP batch uploads
 type: tech
-status: draft
+status: archived
 priority: P0
 created: 2026-07-06
 author: tech-lead
@@ -12,8 +13,7 @@ reviewer: tech-lead
 blocked_by: []
 replaces: null
 supersedes: null
-adr: 0004
----
+adr: 0004---
 
 # Spec: Caregiver presence updates from HTTP batch uploads
 

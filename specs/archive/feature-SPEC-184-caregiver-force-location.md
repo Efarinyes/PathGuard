@@ -1,8 +1,9 @@
+<!-- ARXIVAT: APARCAT — no prioritat beta -->
 ---
 id: feature-SPEC-184
 title: Caregiver force location (push wake + flush)
 type: feature
-status: draft
+status: archived
 priority: P2
 created: 2026-08-01
 author: tech-lead
@@ -18,8 +19,7 @@ blocked_by:
   - tech-SPEC-183
 replaces: null
 supersedes: null
-adr: null
----
+adr: null---
 
 # Spec: Caregiver force location (DEFERRED)
 
@@ -85,5 +85,5 @@ Sense canal remot, el caregiver no pot despertar un FGS mort per OEM. Keep-alive
 ## 10. Referències
 
 - Pla reactivació 2026-08-01
-- `specs/tech-SPEC-183-android-walk-keepalive.md`
+- `../tech-SPEC-183-android-walk-keepalive.md`
 - `docs/field-tests/TEMPLATE-reactivation-metrics.md`

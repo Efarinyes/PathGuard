@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Backlog P1 — fora de specs actives 2026-08-03 -->
 ---
 id: devops-SPEC-060
 title: Pipeline CI/CD multi-plataforma
 type: devops
-status: draft
+status: archived
 priority: P1
 created: 2026-06-30
 author: tech-lead
@@ -13,8 +14,7 @@ reviewer: tech-lead
 blocked_by: []
 replaces: null
 supersedes: null
-adr: null
----
+adr: null---
 
 # Spec: Pipeline CI/CD multi-plataforma
 

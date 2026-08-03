@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Implementada / mergejada; arxivada 2026-08-03 (higiene specs) -->
 ---
 id: tech-SPEC-040
 title: Bridge LocationSync v2 — 6 mètodes, contracte canònic
 type: tech
-status: approved
+status: archived
 priority: P0
 created: 2026-06-30
 approved: 2026-06-30
@@ -19,8 +20,7 @@ blocked_by:
   - SPEC-020
 replaces: null
 supersedes: null
-adr: 0004
----
+adr: 0004---
 
 # Spec: Bridge LocationSync v2 — 6 mètodes, contracte canònic
 

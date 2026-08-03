@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Implementada / mergejada; arxivada 2026-08-03 (higiene specs) -->
 ---
 id: tech-SPEC-010
 title: Restore Android plugin (3 fitxers perduts)
 type: tech
-status: draft
+status: archived
 priority: P0
 created: 2026-06-30
 author: tech-lead
@@ -13,8 +14,7 @@ reviewer: platform-integration
 blocked_by: []
 replaces: null
 supersedes: null
-adr: null
----
+adr: null---
 
 # Spec: Restore Android plugin (3 fitxers perduts)
 

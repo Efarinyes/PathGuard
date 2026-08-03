@@ -100,6 +100,6 @@ Mentrestant `get_presence_status()` ja calcula `online | gps_online | limbo | of
 
 ## 10. Referències
 
-- `specs/tech-SPEC-170-caregiver-presence-http-broadcast.md`
+- `specs/archive/tech-SPEC-170-caregiver-presence-http-broadcast.md`
 - `backend/app/api/websocket/connection_manager.py`
 - `docs/field-tests/TEMPLATE-reactivation-metrics.md`

@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Implementada / mergejada; arxivada 2026-08-03 (higiene specs) -->
 ---
 id: tech-SPEC-150
 title: Android foreground service robustness for 2h walks
 type: tech
-status: draft
+status: archived
 priority: P0
 created: 2026-07-06
 author: tech-lead
@@ -13,8 +14,7 @@ reviewer: tech-lead
 blocked_by: []
 replaces: null
 supersedes: null
-adr: 0006
----
+adr: 0006---
 
 # Spec: Android Foreground Service robustness for 2h walks
 
@@ -163,8 +163,8 @@ Aquesta spec toca 2 agents:
 - [Android Developers — FusedLocationProviderClient](https://developer.android.com/develop/sensors-and-location/location/retrieve-current) — referència per a location updates.
 - `docs/decisions/0004-single-gps-source.md` (ADR-0004) — 1 sola font GPS.
 - `docs/decisions/0006-centralized-permissions.md` (ADR-0006) — permisos centralitzats al plugin.
-- `specs/integration-SPEC-020-consolidate-gps-capture.md` (SPEC-020) — C-3 ja previst a 020.4, però no implementat.
-- `specs/tech-SPEC-040-bridge-contract-v2.md` (SPEC-040) — contracte immutable, no es toca.
+- `integration-SPEC-020-consolidate-gps-capture.md` (SPEC-020) — C-3 ja previst a 020.4, però no implementat.
+- `tech-SPEC-040-bridge-contract-v2.md` (SPEC-040) — contracte immutable, no es toca.
 - `.cursor/skills/pathguard-agent-android/SKILL.md` — guia del plugin Android.
 - `.cursor/skills/pathguard-agent-frontend/SKILL.md` — guia del frontend.
 - `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationSyncForegroundService.java` — fitxer a modificar.

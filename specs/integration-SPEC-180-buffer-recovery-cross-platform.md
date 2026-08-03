@@ -162,10 +162,10 @@ Aquesta spec toca **6 agents** i requereix coordinació:
 
 ## 10. Referències
 
-- `specs/integration-SPEC-020-consolidate-gps-capture.md`
-- `specs/tech-SPEC-130-fix-presence-and-recovered.md`
-- `specs/tech-SPEC-150-android-foreground-robustness.md`
-- `specs/tech-SPEC-040-bridge-contract-v2.md`
+- `specs/archive/integration-SPEC-020-consolidate-gps-capture.md`
+- `specs/archive/tech-SPEC-130-fix-presence-and-recovered.md`
+- `specs/archive/tech-SPEC-150-android-foreground-robustness.md`
+- `specs/archive/tech-SPEC-040-bridge-contract-v2.md`
 - `.cursor/skills/pathguard-domain-bridge-contract/SKILL.md`
 - `.cursor/skills/pathguard-agent-ios/SKILL.md`
 - `.cursor/skills/pathguard-agent-android/SKILL.md`

@@ -129,8 +129,8 @@ Aquesta spec només toca la capa iOS:
 ## 10. Referències
 
 - `integration-SPEC-180-buffer-recovery-cross-platform.md`
-- `specs/tech-SPEC-130-fix-presence-and-recovered.md`
-- `specs/tech-SPEC-140-native-ios-network-reachability-bridge.md`
+- `specs/archive/tech-SPEC-130-fix-presence-and-recovered.md`
+- `specs/archive/integration-SPEC-140-native-ios-network-reachability-bridge.md`
 - `.cursor/skills/pathguard-agent-ios/SKILL.md`
 - `frontend/plugins/location-sync/ios/Plugin/LocationBuffer.swift`
 - `frontend/plugins/location-sync/ios/Plugin/BufferStore.swift`

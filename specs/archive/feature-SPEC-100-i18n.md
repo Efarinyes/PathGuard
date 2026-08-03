@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Post-beta -->
 ---
 id: feature-SPEC-100
 title: i18n: infraestructura per a CA/ES/EN
 type: feature
-status: draft
+status: archived
 priority: P2
 created: 2026-06-30
 author: tech-lead
@@ -13,8 +14,7 @@ reviewer: tech-lead
 blocked_by: []
 replaces: null
 supersedes: null
-adr: pending
----
+adr: pending---
 
 # Spec: i18n: infraestructura per a CA/ES/EN
 

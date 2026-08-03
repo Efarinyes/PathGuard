@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Deute tècnic / backlog -->
 ---
 id: tech-SPEC-110
 title: Tests unitaris natius (XCTest + JUnit)
 type: tech
-status: draft
+status: archived
 priority: P2
 created: 2026-06-30
 author: tech-lead
@@ -15,8 +16,7 @@ blocked_by:
   - SPEC-010
 replaces: null
 supersedes: null
-adr: null
----
+adr: null---
 
 # Spec: Tests unitaris natius (XCTest + JUnit)
 

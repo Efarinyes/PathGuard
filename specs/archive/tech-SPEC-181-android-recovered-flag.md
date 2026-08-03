@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Implementada / mergejada; arxivada 2026-08-03 (higiene specs) -->
 ---
 id: tech-SPEC-181
 title: Fix Android is_recovered override and buffer hysteresis
 type: tech
-status: implementing
+status: archived
 priority: P0
 created: 2026-07-07
 author: tech-lead
@@ -13,8 +14,7 @@ blocked_by:
   - integration-SPEC-180
 replaces: null
 supersedes: null
-adr: null
----
+adr: null---
 
 # Spec: Fix Android is_recovered override and buffer hysteresis
 
@@ -175,8 +175,8 @@ Aquesta spec només toca la capa Android:
 ## 10. Referències
 
 - `integration-SPEC-180-buffer-recovery-cross-platform.md`
-- `specs/tech-SPEC-130-fix-presence-and-recovered.md` (fix equivalent a iOS)
-- `specs/tech-SPEC-150-android-foreground-robustness.md`
+- `tech-SPEC-130-fix-presence-and-recovered.md` (fix equivalent a iOS)
+- `tech-SPEC-150-android-foreground-robustness.md`
 - `.cursor/skills/pathguard-agent-android/SKILL.md`
 - `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationSyncForegroundService.java`
 - `frontend/plugins/location-sync/android/src/main/java/com/pathguard/app/plugin/LocationBuffer.java`

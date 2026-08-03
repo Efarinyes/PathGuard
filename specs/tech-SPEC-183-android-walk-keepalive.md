@@ -97,6 +97,6 @@ Només Android plugin:
 ## 10. Referències
 
 - Pla: wake_and_force_location (Cursor plan 2026-08-01)
-- `specs/tech-SPEC-150-android-foreground-robustness.md`
-- `specs/tech-SPEC-181-android-recovered-flag.md`
+- `specs/archive/tech-SPEC-150-android-foreground-robustness.md`
+- `specs/archive/tech-SPEC-181-android-recovered-flag.md`
 - `docs/field-tests/TEMPLATE-reactivation-metrics.md`

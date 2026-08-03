@@ -1,3 +1,4 @@
+<!-- ARXIVAT: SUPERSEDED per SPEC-188 -->
 ---
 id: tech-SPEC-186
 title: Android deferred location buffer on rest and process death

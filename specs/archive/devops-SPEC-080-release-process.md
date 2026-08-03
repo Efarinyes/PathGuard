@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Backlog devops -->
 ---
 id: devops-SPEC-080
 title: Tag-driven release + artifacts + secrets
 type: devops
-status: draft
+status: archived
 priority: P1
 created: 2026-06-30
 author: tech-lead
@@ -14,8 +15,7 @@ blocked_by:
   - SPEC-060
 replaces: null
 supersedes: null
-adr: null
----
+adr: null---
 
 # Spec: Tag-driven release + artifacts + secrets
 

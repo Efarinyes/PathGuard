@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Implementada / mergejada; arxivada 2026-08-03 (higiene specs) -->
 ---
 id: integration-SPEC-020
 title: Consolidar captura GPS cross-platform
 type: integration
-status: approved
+status: archived
 priority: P0
 created: 2026-06-30
 approved: 2026-06-30
@@ -17,8 +18,7 @@ reviewer: tech-lead
 blocked_by: []
 replaces: null
 supersedes: null
-adr: 0004
----
+adr: 0004---
 
 # Spec: Consolidar captura GPS cross-platform
 

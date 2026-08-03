@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Implementada / mergejada; arxivada 2026-08-03 (higiene specs) -->
 ---
 id: tech-SPEC-070
 title: iOS Info.plist: armv7 → arm64
 type: tech
-status: approved
+status: archived
 priority: P1
 created: 2026-06-30
 approved: 2026-06-30
@@ -14,8 +15,7 @@ reviewer: tech-lead
 blocked_by: []
 replaces: null
 supersedes: null
-adr: null
----
+adr: null---
 
 # Spec: iOS Info.plist: armv7 → arm64
 

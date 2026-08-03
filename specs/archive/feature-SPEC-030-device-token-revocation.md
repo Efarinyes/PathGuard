@@ -1,8 +1,9 @@
+<!-- ARXIVAT: Backlog post-beta / no urgent -->
 ---
 id: feature-SPEC-030
 title: Revocació de device_token (owner)
 type: feature
-status: draft
+status: archived
 priority: P0
 created: 2026-06-30
 author: tech-lead
@@ -14,8 +15,7 @@ reviewer: platform-integration
 blocked_by: []
 replaces: null
 supersedes: null
-adr: pending  # ADR-0005 a redactar
----
+adr: pending  # ADR-0005 a redactar---
 
 # Spec: Revocació de device_token (owner)
 
