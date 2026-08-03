@@ -1,3 +1,4 @@
+<!-- ARXIVAT 2026-08-03: branques/tags congelats 2026-06-30; veritat → STATE.json + EVOLUTION.md -->
 # PathGuard — Estat del repositori
 
 **Última actualització:** 2026-06-30 (post-Fase 0)

@@ -57,7 +57,7 @@ Veure `agents/INDEX.md` per mapeig complet.
 ## Estat actual
 
 - **Versió:** v2.6.0-beta.1 (veure `package.json`)
-- **Fase:** Fase 0 — Estructura agents + skills (veure `docs/phases/phase-status.md`)
+- **Fase:** pre-beta — field SPEC-188 pendent (veure `.pathguard/STATE.json` i `docs/phases/phase-status.md`)
 - **Branca actual:** veure `.pathguard/STATE.json`
 - **Spec activa:** veure `.pathguard/STATE.json`
 - **Pickup-point:** veure `.pathguard/STATE.json > next_session_pickup`

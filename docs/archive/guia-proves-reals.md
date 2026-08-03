@@ -1,4 +1,4 @@
-<!-- ARXIVAT 2026-06-30: document històric. Veure docs/INDEX.md per la documentació activa. -->
+<!-- ARXIVAT: guia original proves; operativa → skill field-testing + guides/real-world-testing.md -->
 
 # PathGuard — Guia de Proves Reals en Dispositius
 

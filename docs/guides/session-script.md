@@ -107,7 +107,8 @@ Al tancar:
 | `docs/phases/phase-status.md` | A quina fase del projecte estem |
 | `ROADMAP/beta-readiness.md` | Cap a on anem |
 | `docs/archive/` | El que JA NO serveix (no tocar) |
-| `docs/architecture/repository-state.md` | Quin és l'estat del repositori (branques, tags) |
+| `.pathguard/STATE.json` | Branques / proper pas (viuen aquí, no a docs) |
+| `docs/archive/repository-state.md` | Snapshot branques/tags 2026-06-30 (històric) |
 
 ---
 

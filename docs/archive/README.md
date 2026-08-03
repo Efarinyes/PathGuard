@@ -5,23 +5,15 @@ Aquest directori conté documents antics del projecte. **Només lectura.** No ed
 
 Per a la documentació activa, veure `../INDEX.md`.
 
-## Què hi ha aquí
+## Què hi ha aquí (selecció)
 
-- `action-plan.md` — Pla d'acció consolidat (Fase 1-5 + G), reemplaçat per specs/SDD
-- `audit_native_layer.md` — Auditoria capa nativa 2026-06 (mogut des de l’arrel, R1a 2026-08-03)
-- `ROADMAP-TESTS.md` — Matriu de tests 2026-06 (mogut des de l’arrel, R1a 2026-08-03)
-- `auditoria-*.md` — Auditories de pipeline, presència, cobertura, GPS/mapa
-- `completed-sprints.md` — Resum de sprints completats
-- `DOCUMENT-REVIEW.md` — Neteja documental 2026-06
-- `FASE-G-POSTGRESQL-MIGRATION.md` — Detall G.1-G.7
-- `GPS-MAPA-BETA2-PLANNING.md` — Planificació GPS/mapa beta 2
-- `ios-native-layer-plan.md` — Pla iOS (substituït per `../../specs/integration-SPEC-...`)
-- `pla-plugin-location-sync.md` — Pla inicial del plugin
-- `PRIMERA-APROXIMACIO-CAP-A-BETA-ESTABLE.md` — Primera aproximació beta
-- `REORGANITZACIO-DASHBOARD-OWNER.md` — Reorganització dashboard owner
-- `ROADMAP-v1.0-2026-06-09.md` — Roadmap v1.0 (juny 2026)
-- `ROADMAP-v2.6.0.md` — Roadmap v2.6.0 (maig 2026)
-- `../guia-proves-reals.md` — Guia de proves de camp (versió 1, reemplaçada per skill + nova guia)
+- `action-plan.md`, `PRIMERA-APROXIMACIO-…`, `ROADMAP-v*` — plans / roadmaps antics
+- `audit_native_layer.md`, `auditoria-*`, `ROADMAP-TESTS.md` — auditories
+- `ios-native-layer-plan.md`, `pla-plugin-location-sync.md` — plans natius inicials
+- `guia-proves-reals.md` — guia de camp v1 (operativa → skill field-testing)
+- `repository-state.md` — branques/tags congelats 2026-06-30
+- `phase-status-2026-06-30.md` — snapshot de fases (viu → `../phases/phase-status.md`)
+- `assets/` — captures i binaris històrics (ex. mapa 2026-06-04)
 
 ## Política
 
@@ -31,6 +23,7 @@ Per a la documentació activa, veure `../INDEX.md`.
 
 ## Històric d'arxivat
 
-- 2026-06-30 — Arxivat en la primera fase de reestructuració documental (Fase 0).
-- 2026-08-03 — R1a: `audit_native_layer.md` i `ROADMAP-TESTS.md` moguts des de l’arrel del repo.
+- 2026-06-30 — Primera reestructuració documental (Fase 0).
+- 2026-08-03 — R1a: audit + ROADMAP-TESTS des de l’arrel.
+- 2026-08-03 — R3 docs: guia proves, repository-state, phase-status antic, captura `mapes/` → aquí.
 -->
