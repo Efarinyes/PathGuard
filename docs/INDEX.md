@@ -2,6 +2,12 @@
 
 Aquest és l'**ÍNDEX** de tota la documentació del projecte. Si ets una IA o una persona nova, comença aquí.
 
+## Història del projecte
+
+| Document | Què hi ha |
+|---|---|
+| [`EVOLUTION.md`](EVOLUTION.md) | Cronologia narrativa: concepció → PWA → natiu → GPS de camp → `is_recovered` → avui |
+
 ## Estructura
 
 | Carpella | Què hi ha |

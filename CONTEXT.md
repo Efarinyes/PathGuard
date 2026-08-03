@@ -90,6 +90,7 @@ Veure `agents/INDEX.md` per mapeig complet.
 - **Mapa d'agents i skills:** `agents/INDEX.md`
 - **Catàleg de specs:** `specs/000-index.md`
 - **Índex de documentació:** `docs/INDEX.md`
+- **Evolució (cronologia):** `docs/EVOLUTION.md`
 - **Estat del projecte:** `.pathguard/STATE.json`
 - **ADRs:** `docs/decisions/`
 - **Fase actual:** `docs/phases/phase-status.md`
