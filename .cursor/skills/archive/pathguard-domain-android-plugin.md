@@ -289,7 +289,7 @@ Caldria:
 
 **Escenaris:**
 1. Walk 15 min
-2. Mode avió 5 min
+2. pèrdua de connexió 5 min
 3. Screen-off 30 min
 4. Kill app
 5. Reobrir (recuperar walkId)

@@ -35,7 +35,7 @@ erroni de `navigator.onLine` i dels timers de `WKWebView`.
   `main` (commit `1cd95f1`) amb polling de salut JS cada 15s **no** ha
   resolt el problema a l'iPhone 8 real.
 - `WKWebView` (Capacitor iOS) no dispara l'event `online` quan es desactiva el
-  mode avió. `navigator.onLine` també pot reportar `true` quan no hi ha
+  pèrdua de connexió. `navigator.onLine` també pot reportar `true` quan no hi ha
   connectivitat real.
 - El polling `setInterval` dins del WebView no reconnecta quan el WS queda en
   un estat "mort" després de la pèrdua de xarxa; els timers del WebView es
@@ -46,11 +46,11 @@ erroni de `navigator.onLine` i dels timers de `WKWebView`.
 
 ## 3. Problema
 
-Quan un pacient amb iOS activa i desactiva el mode avió durant un passeig:
+Quan un pacient amb iOS activa i desactiva el pèrdua de connexió durant un passeig:
 
 1. El WebSocket es tanca per falta de xarxa.
 2. El cuidador veu `Passeig actiu - Sense cobertura` (taronja).
-3. En desactivar el mode avió, el WebSocket del pacient **no reconnecta**.
+3. En desactivar el pèrdua de connexió, el WebSocket del pacient **no reconnecta**.
 4. El cuidador continua veient `Sense cobertura` fins que l'app es tanca i
    reobre.
 
@@ -100,8 +100,8 @@ Això bloqueja el milestone `beta-ready`.
   rellevants.
 - [ ] **AC-12:** Tests frontend baseline 108/108 passen (6 skipped
   preexistents) i s'afegeixen ≥ 2 tests nous sense regressions.
-- [ ] **AC-13:** Field test a iPhone 8: desactivar mode avió → esperar
-  `Sense cobertura` al cuidador → desactivar mode avió → l'estat passa a
+- [ ] **AC-13:** Field test a iPhone 8: desactivar pèrdua de connexió → esperar
+  `Sense cobertura` al cuidador → desactivar pèrdua de connexió → l'estat passa a
   `En línia` en ≤ 15s sense tancar/reobrir l'app.
 
 ## 6. Riscos identificats
@@ -204,8 +204,8 @@ Això bloqueja el milestone `beta-ready`.
 - **Dispositiu:** iPhone 8 (iOS 15+).
 - **Escenari:**
   1. Pacient inicia passeig; cuidador veu `En línia`.
-  2. Pacient activa mode avió; cuidador veu `Sense cobertura`.
-  3. Pacient desactiva mode avió; **sense tancar l'app**, cuidador passa a
+  2. Pacient perd la connexió; cuidador veu `Sense cobertura`.
+  3. Pacient desperd la connexió; **sense tancar l'app**, cuidador passa a
      `En línia` en ≤ 15s.
 - **Evidència:** captures de pantalla + logs de `LocationSyncPlugin` si és
   possible.

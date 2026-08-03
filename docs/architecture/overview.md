@@ -105,7 +105,7 @@ Loop:
 ```
 Pacient (PWA)                              Cuidador (web)
 ─────────────                              ───────────────
-[mode avió]
+[sense xarxa]
 LocationHttpClient.sendBatch → fail
   ↓ onFlushResult(false)
 LocationBuffer
@@ -118,7 +118,7 @@ LocationBuffer
                               "Reconnectant..." (limbo)
                               NO "offline" (vermell)
 
-[mode avió OFF]
+[xarxa OK]
 Nou LocationHttpClient.sendBatch → success
   ↓ onFlushResult(true)
 LocationBuffer

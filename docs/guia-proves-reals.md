@@ -342,9 +342,9 @@ Si Vercel genera una URL de preview diferent (ex: `pathguard-xxxxx.vercel.app`),
 ### Escenari 4: Pèrdua de cobertura
 
 1. **Pacient:** Inicia un passeig amb GPS actiu
-2. **Pacient:** Entra en un lloc sense cobertura (túnel, parking subterrani) o activa mode avió
+2. **Pacient:** Entra en un lloc sense cobertura (túnel, parking subterrani) o perd la connexió
 3. **Cuidador:** Veure "Passeig actiu - Sense cobertura" amb indicador taronja ✅ (ara funciona amb el fix BUG1-5)
-4. **Pacient:** Surt del túnel / desactiva mode avió
+4. **Pacient:** Surt del túnel / desperd la connexió
 5. **Cuidador:** Veure "Passeig actiu - En línia" amb indicador verd
 6. **Cuidador:** Notificació "El familiar ha recuperat la cobertura" (només després del primer event WS, no fals positiu a l'inici)
 

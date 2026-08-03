@@ -80,7 +80,6 @@ Sense canal remot, el caregiver no pot despertar un FGS mort per OEM. Keep-alive
 
 ## 9. Out of scope (sempre)
 
-- Mode avió com a criteri
 - Substituir keep-alive patient (SPEC-183 continua sent el default)
 
 ## 10. Referències

@@ -123,10 +123,9 @@ Aquesta spec només toca la capa Android:
 - [x] `./gradlew :pathguard-location-sync:testDebugUnitTest` — 5/5 OK (JDK Android Studio a `/Volumes/Extern_Idoia/...`).
 - [x] No es canvien constants GPS, permisos, ni el format JSON del payload.
 
-### AC-6 — Prova de camp (sense mode avió)
+### AC-6 — Prova de camp
 - [~] Smoke 2026-08-01 (Redmi, APK post-`0f9d71d`, **sense moviment**): kill app → caregiver «Passeig actiu - Sense cobertura» (taronja, amb latència); reobrir → «En línia» (verd). Presència OK. `is_recovered` **no validable** sense punts GPS nous.
 - [ ] Pendent: passeig amb moviment + butxaca i/o kill/reopen → verificar flags `is_recovered` a BD.
-- [x] Mode avió **no** és criteri d’acceptació (fora d’abast beta — decisió producte 2026-08-01).
 
 ## 6. Riscos identificats
 
@@ -185,7 +184,7 @@ Aquesta spec només toca la capa Android:
 
 ## 11. Field test notes (2026-08-01)
 
-**Walk 144** — 9/19 punts amb `is_recovered=true` (942–950) durant repòs del telèfon, sense mode avió.
+**Walk 144** — 9/19 punts amb `is_recovered=true` (942–950) durant repòs del telèfon.
 
 ### Semàntica acordada (no implementar encara)
 

@@ -19,7 +19,6 @@ El telèfon del patient sol anar **a la butxaca** (pantalla apagada / repòs). A
 
 ### Fora d’abast per a Beta estable
 
-- **Mode avió** — no és un cas d’ús de producte ni criteri de gate beta. No l’utilitzar en proves de release. (Històricament s’havia usat com a proxy de laboratori; s’abandona.)
 - Passejos de 2h+ — fora del target de producte actual.
 
 ## Dispositius

@@ -547,7 +547,7 @@ export { LocationSync };
 | Compilació | `npx cap sync ios` + build a Xcode |
 | Unitari | No previst (funció pura haversine testejable a part) |
 | Manual (camp) | iPhone 8, caminar 15 min, verificar backend |
-| Offline | Mode avió 10 min, reactivar, verificar `is_recovered=true` |
+| Offline | pèrdua de connexió 10 min, reactivar, verificar `is_recovered=true` |
 
 ## 9. Riscos i Mitigacions
 

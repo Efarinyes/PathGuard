@@ -407,7 +407,7 @@ xcodebuild -workspace App/App.xcworkspace -scheme App -configuration Debug
 
 **Dispositiu:** iPhone 8 (iOS 15+) + iPhone recent (iOS 17+)
 
-**Escenaris (beta — sense mode avió):**
+**Escenaris (beta):**
 1. Walk 15 min en zona urbana
 2. Butxaca / screen-off 15–30 min
 3. Kill app (swipe away) → reobrir + estat en línia

@@ -77,8 +77,9 @@ Aquesta spec toca **6 agents** i requereix coordinació:
 ## 5. Criteris d’acceptació
 
 ### AC-1 — Semàntica de `is_recovered`
-- [ ] `is_recovered = true` només quan el punt ha estat **prèviament emmagatzemat al buffer local** per una fallada de xarxa o perquè l’app no estava en primer pla.
-- [ ] `is_recovered = false` per a qualsevol punt nou generat per `LocationAcquirer` mentre l’app està connectada i en primer pla.
+- [ ] `is_recovered = true` **només** quan el punt ha estat **prèviament emmagatzemat al buffer local per recuperar-lo** (fallada de flush / cua desada i recarregada després de mort de procés) i després s’envia.
+- [ ] `is_recovered = false` per a punts nous enviats amb flush OK mentre el FGS de passeig està actiu (**incloent** pantalla apagada / UI no visible).
+- [ ] Pantalla apagada o `markBackgrounded` **sols** no fan recovered.
 
 ### AC-2 — Persistència del buffer
 - [ ] Quan l’app es tanca amb punts pendents al buffer, aquests persisteixen al disc (UserDefaults a iOS, SharedPreferences a Android).
@@ -154,7 +155,6 @@ Aquesta spec toca **6 agents** i requereix coordinació:
 
 ## 9. Out of scope
 
-- Mode avió — **fora d’abast per a gate beta** (decisió producte 2026-08-01). No usar com a criteri de prova ni nord de specs.
 - Nou mètode al bridge (el contracte actual ja suporta `is_recovered`).
 - Canvis al protocol WebSocket de presència (ja cobert per SPEC-130, SPEC-140, SPEC-160).
 - Foreground notification iOS (post-beta).
@@ -184,7 +184,7 @@ Aquesta spec toca **6 agents** i requereix coordinació:
 
 ## 11. Field test notes (2026-08-01)
 
-**Walk 144** (Android Redmi, ~35 min, sense mode avió) — validació parcial post-fix GPS (`f96ae5c`).
+**Walk 144** (Android Redmi, ~35 min) — validació parcial post-fix GPS (`f96ae5c`).
 
 | Mètrica | Resultat |
 |---|---|
@@ -193,28 +193,25 @@ Aquesta spec toca **6 agents** i requereix coordinació:
 | `is_recovered=false` | 10 punts (inici + tram final) |
 | `is_recovered=true` | 9 punts contíguos (~10:08–10:16 UTC) durant repòs del telèfon |
 
-### Semàntica acordada (revisió producte 2026-08-01)
-
-**No confondre** «només fallada de xarxa» amb «només mode avió». La definició operativa per al cuidador és:
+### Semàntica acordada (revisió producte 2026-08-03 — SPEC-188)
 
 | `is_recovered` | Significat per al producte |
 |---|---|
-| `false` | Punt enviat en **transmissió en viu** mentre l'app està activa en primer pla amb xarxa OK |
-| `true` | Punt **emmagatzemat al buffer local** (repòs/segon pla, flush fallit, reobertura app) i enviat després |
+| `false` | Enviat en **transmissió en viu** amb FGS/enviament OK (pantalla apagada no canvia això) |
+| `true` | Havia estat al **buffer de recuperació** (flush fallit o reload des de disc post-kill) i enviat després |
 
-Per tant, el bloc 942–950 del walk 144 **pot ser comportament esperat** si el telèfon estava en repòs i els punts es van bufferitzar abans d'enviar-se — no és automàticament un error de dades.
+**Walk 154** (2026-08-03): evidencia que SPEC-186 (no-foreground → recovered) va a l’inrevés → **SPEC-188**.
 
-### Implementació Android (actualitzat 2026-08-02)
+### Implementació Android (actualitzat 2026-08-03)
 
-- **SPEC-181:** mergejada — ja no es sobreescriu `isRecovered` al flush en viu amb el proxy foreground.
-- **SPEC-186:** buffer diferit — punts amb UI no foreground → `addDeferred` (`isRecovered=true` + persist); `MARK_BACKGROUNDED` / `onTaskRemoved` / `onDestroy` persisteixen.
+- **SPEC-181:** mergejada (histeresi / sense override al flush en viu).
+- **SPEC-186:** **superseded** per SPEC-188.
+- **SPEC-188:** recovered NOMÉS des de buffer de recuperació real (draft → implementació post-aprovació).
 - **SPEC-187:** notificació FGS visible (canal `pathguard_walk_v2`).
 - **SPEC-183 (mínim):** keep-alive flush 30s + sonda GPS si stale ≥90s.
-- **SPEC-182 (iOS):** diferida conscientment (sense accés a iPhone); no bloqueja avanç Android.
-
-**Walk 151** (2026-08-02): 14 punts, tots `is_recovered=false` després de kill×2 — confirma que sense persist en adormida el tram diferit no es veu; SPEC-186 adreça això.
+- **SPEC-182 (iOS):** diferida; no bloqueja Android.
 
 ### Limitacions observades (fora d'aquesta spec)
 
-- Forats GPS llargs en repòs (950→951 ~7 min) → SPEC-183 keep-alive + field Metric A.
+- Aturada sense desplaçament mínim → sense punt nou = **esperat** (tranquil·litat, no densitat).
 - Mapa sense indicadors de direcció → backlog UX (no bloqueja SPEC-180).

@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
 
+/**
+ * In-memory location queue with optional disk persistence.
+ * SPEC-188: isRecovered becomes true only on flush failure re-queue or when
+ * loading a previously persisted queue from disk — never because UI is backgrounded.
+ */
 public class LocationBuffer {
     private static final int BUFFER_MAX_SIZE = 200;
     private static final int RECOVERY_STREAK_THRESHOLD = 3;
@@ -17,6 +22,7 @@ public class LocationBuffer {
         this.buffer = store.load();
         this.lastFlushFailed = store.getLastFlushFailed();
         this.recoveryStreak = store.getRecoveryStreak();
+        // Reload from disk = recovery path
         for (LocationPoint p : buffer) {
             p.isRecovered = true;
         }
@@ -36,27 +42,9 @@ public class LocationBuffer {
         add(point);
     }
 
-    /**
-     * Point captured while live pipeline is not trusted (UI background / rest).
-     * Marks recovered and persists so kill/reopen still delivers the segment.
-     */
-    public synchronized void addDeferred(LocationPoint point, int walkId) {
-        point.isRecovered = true;
-        add(point, walkId);
-        persist();
-    }
-
-    /** Persist current queue (does not clear). */
+    /** Persist current queue without changing isRecovered flags (kill-safety). */
     public synchronized void persist() {
         store.save(buffer, lastFlushFailed, recoveryStreak);
-    }
-
-    /** Mark all pending points as recovered and persist (e.g. on background). */
-    public synchronized void markPendingRecoveredAndPersist() {
-        for (LocationPoint p : buffer) {
-            p.isRecovered = true;
-        }
-        persist();
     }
 
     public synchronized List<LocationPoint> drainAll() {

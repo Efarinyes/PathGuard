@@ -337,7 +337,7 @@ Caldria:
 
 **Dispositiu:** Redmi (testat parcialment 2026-06-10)
 
-**Escenaris (beta — sense mode avió):**
+**Escenaris (beta):**
 1. Walk 15 min (app activa)
 2. Butxaca / screen-off 15–30 min (**prioritari** — Doze/OEM)
 3. Kill app + reobrir (recuperar walkId + en línia)

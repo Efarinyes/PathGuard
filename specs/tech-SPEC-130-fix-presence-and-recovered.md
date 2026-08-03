@@ -20,7 +20,7 @@ adr: null
 
 ## 1. Objectiu
 Tancar dos bugs P0 descoberts durant el field test de Fase 1 al iPhone 8:
-- **R-P0-NEW-1:** Quan el pacient entra/surt de mode avió, l'estat al
+- **R-P0-NEW-1:** Quan el pacient entra/recupera la connexió, l'estat al
   cuidador queda persistent en "Sense cobertura" tot i que el WebSocket
   del pacient podria reconnectar.
 - **R-P0-NEW-3:** La columna `is_recovered` de la taula `location` no
@@ -30,7 +30,7 @@ Tancar dos bugs P0 descoberts durant el field test de Fase 1 al iPhone 8:
 
 ## 2. Context
 - Plugin iOS (`LocationSyncService.swift`) implementat al commit 23b6536.
-- Validat al iPhone 8 que: mapa, mode avió, kill app, `is_recovered`
+- Validat al iPhone 8 que: mapa, pèrdua de connexió, kill app, `is_recovered`
   (parcial, amb el bug descobert).
 - Audit `docs/audit/audit_native_layer.md` actualitzat amb R-P0-NEW-1,
   R-P0-NEW-2, R-P0-NEW-3.
@@ -39,19 +39,19 @@ Tancar dos bugs P0 descoberts durant el field test de Fase 1 al iPhone 8:
 
 ## 3. Problema
 
-### 3.1 R-P0-NEW-1 — Presència queda "offline" després de mode avió
+### 3.1 R-P0-NEW-1 — Presència queda "offline" després de pèrdua de connexió
 
 **Reproducció (validada al iPhone 8, sessió 2026-07-03):**
 1. Iniciar passeig des de PWA iOS → cuidador veu `Passeig actiu - En línia` (verd).
-2. Activar mode avió al iPhone → cuidador veu `Passeig actiu - Sense cobertura` (taronja).
-3. Desactivar mode avió → cuidador **continua veient** `Sense cobertura`.
+2. Perdre la connexió al iPhone → cuidador veu `Passeig actiu - Sense cobertura` (taronja).
+3. Recuperar la connexió → cuidador **continua veient** `Sense cobertura`.
 4. Tancar i reobrir la PWA → cuidador veu `En línia` (verd, es recupera).
 
 **Causa arrel:**
 - `useWebSocket.ts:130-138` ja escolta `window.addEventListener('online', ...)`
   per reconnectar quan la xarxa torna.
 - En WKWebView (Capacitor iOS), `navigator.onLine` queda `true` i l'event
-  `online` **no es dispara** quan es desactiva el mode avió. És un
+  `online` **no es dispara** quan es recupera la connexió. És un
   bug conegut dels WebViews mòbils.
 - El reconnect només es reactiva quan es desmunta i remunta el hook
   (`useWebSocket.ts:140-163` cleanup) — la qual cosa passa en tancar/reobrir.
@@ -61,7 +61,7 @@ Tancar dos bugs P0 descoberts durant el field test de Fase 1 al iPhone 8:
 **Reproducció (validada amb query a `location`, sessió 2026-07-03):**
 - Iniciar passeig amb l'app en background (telèfon a la butxaca, pantalla
   apagada) → tots els punts inserits tenen `is_recovered = true`.
-- Reobrir l'app i iniciar un passeig nou sense mode avió previ → el primer
+- Reobrir l'app i iniciar un passeig nou previ → el primer
   punt pot arribar amb `is_recovered = true` heretat de `lastFlushFailed`
   (que pot estar `true` per una sessió anterior via `UserDefaults`).
 - Exemple d'inserció a la BD: `{"idx":52,"id":737,"walk_id":104,...,"is_recovered":true}`
@@ -114,14 +114,14 @@ El bug és l'**sobreescriptura innecessària** a `onPointAccepted`.
   `navigator.onLine === true` durant ≥ 5s, encara que l'event `online`
   no s'hagi disparat (polling de salut).
 - [ ] AC-2: El polling de salut **NO** s'activa quan
-  `navigator.onLine === false` (evita loops infinits en mode avió).
+  `navigator.onLine === false` (evita loops infinits en pèrdua de connexió).
 - [ ] AC-3: L'interval del polling és configurable via `lib/config.ts`
   amb la constant `WS_HEALTH_PING_INTERVAL_MS` (proposta: 15000 ms).
 - [ ] AC-4: Tests Vitest cobreixen: reconnect periòdic quan WS tancat i
   online; no reconnect quan offline; reset d'attempts en reconnect
   exitós; neteja de timers en unmount.
 - [ ] AC-5: Comportament observable al cuidador canvia: després de
-  sortir de mode avió (sense tancar/reobrir), l'estat passa a
+  sortir de pèrdua de connexió (sense tancar/reobrir), l'estat passa a
   `En línia` en ≤ 30s.
 
 ### iOS (is_recovered)
@@ -133,9 +133,9 @@ El bug és l'**sobreescriptura innecessària** a `onPointAccepted`.
 - [ ] AC-8: Test XCTest a `LocationBufferTests.swift` valida els 3
   camins: init carregant del store, add d'un punt nou, reAdd després
   d'un flush failure.
-- [ ] AC-9: Field test al iPhone 8: passeig net (sense mode avió) →
+- [ ] AC-9: Field test al iPhone 8: passeig net →
   tots els punts a `location.is_recovered = false`. Passeig amb mode
-  avió intermitent → només els punts emmagatzemats al buffer tenen
+  connexió intermitent → només els punts emmagatzemats al buffer tenen
   `is_recovered = true`, els nous generats un cop recuperada la xarxa
   tenen `false`.
 
@@ -241,10 +241,10 @@ El bug és l'**sobreescriptura innecessària** a `onPointAccepted`.
 - **Validació de camp:** iPhone 8 amb 2 escenaris:
   - Escenari A: passeig net de 15 min sense perdre cobertura → tots els
     punts a `location.is_recovered = false`.
-  - Escenari B: passeig amb 2 intervals de mode avió (3 min cadascun) →
-    els punts emmagatzemats al buffer durant el mode avió tenen
+  - Escenari B: passeig amb 2 intervals de pèrdua de connexió (3 min cadascun) →
+    els punts emmagatzemats al buffer durant el pèrdua de connexió tenen
     `is_recovered = true`, la resta `false`. L'estat al cuidador passa
-    a `En línia` ≤ 30s després de desactivar el mode avió (sense
+    a `En línia` ≤ 30s després de desactivar el pèrdua de connexió (sense
     tancar/reobrir).
 - **QA sign-off:** tots els AC verificats, tests passen, field test
   documentat amb captures/evidència.

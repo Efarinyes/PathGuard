@@ -138,11 +138,10 @@ Aquesta spec toca 2 agents:
 - **Tests Vitest:** baseline 108/108 → objectiu 110/110 (2 nous escenaris a C-3).
 - **Tests JUnit:** no existeixen al plugin (deute tècnic SPEC-110) — fora d'abast.
 - **Tests backend:** 152/152 sense canvis (no s'ha tocat el backend).
-- **Field test (Redmi) — target producte ~45–60 min (no 2h, no mode avió):**
+- **Field test (Redmi) — target producte ~45–60 min(no 2h):**
   - Screen-off / butxaca des dels primers minuts (escenari crític)
   - 1 kill app + reobrir a mitja passejada
   - Criteri d'èxit: densitat de punts acceptable a la butxaca; 0 pèrdua massiva; mapa cuidador coherent.
-  - Mode avió: **fora d’abast** per a gate beta (decisió producte 2026-08-01).
 - **Cross-capa:** format JSON del payload Android idèntic al d'iOS.
 - **QA sign-off:** tots els AC verificats, tests passen, field test documentat.
 
@@ -199,5 +198,4 @@ Aquesta spec toca 2 agents:
 ### Prioritat producte (2026-08-01)
 
 - Target: passejos curts ≤ ~1h; telèfon a la butxaca.
-- Gate beta: butxaca/screen-off + kill/reopen. **Sense mode avió.**
 - Backlog candidat (no implementat): keep-alive periòdic no invasiva durant passeig actiu; opcionalment **caregiver → force location** (wake + flush buffer sota demanda). Veure pla post-GPS.

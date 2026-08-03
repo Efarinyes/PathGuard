@@ -76,7 +76,7 @@ S'ha observat a la BD: 782 (false), **783 (true)**, 784 (false), 785 (false). El
 - [ ] **AC-1.2:** `LocationSyncPlugin.startTracking()` ja **no** crida `networkMonitor.start()`.
 - [ ] **AC-1.3:** `LocationSyncPlugin.stopTracking()` ja **no** crida `networkMonitor.stop()`.
 - [ ] **AC-1.4:** El monitor s'inicia quan el plugin es carrega (per defecte, quan s'obre l'app).
-- [ ] **AC-1.5:** Validar al iPhone 8: cuidador obre app, activa mode avió 5 min, desactiva → el WS reconnecta en ≤ 30s **sense** tancar/reobrir l'app.
+- [ ] **AC-1.5:** Validar al iPhone 8: cuidador obre app, perd la connexió 5 min, desactiva → el WS reconnecta en ≤ 30s **sense** tancar/reobrir l'app.
 
 ### Bug 2 — Race condition
 
@@ -121,7 +121,7 @@ Ordre crític: 1 primer (perquè 2 depèn que el monitor estigui actiu quan es c
 - **Tests Vitest:** baseline 124/130 → 0 regressions.
 - **tsc --noEmit:** 0 errors.
 - **Field test (iPhone 8):**
-  - Escenari A: cuidador obre app → activa mode avió 5 min → desactiva → estat canvia a "En línia" en ≤ 30s sense tancar/reobrir.
+  - Escenari A: cuidador obre app → perd la connexió 5 min → desactiva → estat canvia a "En línia" en ≤ 30s sense tancar/reobrir.
   - Escenari B: cuidador obre app amb xarxa ja restablerta → WS es connecta correctament.
   - Escenari C: pacient i cuidador ambdós a iPhone — es veuen punts en temps real durant tot el cicle.
 - **Cross-capa:** el format JSON del payload iOS no canvia.

@@ -1,6 +1,5 @@
 package com.pathguard.app.plugin;
 
-import android.app.ActivityManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -20,8 +19,12 @@ import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Foreground walk tracking. SPEC-188: is_recovered is set only after real recovery
+ * (flush failure re-queue, or reload from disk after process death) — not because
+ * the WebView is backgrounded or the screen is off.
+ */
 public class LocationSyncForegroundService extends Service {
 
     private static final String PREF_FILE = "pathguard_tracking";
@@ -36,7 +39,6 @@ public class LocationSyncForegroundService extends Service {
     private static boolean running = false;
     private static int pointsSent = 0;
     private static String lastSentAt = null;
-    private static final AtomicBoolean appInForeground = new AtomicBoolean(true);
 
     private LocationAcquirer acquirer;
     private LocationBuffer locationBuffer;
@@ -76,8 +78,6 @@ public class LocationSyncForegroundService extends Service {
         wakeLock.setReferenceCounted(false);
         wakeLock.acquire();
 
-        appInForeground.set(isAppProcessForeground());
-
         BufferStore bufferStore = new BufferStore(this);
         locationBuffer = new LocationBuffer(bufferStore);
         httpClient = new LocationHttpClient();
@@ -107,20 +107,6 @@ public class LocationSyncForegroundService extends Service {
         } else {
             startForeground(NotificationHelper.NOTIFICATION_ID, notification);
         }
-    }
-
-    private boolean isAppProcessForeground() {
-        ActivityManager.RunningAppProcessInfo processInfo = new ActivityManager.RunningAppProcessInfo();
-        ActivityManager.getMyMemoryState(processInfo);
-        return processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
-            || processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
-    }
-
-    private boolean isAppInForeground() {
-        if (appInForeground.get()) {
-            return true;
-        }
-        return isAppProcessForeground();
     }
 
     @Override
@@ -164,14 +150,11 @@ public class LocationSyncForegroundService extends Service {
                     break;
 
                 case "MARK_BACKGROUNDED":
-                    appInForeground.set(false);
-                    if (locationBuffer != null) {
-                        locationBuffer.markPendingRecoveredAndPersist();
-                    }
+                    // Visibility hint only (SPEC-188): must NOT flip is_recovered.
                     break;
 
                 case "MARK_FOREGROUNDED":
-                    appInForeground.set(true);
+                    // Visibility hint only (SPEC-188).
                     break;
             }
         } else {
@@ -185,12 +168,8 @@ public class LocationSyncForegroundService extends Service {
     }
 
     private void onPointAccepted(LocationPoint point) {
-        if (!isAppInForeground()) {
-            // Deferred delivery: rest / UI not trusted as live pipeline
-            locationBuffer.addDeferred(point, walkId);
-        } else {
-            locationBuffer.add(point, walkId);
-        }
+        // Live accept: recovered stays false until flush failure or disk reload.
+        locationBuffer.add(point, walkId);
     }
 
     private void startTracking() {
@@ -270,9 +249,10 @@ public class LocationSyncForegroundService extends Service {
         }
     }
 
+    /** Persist queue for kill safety without labeling recovered (label happens on disk reload). */
     private void persistForProcessDeath() {
         if (locationBuffer != null && !locationBuffer.isEmpty()) {
-            locationBuffer.markPendingRecoveredAndPersist();
+            locationBuffer.persist();
         }
     }
 

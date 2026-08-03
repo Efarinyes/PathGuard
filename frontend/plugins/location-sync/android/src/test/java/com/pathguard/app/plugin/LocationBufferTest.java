@@ -11,6 +11,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+/** SPEC-188: recovered only via flush failure or disk reload. */
 public class LocationBufferTest {
 
     private FakeBufferPersistence store;
@@ -38,42 +39,27 @@ public class LocationBufferTest {
         LocationBuffer buffer = new LocationBuffer(store);
         LocationPoint point = new LocationPoint(41.5, 2.4, 2_000L, "cid-2");
 
-        buffer.add(point);
+        buffer.add(point, 11);
         List<LocationPoint> drained = buffer.drainAll();
 
         assertEquals(1, drained.size());
         assertFalse(drained.get(0).isRecovered);
+        assertEquals(11, drained.get(0).walkId);
     }
 
     @Test
-    public void test_addDeferred_marksRecoveredAndPersists() {
-        LocationBuffer buffer = new LocationBuffer(store);
-        LocationPoint point = new LocationPoint(41.5, 2.4, 2_500L, "cid-2b");
-
-        buffer.addDeferred(point, 42);
-
-        assertEquals(1, store.savedSize());
-        assertTrue(store.lastSavedWasRecovered());
-        assertEquals(42, store.lastSavedWalkId());
-
-        List<LocationPoint> drained = buffer.drainAll();
-        assertEquals(1, drained.size());
-        assertTrue(drained.get(0).isRecovered);
-        assertEquals(42, drained.get(0).walkId);
-    }
-
-    @Test
-    public void test_markPendingRecoveredAndPersist_flagsQueue() {
+    public void test_persist_doesNotFlipLivePointsToRecovered() {
         LocationBuffer buffer = new LocationBuffer(store);
         LocationPoint live = new LocationPoint(41.5, 2.4, 2_600L, "cid-2c");
         buffer.add(live, 7);
         assertFalse(live.isRecovered);
 
-        buffer.markPendingRecoveredAndPersist();
+        buffer.persist();
 
         assertEquals(1, store.savedSize());
-        assertTrue(store.lastSavedWasRecovered());
+        assertFalse(store.lastSavedWasRecovered());
 
+        // Reload path (process death) marks recovered — that is intentional.
         LocationBuffer reloaded = new LocationBuffer(store);
         List<LocationPoint> drained = reloaded.drainAll();
         assertEquals(1, drained.size());
@@ -81,17 +67,15 @@ public class LocationBufferTest {
     }
 
     @Test
-    public void test_persist_survivesReloadAsRecovered() {
+    public void test_persist_thenSuccessfulFlushPath_liveFlagsUnchangedInMemory() {
         LocationBuffer buffer = new LocationBuffer(store);
-        LocationPoint point = new LocationPoint(41.5, 2.4, 2_700L, "cid-2d");
-        point.isRecovered = true;
-        buffer.add(point, 9);
+        LocationPoint live = new LocationPoint(41.5, 2.4, 2_700L, "cid-2d");
+        buffer.add(live, 9);
         buffer.persist();
+        assertFalse(live.isRecovered);
 
-        LocationBuffer reloaded = new LocationBuffer(store);
-        assertEquals(1, reloaded.size());
-        List<LocationPoint> drained = reloaded.drainAll();
-        assertTrue(drained.get(0).isRecovered);
+        List<LocationPoint> drained = buffer.drainAll();
+        assertFalse(drained.get(0).isRecovered);
     }
 
     @Test
@@ -106,6 +90,8 @@ public class LocationBufferTest {
 
         assertEquals(1, drained.size());
         assertTrue(drained.get(0).isRecovered);
+        assertEquals(1, store.savedSize());
+        assertTrue(store.lastSavedWasRecovered());
     }
 
     @Test
@@ -175,11 +161,6 @@ public class LocationBufferTest {
                 if (!p.isRecovered) return false;
             }
             return true;
-        }
-
-        int lastSavedWalkId() {
-            if (seeded.isEmpty()) return 0;
-            return seeded.peek().walkId;
         }
 
         @Override

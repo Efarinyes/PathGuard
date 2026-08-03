@@ -95,7 +95,7 @@ Possible pèrdua de punts en background, comportament diferent d'Android, i expe
 - Unit tests Swift per a `LocationBuffer`, `LocationAcquirer` gates.
 - Build Xcode + crides des de JavaScript.
 - Tests de permisos amb cada estat possible.
-- Proves de camp: passeig real de 15-30 min amb mode avió i background.
+- Proves de camp: passeig real de 15-30 min amb pèrdua de connexió i background.
 
 **Esforç estimat:** Alt (2-4 dies).
 
@@ -252,7 +252,7 @@ Afegir un retry exponencial simple (màxim 3 intents) abans de donar el batch pe
 
 **Tests necessaris:**
 - Unit tests amb `URLProtocol` mock per simular errors.
-- Integration tests: mode avió + reconnect.
+- Integration tests: pèrdua de connexió + reconnect.
 
 **Esforç estimat:** Baix (1 dia).
 
@@ -280,7 +280,7 @@ Modificar `LocationBuffer.onFlushResult(false)` per re-afegir el batch al buffer
 
 **Tests necessaris:**
 - Unit test: flush fallit → batch es re-afageix i `isRecovered = true`.
-- Integration test: mode avió → punts persisteixen i es reenvien.
+- Integration test: pèrdua de connexió → punts persisteixen i es reenvien.
 
 **Esforç estimat:** Baix (1-2 hores).
 
@@ -484,7 +484,7 @@ Definir els selectors amb `@objc private func applicationDidBecomeActive(_ notif
 ## Preguntes pendents
 
 1. **Android és intencionadament trencat en aquesta branca?** Els fitxers `BufferStore.java`, `LocationHttpClient.java` i `LocationSyncForegroundService.java` apareixen esborrats a git. És un error o forma part d'un refactor en curs?
-2. **Quin és el pla de proves de camp per a iOS?** Es farà un passeig controlat amb l'iPhone 8? Es provarà mode avió, background i kill app?
+2. **Quin és el pla de proves de camp per a iOS?** Es farà un passeig controlat amb l'iPhone 8? Es provarà pèrdua de connexió, background i kill app?
 3. **Es desplegarà Android i iOS simultàniament a beta, o només un d'ells?** Això afecta la prioritat de restaurar Android.
 4. **Existeix algun mecanisme de revocació de `device_token` previst al roadmap?** És un requisit de seguretat important.
 5. **S'ha considerat l'ús de `Capacitor Preferences` en lloc de `localStorage` per als tokens en natiu?**

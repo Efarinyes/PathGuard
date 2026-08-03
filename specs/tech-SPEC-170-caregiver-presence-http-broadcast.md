@@ -23,7 +23,7 @@ Garantir que el cuidador (`/caregiver` a Brave en Mac) vegi correctament l'estat
 
 ## 2. Context
 
-Sessió 2026-07-06 (camp a iPhone 8 + Mac): el pacient transmet punts correctament quan surt de mode avió (la BD rep els punts, el mapa del cuidador reb els `location` events per WS), però el **panell d'estat** del cuidador queda persistentment en "Passeig actiu - Sense cobertura" (punt taronja). Només canvia quan el pacient tanca i obre l'app al mòbil (que reconnecta el WS).
+Sessió 2026-07-06 (camp a iPhone 8 + Mac): el pacient transmet punts correctament quan recupera la connexió (la BD rep els punts, el mapa del cuidador reb els `location` events per WS), però el **panell d'estat** del cuidador queda persistentment en "Passeig actiu - Sense cobertura" (punt taronja). Només canvia quan el pacient tanca i obre l'app al mòbil (que reconnecta el WS).
 
 Auditoria del codi (`backend/app/services/location_service.py`, `backend/app/api/websocket/connection_manager.py`) ha revelat la causa:
 
@@ -52,7 +52,7 @@ El `presenceStatus` del cuidador queda desfasat respecte l'estat real del pacien
 - [ ] **AC-2:** Quan arriba un POST a `/locations/batch` amb èxit, tots els cuidadors connectats al WS del grup reben un missatge `{"type": "patient_status", "status": "gps_online", "group_id": N}`.
 - [ ] **AC-3:** El status reflecteix correctament el temps des de l'últim HTTP rebut: `gps_online` (< 60s), `limbo` (< 300s), `offline` (> 300s), `online` (WS obert).
 - [ ] **AC-4:** Tests backend: 152/152 + 1 test nou = 153/153 (o 152/152 si el test existent ja cobreix el cas).
-- [ ] **AC-5:** Field test a iPhone 8 + Mac: quan /patient surt de mode avió, /caregiver canvia de "Sense cobertura" a "GPS actiu" o "En línia" en ≤ 5s sense tancar/reobrir cap app.
+- [ ] **AC-5:** Field test a iPhone 8 + Mac: quan /patient recupera la connexió, /caregiver canvia de "Sense cobertura" a "GPS actiu" o "En línia" en ≤ 5s sense tancar/reobrir cap app.
 - [ ] **AC-6:** tsc --noEmit: 0 errors (no s'ha tocat frontend però es verifica per si de pas).
 - [ ] **AC-7:** Tests Vitest: 124/130 (no s'ha tocat frontend).
 
@@ -76,14 +76,14 @@ El `presenceStatus` del cuidador queda desfasat respecte l'estat real del pacien
 - **Tests backend:** 152/152 + 1 test nou = 153/153.
 - **tsc --noEmit:** 0 errors.
 - **Field test (iPhone 8 + Mac):**
-  - Escenari A: cuidador connectat, pacient surt de mode avió → cuidador veu canvi d'estat en ≤ 5s.
+  - Escenari A: cuidador connectat, pacient recupera la connexió → cuidador veu canvi d'estat en ≤ 5s.
   - Escenari B: pacient connectat per WS → cuidador veu "En línia". Pacient perd WS → cuidador veu "GPS actiu" (no pas "Sense cobertura" perquè el HTTP encara funciona). Pacient recupera WS → cuidador veu "En línia" de nou.
   - Escenari C: pacient aturat 5 min → cuidador veu "Connectant..." (limbo). Pacient continua 5 min més → cuidador veu "Sense cobertura" (offline).
 - **QA sign-off:** tots els AC verificats, field test documentat.
 
 ## 9. Out of scope
 
-- **Bug A** (pacient iOS no reconnecta WS quan surt de mode avió): cobert per SPEC-160, seguiment separat. Aquesta spec NO resol el Bug A, però en redueix l'impacte perquè el cuidador ja veu l'estat correcte via HTTP.
+- **Bug A** (pacient iOS no reconnecta WS quan recupera la connexió): cobert per SPEC-160, seguiment separat. Aquesta spec NO resol el Bug A, però en redueix l'impacte perquè el cuidador ja veu l'estat correcte via HTTP.
 - **NWPathMonitor equivalent per Android:** post-beta.
 - **Refactor del `connection_manager`:** post-beta.
 

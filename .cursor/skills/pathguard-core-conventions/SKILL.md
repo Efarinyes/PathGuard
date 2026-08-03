@@ -115,6 +115,6 @@ Quan un document ja no és operatiu:
 
 - Walk real al dispositiu
 - 2 dispositius (pacient + cuidador)
-- Butxaca / screen-off, kill app + reobrir (no mode avió per a gate beta)
+- Butxaca / screen-off, kill app + reobrir (butxaca / screen-off / kill+reopen per a gate beta)
 
 Mínim: 1 passeig de 15 min + tram a la butxaca amb captura GPS acceptable.

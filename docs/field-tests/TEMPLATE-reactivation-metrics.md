@@ -1,8 +1,6 @@
 # Field Test: Reactivation metrics (butxaca / kill-reopen)
 
 Use this template for beta walks that decide **SPEC-183** (GPS keepalive) vs **SPEC-185** (honest HTTP presence).  
-**Do not use airplane mode.**
-
 - **Data:** YYYY-MM-DD
 - **Dispositiu:** <model> <OS>
 - **APK / commit:** <hash>
@@ -13,16 +11,19 @@ Use this template for beta walks that decide **SPEC-183** (GPS keepalive) vs **S
 
 ---
 
-## Metric A — Densitat GPS (BD / mapa)
+## Metric A — Senyal útil amb moviment (BD / mapa)
 
-| Interval | Punts esperats (aprox.) | Punts observats | Forats > 3 min |
+> **Aturada sense desplaçament mínim → sense punt nou = esperat** (no compta com a fallada).
+
+| Interval | Hi ha moviment? | Punts observats | Notes |
 |---|---|---|---|
 | App visible (inici) | | | |
-| Butxaca / screen-off | | | |
+| Butxaca / screen-off (caminant) | | | |
+| Aturada (cafè / xerrada) | no | 0 esperat | |
 | Després de reobrir | | | |
 | **Total walk** | | | |
 
-**Verdict A:** ✅ densitat OK · ⚠️ forats lleus · ❌ forats greus (→ prioritzar SPEC-183)
+**Verdict A:** ✅ tranquil·litat OK amb moviment · ⚠️ dubtes · ❌ sense senyal útil **mentre hi ha desplaçament** (→ revisar keepalive / enviament)
 
 Notes:
 -

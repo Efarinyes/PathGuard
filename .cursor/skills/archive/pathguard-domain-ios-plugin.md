@@ -338,7 +338,7 @@ let package = Package(
 
 **Escenaris:**
 1. Walk 15 min en zona urbana
-2. Mode avió 5 min → reconnectar
+2. pèrdua de connexió 5 min → reconnectar
 3. Screen-off 30 min
 4. Kill app (swipe away) → reobrir
 5. SOS (mantenir 3s)

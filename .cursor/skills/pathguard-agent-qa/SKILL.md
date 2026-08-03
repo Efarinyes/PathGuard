@@ -101,8 +101,6 @@ QA no implementa la spec — **verifica que els AC es compleixen**.
 5. **Multi-caregiver** — 2 cuidadors al grup, verificar broadcast
 6. **Bateria** — walk ~45–60 min (límit producte), verificar consum acceptable
 
-**Fora de gate beta:** mode avió (no és cas d’ús de producte).
-
 Veure el procediment complet a `.cursor/skills/pathguard-domain-field-testing/SKILL.md`.
 
 ### 6. Validació per release

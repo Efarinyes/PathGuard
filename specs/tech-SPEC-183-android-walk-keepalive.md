@@ -94,8 +94,6 @@ Només Android plugin:
 - Caregiver force location (SPEC-184)
 - iOS keepalive (només si camp iOS falla)
 - Reconnect WS des de natiu
-- Mode avió
-
 ## 10. Referències
 
 - Pla: wake_and_force_location (Cursor plan 2026-08-01)
