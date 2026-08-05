@@ -108,13 +108,12 @@ Walk **159** (2026-08-04): kill amb tot `is_recovered=false` + mapa blau — coh
 
 **Branca de treball UI:** `feat/SPEC-189-caregiver-walk-silence` des de `main` (deploy Vercel exigeix arribar a `main`).
 
-**Ordre:**
+**Ordre d’alt nivell:** veure §11 (sessions curtes). Resum:
 
-1. **Tech Lead (aquesta entrega docs):** PD + SPEC-189 + alineació 180/188/185 → branca `docs/SPEC-189-walk-closed-exception` → merge `main`.
-2. **Frontend:** AC-1..AC-3, AC-5, AC-6 (Vitest). Python/Java no calen.
-3. **Backend:** només si el MVP descobreix forat de presence (aleshores micromamba `tracker-env` + pytest).
-4. **QA:** validació Vercel; field natiu quan hi hagi build.
-5. **Android / iOS / Platform:** cap canvi de codi al MVP; actualitzar notes de contracte quan es toqui natiu més endavant.
+1. Docs/PD a `main` (fet: `31c28e0`).
+2. Frontend MVP per sessions A–C → `main` + Vercel.
+3. Tancament paper (D); field natiu (E) quan hi hagi binari.
+4. Backend només si cal (micromamba `tracker-env`).
 
 ## 8. Pla de validació
 
@@ -141,3 +140,62 @@ Walk **159** (2026-08-04): kill amb tot `is_recovered=false` + mapa blau — coh
 - `frontend/components/CaregiverMap/CurrentPositionMarker.tsx`
 - `frontend/lib/derivePresenceStatus.ts`
 - `docs/field-tests/TEMPLATE-reactivation-metrics.md`
+
+## 11. Pla d’execució per sessions curtes
+
+> **Font de veritat per reprendre després de tancar el xat.**  
+> Actualitzar l’estat `[ ]` / `[x]` en tancar cada sessió.  
+> Pickup operatiu local: `.pathguard/STATE.json` (gitignored) — ha d’apuntar a la **propera** sessió d’aquesta taula.
+
+**Constraints (totes les sessions):** sense rebuild natiu al dispositiu fins a E; UI → `main`+`origin/main` (Vercel); backend = micromamba `tracker-env`; Java = només Android Studio; contracte Android **i** iOS.
+
+| Sessió | Estat | Objectiu | Sortida (Definition of Done) |
+|---|---|---|---|
+| **0 — Docs** | [x] | PD + SPEC-189 + alineació 180/185/188 | `31c28e0` a `main`=`develop`=`origin` |
+| **A — Copy** | [x] | Text calm `limbo`/`offline` a `PatientStatusCard`; sense ping en silenci | Commit a `feat/SPEC-189-caregiver-walk-silence` (`fa2c18f`) |
+| **B — Mapa** | [ ] | Marcador **darrera posició coneguda** evident (`CurrentPositionMarker` / `CustomIcons`); sense pols “en viu” engañós en silenci/`stale` | Commit a la mateixa feat; **aturar** |
+| **C — Tests + Vercel** | [ ] | Vitest AC-6; merge feat → `main`; push `origin/main` (+ `develop`); smoke cuidador a Vercel | UI en producció Vercel; **aturar** |
+| **D — Paper** | [ ] | Marcar ACs MVP d’aquesta spec; actualitzar `STATE` / EVOLUTION si cal; deixar AC-7 field obert | Spec reflecteix MVP fet; **aturar** |
+| **E — Camp** | [ ] | Quan hi hagi APK/IPA: butxaca (188 AC-6) + kill (189 AC-7); iOS quan hi hagi iPhone | Informes de camp; tancar AC-7 |
+
+### Detall per sessió (checklist)
+
+#### Sessió A — Copy cuidador ✅
+- [x] Branca `feat/SPEC-189-caregiver-walk-silence`
+- [x] `limbo` → esperant actualització
+- [x] `offline` → sense actualitzacions (+ timeAgo) — darrera posició coneguda
+- [x] Sense `animate-ping` en silenci
+- [x] Commit
+
+#### Sessió B — Darrera posició al mapa
+- [ ] Skills: `pathguard-core-state`, `pathguard-agent-frontend`, `pathguard-core-golden-rules`
+- [ ] Mode visual “darrera coneguda” quan `limbo`/`offline` o confidence `stale`
+- [ ] Distingible de `live` / `gps_online` (sense pols viu engañós)
+- [ ] Traça existent intacta; no exigir `is_recovered` pel silenci
+- [ ] Commit; **no** merge a `main` encara
+
+#### Sessió C — Tests + desplegament
+- [ ] Vitest per copy/estat i/o marcador (AC-6)
+- [ ] `npm test` baseline OK
+- [ ] Merge → `main` + `develop` + push `origin`
+- [ ] Smoke: https://path-guard-orpin.vercel.app (cuidador)
+- [ ] Actualitzar aquesta taula (C = `[x]`)
+
+#### Sessió D — Tancament paper MVP
+- [ ] Marcar AC-1..AC-3, AC-5, AC-6 com a fets si aplica
+- [ ] Deixar AC-7 / field explícitament diferit
+- [ ] `STATE.json` pickup → Sessió E o “MVP 189 en Vercel”
+- [ ] Commit docs si cal
+
+#### Sessió E — Field (diferit fins a binari natiu)
+- [ ] Android: butxaca → majoria `is_recovered=false` (188)
+- [ ] Android: kill → missatge + darrera posició; forats OK; no taronja massiu (189)
+- [ ] iOS: mateix contracte quan hi hagi dispositiu (182)
+- [ ] Plantilla: `docs/field-tests/TEMPLATE-reactivation-metrics.md`
+
+### Com reprendre en una sessió nova
+
+1. Llegir `.cursor/skills/pathguard-core-state/SKILL.md` + `.pathguard/STATE.json`
+2. Obrir **aquesta secció §11** i fer la primera fila `[ ]`
+3. `git branch --show-current` → hauria de ser `feat/SPEC-189-caregiver-walk-silence` fins a C
+4. En tancar: actualitzar §11 + `STATE.next_action` / `next_session_pickup`
