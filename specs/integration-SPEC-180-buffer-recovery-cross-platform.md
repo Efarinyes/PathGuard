@@ -26,7 +26,10 @@ adr: null
 
 ## 1. Objectiu
 
-Garantir que els punts de localització capturats durant interrupcions d’una passejada (app en segon pla, app tancada temporalment, connexió intermitent) es persisteixin localment i s’enviïn al backend marcats com a `is_recovered = true`, amb comportament coherent a iOS i Android.
+Garantir que la semàntica de `is_recovered` i la **cua de recuperació real** (flush fallit / reload des de disc) siguin coherents a **Android i iOS**, i que el mapa cuidador distingeixi traça viva vs recuperada.
+
+**Actualització 2026-08-05 (PD-WALK-CLOSED-IS-EXCEPTION):**  
+**No** es promet traça completa mentre l’app està tancada / procés mort. Això és excepcionalitat → missatge + darrera posició (**SPEC-189**). Aquesta umbrella cobreix buffer **pendent** (curt) + semàntica cross-platform, no “kill = passeig sencer en taronja”.
 
 ## 2. Context
 
@@ -81,9 +84,10 @@ Aquesta spec toca **6 agents** i requereix coordinació:
 - [ ] `is_recovered = false` per a punts nous enviats amb flush OK mentre el FGS de passeig està actiu (**incloent** pantalla apagada / UI no visible).
 - [ ] Pantalla apagada o `markBackgrounded` **sols** no fan recovered.
 
-### AC-2 — Persistència del buffer
-- [ ] Quan l’app es tanca amb punts pendents al buffer, aquests persisteixen al disc (UserDefaults a iOS, SharedPreferences a Android).
-- [ ] Quan l’app es reobre, els punts persistits es carreguen i s’envien amb `is_recovered = true`.
+### AC-2 — Persistència del buffer (cua pendent, no trajecte sencer)
+- [ ] Quan el procés mor amb **punts ja capturats i encara no enviats**, aquests persisteixen al disc (UserDefaults a iOS, SharedPreferences a Android).
+- [ ] Quan el procés torna, els punts persistits es carreguen i s’envien amb `is_recovered = true`.
+- [ ] **No** és AC: inventar o omplir el trajecte del interval en què el procés estava mort (forats acceptats; UX → SPEC-189).
 
 ### AC-3 — Android
 - [ ] `LocationSyncForegroundService.onPointAccepted` no sobreescriu `isRecovered` basant-se en `appInForeground` ni `lastFlushFailed`.
@@ -101,9 +105,10 @@ Aquesta spec toca **6 agents** i requereix coordinació:
 - [ ] Els punts recuperats apareixen al mapa en l’ordre cronològic correcte.
 
 ### AC-6 — Proves de camp
-- [ ] iPhone 8, permís "sempre": passeig amb app sortida/reoberta 2 cops → els primers punts després de cada reobertura tenen `is_recovered = true`.
-- [ ] Android (Redmi), permís "sempre": mateix escenari → resultat equivalent.
-- [ ] iPhone 8, permís "while in use": es documenta quin és el comportament esperat i les limitacions.
+- [ ] Butxaca / pantalla apagada amb passeig actiu: majoria `is_recovered=false` si l’enviament va bé (alineat SPEC-188).
+- [ ] Kill amb cua pendent: només els punts de la cua (si n’hi ha) poden ser `true`; no s’exigeix traça taronja completa.
+- [ ] Kill / silenci sense cua: forats OK; cuidador veu missatge + darrera posició (SPEC-189).
+- [ ] iOS: mateix contracte quan hi hagi dispositiu (SPEC-182); mentrestant documentat.
 
 ### AC-7 — Tests
 - [ ] XCTest a iOS valida els 3 camins: init amb punts persistits, punt nou, re-add després de flush failure.
@@ -193,23 +198,26 @@ Aquesta spec toca **6 agents** i requereix coordinació:
 | `is_recovered=false` | 10 punts (inici + tram final) |
 | `is_recovered=true` | 9 punts contíguos (~10:08–10:16 UTC) durant repòs del telèfon |
 
-### Semàntica acordada (revisió producte 2026-08-03 — SPEC-188)
+### Semàntica acordada (revisió producte 2026-08-03 — SPEC-188; excepció 2026-08-05)
 
 | `is_recovered` | Significat per al producte |
 |---|---|
 | `false` | Enviat en **transmissió en viu** amb FGS/enviament OK (pantalla apagada no canvia això) |
 | `true` | Havia estat al **buffer de recuperació** (flush fallit o reload des de disc post-kill) i enviat després |
 
+**App tancada / silenci de passeig:** no implica recovered massiu → **SPEC-189** (missatge + darrera posició).
+
 **Walk 154** (2026-08-03): evidencia que SPEC-186 (no-foreground → recovered) va a l’inrevés → **SPEC-188**.
 
-### Implementació Android (actualitzat 2026-08-03)
+### Implementació Android (actualitzat 2026-08-05)
 
 - **SPEC-181:** mergejada (histeresi / sense override al flush en viu).
 - **SPEC-186:** **superseded** per SPEC-188.
-- **SPEC-188:** recovered NOMÉS des de buffer de recuperació real (draft → implementació post-aprovació).
+- **SPEC-188:** recovered NOMÉS des de buffer de recuperació real; AC-6 butxaca (kill → 189).
+- **SPEC-189:** UX cuidador silenci (approved; MVP Vercel).
 - **SPEC-187:** notificació FGS visible (canal `pathguard_walk_v2`).
 - **SPEC-183 (mínim):** keep-alive flush 30s + sonda GPS si stale ≥90s.
-- **SPEC-182 (iOS):** diferida; no bloqueja Android.
+- **SPEC-182 (iOS):** diferida; mateix contracte de producte; no bloqueja MVP 189.
 
 ### Limitacions observades (fora d'aquesta spec)
 

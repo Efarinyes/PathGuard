@@ -2,7 +2,7 @@
 
 Catàleg viu de les specs **operatives**. Les tancades / backlog / superseded viuen a [`archive/`](archive/).
 
-**Última higiene:** 2026-08-03 (R2) — només 6 specs actives a l’arrel.
+**Última higiene:** 2026-08-05 — +SPEC-189 (silenci de passeig / darrera posició); PD-WALK-CLOSED-IS-EXCEPTION.
 
 ## Format
 
@@ -34,7 +34,8 @@ Catàleg viu de les specs **operatives**. Les tancades / backlog / superseded vi
 | [SPEC-183](tech-SPEC-183-android-walk-keepalive.md) | tech | Android FGS walk keepalive | android | implementing | Mínim mergejat; revisió post-188 |
 | [SPEC-185](tech-SPEC-185-honest-http-presence.md) | tech | Honest HTTP presence when patient WS dies | backend+frontend | implementing | Field AC-5 pendent |
 | [SPEC-187](tech-SPEC-187-android-fgs-notification-visibility.md) | tech | Android FGS notification on lock screen | android | implementing | Canal `pathguard_walk_v2`; smoke OK |
-| [SPEC-188](tech-SPEC-188-recovered-only-from-buffer.md) | tech | `is_recovered` només des del buffer real | android+qa | implementing | Mergejat; field AC-6 pendent |
+| [SPEC-188](tech-SPEC-188-recovered-only-from-buffer.md) | tech | `is_recovered` només des del buffer real | android+qa | implementing | Mergejat; AC-6 = butxaca (kill → 189) |
+| [SPEC-189](feature-SPEC-189-caregiver-walk-silence-last-known.md) | feature | Silenci de passeig: missatge calm + darrera posició | frontend+qa | approved | MVP Vercel; natiu field diferit |
 
 ---
 

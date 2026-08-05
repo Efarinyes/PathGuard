@@ -1,6 +1,6 @@
 # PathGuard — Estat per fase
 
-**Última actualització:** 2026-08-03  
+**Última actualització:** 2026-08-05  
 **Font operativa del dia a dia:** `.pathguard/STATE.json` (no aquest fitxer).  
 **Història:** [`../EVOLUTION.md`](../EVOLUTION.md) · snapshot antic: [`../archive/phase-status-2026-06-30.md`](../archive/phase-status-2026-06-30.md)
 
@@ -10,10 +10,10 @@
 
 | Eix | Estat |
 |---|---|
-| Producte | Pre-beta externa — PWA + Android al carrer; iOS diferit |
-| Integració | `main` = `develop` = origin |
-| Plugin GPS Android | SPEC-188 mergejada — **field AC-6 pendent** |
-| Specs actives | 180, 182 (diferit), 183, 185, 187, 188 — veure `specs/000-index.md` |
+| Producte | Pre-beta — PD-WALK-CLOSED-IS-EXCEPTION; SPEC-189 approved (MVP Vercel) |
+| Integració | Treball docs a `docs/SPEC-189-walk-closed-exception` → merge `main` |
+| Plugin GPS Android | SPEC-188 mergejada; field butxaca diferit (sense rebuild APK ara) |
+| Specs actives | 180, 182 (diferit), 183, 185, 187, 188, **189** — veure `specs/000-index.md` |
 | Target versió | `v2.7.0-beta.1` |
 
 ---
@@ -22,10 +22,10 @@
 
 | Capa | Estat |
 |---|---|
-| Backend (FastAPI / Postgres) | Estable en prod (Render + Supabase) |
-| Frontend PWA (cuidador) | Estable (Vercel) |
-| Android LocationSync | Operatiu; semàntica `is_recovered` via SPEC-188; camp pendent |
-| iOS LocationSync | Diferit (SPEC-182) — sense dispositiu de prova ara |
+| Backend (FastAPI / Postgres) | Estable en prod (Render + Supabase); pytest via micromamba `tracker-env` |
+| Frontend PWA (cuidador) | Vercel des de `main`; proper: SPEC-189 UI |
+| Android LocationSync | Operatiu; sense rebuild dispositiu aquesta iteració |
+| iOS LocationSync | Diferit (SPEC-182) — mateix contracte producte que Android |
 | Governança (skills / SDD) | Cursor (migrat des d’OpenCode 2026-07-30) |
 
 ---

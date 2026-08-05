@@ -3,7 +3,7 @@
 Cronologia narrativa del producte i del projecte, de la concepció fins al present.
 No substitueix l’estat operatiu (`.pathguard/STATE.json`) ni el catàleg de specs (`specs/000-index.md`).
 
-**Última actualització:** 2026-08-03
+**Última actualització:** 2026-08-05
 
 ---
 
@@ -108,27 +108,33 @@ Lliçó: una spec “correcta” al paper pot ser un bug de producte al carrer. 
 
 ---
 
-## 7. Avui — on som (2026-08-03)
+## 7. Avui — on som (2026-08-05)
 
-**Codi en producció / integració:** `main` = `develop` = origin, higiene docs a `fff6f78`; darrer canvi natiu rellevant de recovered: `f896660` (SPEC-188). Frontend Vercel, backend Render, BD Supabase.
+**Codi en producció / integració:** `main` = `develop` = origin (fins al merge d’aquesta higiene). Darrer canvi natiu recovered: `f896660` (SPEC-188). Frontend Vercel, backend Render, BD Supabase.
+
+**Decisió de producte (2026-08-05) — PD-WALK-CLOSED-IS-EXCEPTION:**  
+App tancada amb passeig actiu = **excepcionalitat**. No es promet traça completa en taronja. El cuidador ha de veure missatge calm + darrera posició (**SPEC-189**). Butxaca amb passeig actiu = directe (blau). `is_recovered` només buffer real (188).
+
+**Restriccions de sessió:** sense rebuild natiu al dispositiu ara; UX 189 via Vercel/`main`; backend amb micromamba `tracker-env`; Java només via Android Studio quan toqui natiu.
 
 **Specs vives a l’arrel** (la resta a `specs/archive/`):
 
 | Spec | Per què encara importa |
 |---|---|
-| 188 | Field AC-6 / informe de passeig |
+| 189 | MVP cuidador: silenci → copy + darrera posició (Vercel); camp natiu diferit |
+| 188 | Field AC-6 butxaca (kill → 189) |
 | 187 | Notificació FGS (smoke OK; tancar formalment) |
-| 185 | Presència HTTP honesta — field |
-| 183 | Keepalive — revisió després del field 188 |
+| 185 | Presència HTTP honesta — field; UX silenci → 189 |
+| 183 | Keepalive — revisió després del field butxaca |
 | 182 | iOS buffer — **diferit** |
-| 180 | Umbrella semàntica recovered |
+| 180 | Umbrella; promesa “app tancada = recovered complet” retirada |
 
 **Higiene recent:** arrel neta (R1a); specs magres (R2). El que és història viu a `docs/archive/` i `specs/archive/`, no al primer pla de l’explorador.
 
-**Obert a la cartera (no bloqueja el field 188):**
+**Obert a la cartera (no bloqueja el MVP 189):**
 
 - UX “petició de trucada” més calmada (no SOS alarmista) — pla local a session-notes.
-- iOS (182) quan hi hagi dispositiu.
+- iOS (182) + field kill 189 quan hi hagi dispositiu/binari.
 - CI/CD, i18n, tests natius — backlog conscient, no P0 fals.
 
 El producte encara apunta a **beta externa** (`v2.7.0-beta.1` com a target de roadmap): PWA + Android usable al carrer, iOS a remolc, procediments de camp honestos.

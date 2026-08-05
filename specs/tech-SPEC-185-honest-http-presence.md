@@ -96,7 +96,11 @@ Mentrestant `get_presence_status()` ja calcula `online | gps_online | limbo | of
 
 - SPEC-183 keepalive GPS
 - SPEC-184 push force
-- Canviar colors/labels de `PatientStatusCard` (ja té gps_online)
+- Canviar colors/labels de `PatientStatusCard` per silenci de passeig → **SPEC-189** (aquesta spec = presence honesta; 189 = copy + darrera posició evident)
+
+### Nota 2026-08-05 (PD-WALK-CLOSED-IS-EXCEPTION)
+
+Kill app sense HTTP → AC-5 segueix vàlid (offline/limbo, no verd fals). La **comunicació calm** al cuidador i el marcador de darrera posició són **SPEC-189**, no un reobertura de recovered massiu.
 
 ## 10. Referències
 

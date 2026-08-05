@@ -83,10 +83,12 @@ Patró mapa esperat quan hi ha recuperació **real**:
 ### AC-5 — Tests JUnit
 - [x] Tests SPEC-188 a `LocationBufferTest` (sense deferred-on-background).
 
-### AC-6 — Field (Redmi, protocol walk 154)
+### AC-6 — Field (Redmi, protocol walk 154) — actualitzat 2026-08-05
 - [ ] Passeig amb pantalla apagada la major part del temps, notif ON, aturades normals: **majoria** de punts `is_recovered=false` mentre hi ha enviament OK.
 - [ ] Taronja només en trams amb recuperació real (flush fallit o restart amb cua), no per apagar pantalla.
 - [ ] Aturada sense desplaçament → sense punts nous = OK (no és fallada).
+- [ ] **Kill / app tancada NO és gate d’aquest AC.** És excepcionalitat de producte (PD-WALK-CLOSED-IS-EXCEPTION): missatge + darrera posició → **SPEC-189**. No s’exigeix `is_recovered=true` massiu després d’un kill.
+- [ ] Field natiu diferit mentre no es pugui rebuild APK al dispositiu; validació UX de silenci via SPEC-189 (Vercel).
 
 ### AC-7 — Docs / SPEC-186
 - [x] SPEC-186 marcada `superseded` per SPEC-188.

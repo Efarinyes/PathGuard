@@ -81,4 +81,18 @@ Notes:
 
 - Punts `false` (viu): _
 - Punts `true` (buffer): _
-- Coherent amb kill/buffer? sí / no / N/A
+- Coherent amb buffer real (flush fail / reload)? sí / no / N/A
+
+### Kill / app tancada (SPEC-189 — no gate de taronja)
+
+| Pregunta | Sí / No / Notes |
+|---|---|
+| Missatge calm de silenci / sense actualitzacions? | |
+| Darrera posició evident al mapa? | |
+| Forats a la traça acceptats (sense exigir recovered massiu)? | |
+
+**Verdict kill:** ✅ UX 189 OK · ⚠️ · ❌ (si s’espera taronja massiu → contracte mal aplicat)
+
+---
+
+*Actualitzat 2026-08-05: PD-WALK-CLOSED-IS-EXCEPTION — kill = excepció UX, no recovered complet.*
