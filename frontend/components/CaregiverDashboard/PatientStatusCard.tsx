@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { formatTimeAgo } from '@/lib/formatTimeAgo';
 import type { PresenceStatus } from '@/lib/wsEventTypes';
 
 interface PatientStatusCardProps {
@@ -14,20 +13,35 @@ interface PatientStatusCardProps {
 }
 
 const STATUS_CONFIG: Record<PresenceStatus, { color: string; label: string }> = {
-  online:      { color: 'bg-success', label: 'Passeig actiu - En línia' },
-  gps_online:  { color: 'bg-primary', label: 'Passeig actiu - GPS actiu' },
-  limbo:       { color: 'bg-warning', label: 'Passeig actiu - Connectant...' },
-  offline:     { color: 'bg-warning', label: 'Passeig actiu - Sense cobertura' },
+  online:     { color: 'bg-success', label: 'Passeig actiu — En línia' },
+  gps_online: { color: 'bg-primary', label: 'Passeig actiu — GPS actiu' },
+  limbo:      { color: 'bg-warning', label: 'Passeig actiu — Esperant actualització…' },
+  offline:    { color: 'bg-warning', label: 'Sense actualitzacions — darrera posició coneguda' },
 };
+
+function isSilenceStatus(status: PresenceStatus): boolean {
+  return status === 'limbo' || status === 'offline';
+}
+
+function silenceLabel(status: PresenceStatus, timeAgo: string, hasLocation: boolean): string {
+  if (status === 'limbo') {
+    return STATUS_CONFIG.limbo.label;
+  }
+  if (!hasLocation) {
+    return 'Sense actualitzacions — posició encara no disponible';
+  }
+  return `Sense actualitzacions (${timeAgo}) — darrera posició coneguda`;
+}
 
 export default function PatientStatusCard({
   isConnected,
   isActive,
-  isPatientConnected,
   presenceStatus,
   currentLocation,
   timeAgo,
 }: PatientStatusCardProps) {
+  const silent = isConnected && isActive && isSilenceStatus(presenceStatus);
+
   const getStatusColor = () => {
     if (!isConnected || !isActive) return 'bg-slate-400';
     return STATUS_CONFIG[presenceStatus]?.color ?? 'bg-slate-400';
@@ -42,6 +56,9 @@ export default function PatientStatusCard({
   const getStatusText = () => {
     if (!isConnected) return 'Desconnectat';
     if (!isActive) return 'Passeig finalitzat';
+    if (isSilenceStatus(presenceStatus)) {
+      return silenceLabel(presenceStatus, timeAgo, currentLocation !== null);
+    }
     return STATUS_CONFIG[presenceStatus]?.label ?? 'Desconegut';
   };
 
@@ -49,8 +66,12 @@ export default function PatientStatusCard({
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col gap-4 sticky top-6">
       <div className="flex items-center gap-2">
         <span className="relative flex h-3 w-3">
-          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${getStatusPingColor()}`}></span>
-          <span className={`relative inline-flex rounded-full h-3 w-3 ${getStatusColor()}`}></span>
+          {!silent && (
+            <span
+              className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${getStatusPingColor()}`}
+            />
+          )}
+          <span className={`relative inline-flex rounded-full h-3 w-3 ${getStatusColor()}`} />
         </span>
         <p className="text-slate-600 text-sm font-medium">
           {getStatusText()}
@@ -65,7 +86,6 @@ export default function PatientStatusCard({
           {currentLocation ? timeAgo : '---'}
         </p>
       </div>
-
     </div>
   );
 }
