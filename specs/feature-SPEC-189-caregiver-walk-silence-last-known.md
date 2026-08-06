@@ -153,7 +153,7 @@ Walk **159** (2026-08-04): kill amb tot `is_recovered=false` + mapa blau — coh
 |---|---|---|---|
 | **0 — Docs** | [x] | PD + SPEC-189 + alineació 180/185/188 | `31c28e0` a `main`=`develop`=`origin` |
 | **A — Copy** | [x] | Text calm `limbo`/`offline` a `PatientStatusCard`; sense ping en silenci | Commit a `feat/SPEC-189-caregiver-walk-silence` (`fa2c18f`) |
-| **B — Mapa** | [ ] | Marcador **darrera posició coneguda** evident (`CurrentPositionMarker` / `CustomIcons`); sense pols “en viu” engañós en silenci/`stale` | Commit a la mateixa feat; **aturar** |
+| **B — Mapa** | [x] | Marcador **darrera posició coneguda** evident (`CurrentPositionMarker` / `CustomIcons`); sense pols “en viu” engañós en silenci/`stale` | Commit a la mateixa feat; **aturar** |
 | **C — Tests + Vercel** | [ ] | Vitest AC-6; merge feat → `main`; push `origin/main` (+ `develop`); smoke cuidador a Vercel | UI en producció Vercel; **aturar** |
 | **D — Paper** | [ ] | Marcar ACs MVP d’aquesta spec; actualitzar `STATE` / EVOLUTION si cal; deixar AC-7 field obert | Spec reflecteix MVP fet; **aturar** |
 | **E — Camp** | [ ] | Quan hi hagi APK/IPA: butxaca (188 AC-6) + kill (189 AC-7); iOS quan hi hagi iPhone | Informes de camp; tancar AC-7 |
@@ -167,12 +167,12 @@ Walk **159** (2026-08-04): kill amb tot `is_recovered=false` + mapa blau — coh
 - [x] Sense `animate-ping` en silenci
 - [x] Commit
 
-#### Sessió B — Darrera posició al mapa
-- [ ] Skills: `pathguard-core-state`, `pathguard-agent-frontend`, `pathguard-core-golden-rules`
-- [ ] Mode visual “darrera coneguda” quan `limbo`/`offline` o confidence `stale`
-- [ ] Distingible de `live` / `gps_online` (sense pols viu engañós)
-- [ ] Traça existent intacta; no exigir `is_recovered` pel silenci
-- [ ] Commit; **no** merge a `main` encara
+#### Sessió B — Darrera posició al mapa ✅
+- [x] Skills: `pathguard-core-state`, `pathguard-agent-frontend`, `pathguard-core-golden-rules`
+- [x] Mode visual “darrera coneguda” quan `limbo`/`offline` o confidence `stale` (`last_known`)
+- [x] Distingible de `live` / `gps_online` (sense pols viu engañós; anell estàtic + punt ple ambre)
+- [x] Traça existent intacta; no exigir `is_recovered` pel silenci
+- [x] Commit; **no** merge a `main` encara
 
 #### Sessió C — Tests + desplegament
 - [ ] Vitest per copy/estat i/o marcador (AC-6)

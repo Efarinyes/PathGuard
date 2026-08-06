@@ -14,6 +14,8 @@ interface CurrentPositionMarkerProps {
 
 const MIN_DISTANCE_M = 30;
 const SMOOTHING_WINDOW = 3;
+/** Align with derivePresenceStatus gps_online window — after this, treat as last-known. */
+const STALE_MS = 60_000;
 
 function haversine(
   a: [number, number],
@@ -67,18 +69,23 @@ function calculateSmoothedBearing(
   return (avgBearing + 360) % 360;
 }
 
-function getCurrentConfidence(
+/** Pure policy — SPEC-189 silence / stale → last_known (no live pulse). */
+export function resolveMarkerConfidence(
   locations: LocationPayload[],
-  currentIndex: number
+  currentIndex: number,
+  isPatientOffline: boolean,
+  nowMs: number = Date.now()
 ): ConfidenceLevel {
   const loc = locations[currentIndex];
-  if (!loc) return 'live';
+  if (!loc) return isPatientOffline ? 'last_known' : 'live';
 
-  const age = Date.now() - new Date(loc.timestamp).getTime();
+  const age = nowMs - new Date(loc.timestamp).getTime();
+  const isStale = age > STALE_MS;
 
+  if (isPatientOffline || isStale) {
+    return 'last_known';
+  }
   if (loc.is_recovered) return 'recovered';
-  // low_confidence not yet in frontend type, backend supports it
-  if (age > 60_000) return 'stale';
   return 'live';
 }
 
@@ -86,7 +93,7 @@ export default function CurrentPositionMarker({
   coordinates,
   locations,
   currentIndex,
-  isPatientOffline,
+  isPatientOffline = false,
 }: CurrentPositionMarkerProps) {
   const bearing = useMemo(
     () => calculateSmoothedBearing(coordinates),
@@ -94,23 +101,23 @@ export default function CurrentPositionMarker({
   );
 
   const confidence = useMemo(
-    () => getCurrentConfidence(locations, currentIndex),
-    [locations, currentIndex]
+    () => resolveMarkerConfidence(locations, currentIndex, isPatientOffline),
+    [locations, currentIndex, isPatientOffline]
   );
 
   const position = coordinates[currentIndex];
 
-  if (!position || bearing === null) return null;
+  if (!position) return null;
 
-  const effectiveOffline = isPatientOffline || confidence === 'recovered' || confidence === 'stale';
+  const showArrow = bearing !== null;
 
   return (
     <Marker
       position={position}
       icon={DirectionalPulseDotIcon({
-        bearing,
+        bearing: bearing ?? 0,
         confidence,
-        showArrow: true,
+        showArrow,
       })}
     />
   );

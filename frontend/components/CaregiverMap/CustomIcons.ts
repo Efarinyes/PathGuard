@@ -83,7 +83,12 @@ export const OfflinePulseDotIcon = L.divIcon({
   iconAnchor: [14, 14],
 });
 
-export type ConfidenceLevel = 'live' | 'recovered' | 'low_confidence' | 'stale';
+export type ConfidenceLevel =
+  | 'live'
+  | 'recovered'
+  | 'low_confidence'
+  | 'stale'
+  | 'last_known';
 
 const CONFIDENCE_CONFIG: Record<ConfidenceLevel, {
   color: string;
@@ -91,11 +96,15 @@ const CONFIDENCE_CONFIG: Record<ConfidenceLevel, {
   weight: number;
   opacity: number;
   dashArray?: string;
+  filled?: boolean;
+  animatePulse?: boolean;
 }> = {
-  live: { color: COLORS.primary, pulseColor: COLORS.success, weight: 3, opacity: 1.0 },
+  live: { color: COLORS.primary, pulseColor: COLORS.success, weight: 3, opacity: 1.0, animatePulse: true },
   recovered: { color: COLORS.warning, pulseColor: COLORS.warning, weight: 2, opacity: 0.8, dashArray: '10,10' },
   low_confidence: { color: COLORS.foreground, pulseColor: COLORS.foreground, weight: 2, opacity: 0.4, dashArray: '2,8' },
-  stale: { color: COLORS.foreground, pulseColor: COLORS.foreground, weight: 1, opacity: 0.2, dashArray: '5,15' },
+  stale: { color: COLORS.warning, pulseColor: COLORS.warning, weight: 2, opacity: 0.85, filled: true },
+  /** SPEC-189: walk silence — evident last position, no live pulse */
+  last_known: { color: COLORS.warning, pulseColor: COLORS.warning, weight: 3, opacity: 1.0, filled: true },
 };
 
 function formatBearingForAria(bearing: number): string {
@@ -125,34 +134,55 @@ function buildArrowHtml(bearing: number, color: string, weight: number): string 
 
 function buildIconHtml(bearing: number, confidence: ConfidenceLevel, showArrow: boolean): string {
   const config = CONFIDENCE_CONFIG[confidence];
-  const { color, pulseColor, weight, opacity, dashArray } = config;
-  
+  const { color, pulseColor, weight, opacity, dashArray, filled, animatePulse } = config;
+
   const strokeDash = dashArray ? `stroke-dasharray: ${dashArray};` : '';
   const arrowHtml = showArrow ? buildArrowHtml(bearing, color, weight) : '';
-  const ariaLabel = formatBearingForAria(bearing);
+  const ariaLabel =
+    confidence === 'last_known' || confidence === 'stale'
+      ? 'Darrera posició coneguda'
+      : formatBearingForAria(bearing);
 
-  return `
-    <div style="position: relative; width: 28px; height: 28px;" aria-label="${ariaLabel}">
-      <div style="
+  const pulseRing = animatePulse
+    ? `<div style="
         position: absolute;
         inset: -2px;
         border-radius: 50%;
         border: ${weight}px solid ${pulseColor};
         ${strokeDash}
-        animation: map-pulse-${confidence === 'recovered' ? 'offline' : 'live'} 2s infinite ease-out;
+        animation: map-pulse-live 2s infinite ease-out;
         opacity: ${opacity * 0.5};
-      "></div>
+      "></div>`
+    : confidence === 'last_known' || confidence === 'stale'
+      ? `<div style="
+          position: absolute;
+          inset: -4px;
+          border-radius: 50%;
+          border: 2px solid ${pulseColor};
+          opacity: 0.45;
+        "></div>`
+      : '';
+
+  const innerBackground = filled ? color : 'transparent';
+  const arrowColor = filled ? '#FFFFFF' : color;
+
+  return `
+    <div style="position: relative; width: 28px; height: 28px;" aria-label="${ariaLabel}">
+      ${pulseRing}
       <div style="
         position: absolute;
         top: 2px; left: 2px; right: 2px; bottom: 2px;
         border-radius: 50%;
         border: ${weight}px solid ${color};
         ${strokeDash}
-        background: transparent;
+        background: ${innerBackground};
         box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         opacity: ${opacity};
+        display: flex;
+        align-items: center;
+        justify-content: center;
       ">
-        ${arrowHtml}
+        ${showArrow ? buildArrowHtml(bearing, arrowColor, weight) : ''}
       </div>
     </div>
   `;
