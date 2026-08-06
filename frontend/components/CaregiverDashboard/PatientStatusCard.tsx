@@ -19,11 +19,13 @@ const STATUS_CONFIG: Record<PresenceStatus, { color: string; label: string }> = 
   offline:    { color: 'bg-warning', label: 'Sense actualitzacions — darrera posició coneguda' },
 };
 
-function isSilenceStatus(status: PresenceStatus): boolean {
+/** SPEC-189 — exported for Vitest */
+export function isSilenceStatus(status: PresenceStatus): boolean {
   return status === 'limbo' || status === 'offline';
 }
 
-function silenceLabel(status: PresenceStatus, timeAgo: string, hasLocation: boolean): string {
+/** SPEC-189 — exported for Vitest */
+export function silenceLabel(status: PresenceStatus, timeAgo: string, hasLocation: boolean): string {
   if (status === 'limbo') {
     return STATUS_CONFIG.limbo.label;
   }
