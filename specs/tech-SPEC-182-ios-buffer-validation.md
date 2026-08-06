@@ -18,9 +18,16 @@ adr: null
 
 # Spec: Validate iOS persistent buffer and is_recovered on app restart
 
+> **Actualització 2026-08-06 — alineació de producte**  
+> Aquesta spec queda **diferida** (sense iPhone) i s’ha d’executar segons el pla de paritat a **SPEC-189 §12**.  
+> **No** demanar “sempre” com a camí feliç de producte: PathGuard prioritza “mentre s’usa” (calma), com a Android post-`4b1c9eb`.  
+> **No** esperar traça `is_recovered` completa després de tancar l’app (PD-WALK-CLOSED-IS-EXCEPTION). Recovered = cua real (flush fallit / reload disc), com SPEC-188.  
+> **Abans del camp:** sessió **iOS-1** — treure `maybeEscalateToAlways` (o deixar-lo opt-in explícit), perquè avui l’iOS escala sol a Always als 20 punts.
+
 ## 1. Objectiu
 
 Validar que el plugin iOS de PathGuard persisteixi correctament els punts pendents quan l’app es tanca i els enviï amb `is_recovered = true` quan es reobre, i afegir tests XCTest que ho garanteixin.
+
 
 ## 2. Context
 

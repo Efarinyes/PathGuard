@@ -2,7 +2,7 @@
 
 Catàleg viu de les specs **operatives**. Les tancades / backlog / superseded viuen a [`archive/`](archive/).
 
-**Última higiene:** 2026-08-05 — +SPEC-189 (silenci de passeig / darrera posició); PD-WALK-CLOSED-IS-EXCEPTION.
+**Última higiene:** 2026-08-06 — SPEC-189 §12 paritat iOS; SPEC-182 alineada a PD walk-closed.
 
 ## Format
 
@@ -30,7 +30,7 @@ Catàleg viu de les specs **operatives**. Les tancades / backlog / superseded vi
 | ID | Tipus | Títol | Owner | Status | Nota |
 |---|---|---|---|---|---|
 | [SPEC-180](integration-SPEC-180-buffer-recovery-cross-platform.md) | integration | Persistent location buffer / `is_recovered` | platform+ios+android+qa | draft | Umbrella; semàntica via 188; iOS via 182 |
-| [SPEC-182](tech-SPEC-182-ios-buffer-validation.md) | tech | Validate iOS buffer + `is_recovered` on restart | ios | draft | **DIFERIT** — sense iPhone ara |
+| [SPEC-182](tech-SPEC-182-ios-buffer-validation.md) | tech | Validate iOS buffer + `is_recovered` on restart | ios | draft | **DIFERIT** — pla paritat SPEC-189 §12 (iOS-1…4) |
 | [SPEC-183](tech-SPEC-183-android-walk-keepalive.md) | tech | Android FGS walk keepalive | android | implementing | Mínim mergejat; revisió post-188 |
 | [SPEC-185](tech-SPEC-185-honest-http-presence.md) | tech | Honest HTTP presence when patient WS dies | backend+frontend | implementing | Field AC-5 pendent |
 | [SPEC-187](tech-SPEC-187-android-fgs-notification-visibility.md) | tech | Android FGS notification on lock screen | android | implementing | Canal `pathguard_walk_v2`; smoke OK |

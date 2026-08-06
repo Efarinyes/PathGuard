@@ -206,3 +206,52 @@ MVP **PWA desplegat** a `main`/`origin` (`7f4d4d5`): copy silenci + marcador `la
 2. Obrir **aquesta secció §11** i fer la primera fila `[ ]`
 3. `git branch --show-current` → `main` després de C; Sessió E quan hi hagi binari
 4. En tancar: actualitzar §11 + `STATE.next_action` / `next_session_pickup`
+
+## 12. Paritat Android ↔ iOS (pla abans de tancar sessió 2026-08-06)
+
+> **Objectiu:** el cuidador ha de viure **la mateixa història** tant si el pacient porta Android com iPhone.  
+> La UI del cuidador (aquesta SPEC) ja és compartida (Vercel). El que falta és alinear el **plugin iOS** amb les decisions de producte ja tancades a Android.
+
+### Què ja és igual (no cal tocar)
+
+| Peça | On |
+|---|---|
+| Textos de silenci + marcador darrera posició | PWA cuidador (Vercel) — sessions A–D |
+| Contracte de producte (butxaca = viu; app tancada = excepció; recovered només cua real) | PD-WALK-CLOSED + SPEC-188 + aquesta SPEC |
+| Buffer iOS: reload de disc / flush fallit → `isRecovered=true` | Codi ja present (`LocationBuffer.swift`) — **cal validar** amb 182 |
+
+### Diferències reals (iOS vs Android avui)
+
+| Tema | Android (ara) | iOS (ara) | Què fer |
+|---|---|---|---|
+| Permís d’ubicació de producte | “Mentre s’usa” n’hi ha prou (FGS) | Demana “when in use”, però **escala sol a “sempre”** als 20 punts (`maybeEscalateToAlways`) | **Treure o desactivar** l’auto-escalat a Always (calma PathGuard) |
+| Keepalive / forats a la butxaca | SPEC-183 (flush + sonda) | Flush periòdic ~30s; sense sonda stale com 183 | Si el camp iOS mostra forats → valorar keepalive iOS (spec nova o ampliar 183) |
+| App tancada | Excepció + UX 189; no traça completa | Igual a producte; “while in use” no captura amb app morta | Documentar + camp (no prometre recovered massiu) |
+| Tests natius buffer | JUnit (188) | XCTest pendent | SPEC-182 |
+| Camp | Redmi disponible | Sense iPhone ara | Diferit |
+
+### Sessions curtes quan hi hagi iPhone / Xcode
+
+| Sessió | Què | Spec / skill | Sortida |
+|---|---|---|---|
+| **iOS-1** | Desactivar auto-escalat a “sempre”; deixar “mentre s’usa” com a defecte de producte; build Xcode | SPEC-182 (+ nota producte) · `pathguard-agent-ios` | Commit; IPA de prova |
+| **iOS-2** | XCTest buffer (reload / flush fail / punt nou no recovered) — paritat 188 | SPEC-182 AC-1 | Tests verds |
+| **iOS-3** | Revisar persistència en background / kill (cua pendent curta) | SPEC-182 AC-2 | Cua real → recovered; forats OK |
+| **iOS-4** | Camp: butxaca + silenci cuidador (189) + kill (excepció) | SPEC-182 + 189 AC-7 · `pathguard-domain-field-testing` | Informe; tancar AC-7 iOS |
+| **iOS-5** (només si cal) | Keepalive / forats GPS com 183 | Spec nova o ampliació | Només si iOS-4 falla per forats amb moviment |
+
+### Ordre obligatori
+
+1. **No** reobrir “app tancada = tot taronja” a iOS.  
+2. Primer **iOS-1** (permisos calm) abans del camp.  
+3. SPEC-182 s’ha d’**actualitzar** perquè els AC antics (“sempre” com a camí feliç / recovered després de cada reobertura) **no** contradiguin PD-WALK-CLOSED i SPEC-188.  
+4. Cuidador: cap canvi extra — ja és multiplataforma.
+
+### Invocació propera (quan hi hagi dispositiu)
+
+«Anem amb iOS-1 — paritat permisos»  
+o  
+«Anem amb la sessió E» (camp Android) si el Redmi va primer.
+
+**Skills:** `pathguard-core-state` → SPEC-189 §12 + SPEC-182 → `pathguard-agent-ios` → `pathguard-core-golden-rules`.
+
