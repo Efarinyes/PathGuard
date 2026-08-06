@@ -2,7 +2,7 @@
 id: feature-SPEC-189
 title: Caregiver calm notice and last-known position when walk goes silent
 type: feature
-status: approved
+status: implementing
 priority: P0
 created: 2026-08-05
 author: tech-lead
@@ -50,6 +50,11 @@ El contracte aplica a **Android i iOS** (mateixa UX cuidador; la captura nativa 
 
 Walk **159** (2026-08-04): kill amb tot `is_recovered=false` + mapa blau — coherent amb SPEC-188 i amb aquesta decisió (no esperar taronja massiu).
 
+### Estat MVP (2026-08-06 — Sessió D)
+
+MVP **PWA desplegat** a `main`/`origin` (`7f4d4d5`): copy silenci + marcador `last_known` + Vitest.  
+**AC-7 field natiu diferit** fins a rebuild APK/IPA (Sessió E).
+
 ## 3. Problema
 
 1. El cuidador no té un missatge clar i calm quan el passeig deixa d’actualitzar-se (copy actual “Sense cobertura” pot confondre xarxa vs silenci del pacient).
@@ -69,33 +74,35 @@ Walk **159** (2026-08-04): kill amb tot `is_recovered=false` + mapa blau — coh
 ## 5. Criteris d’acceptació
 
 ### AC-1 — Copy calm amb passeig actiu en silenci
-- [ ] Amb passeig actiu i presence `limbo`: text informatiu del tipus “Passeig actiu — esperant actualització…”.
-- [ ] Amb passeig actiu i presence `offline` (edat darrera ubicació > llindar existent, p.ex. 300s): text del tipus “Sense actualitzacions des de fa X — darrera posició coneguda” (o equivalent calm en català).
-- [ ] No s’introdueix UI d’alarma / SOS per aquest estat.
+- [x] Amb passeig actiu i presence `limbo`: text informatiu del tipus “Passeig actiu — esperant actualització…”.
+- [x] Amb passeig actiu i presence `offline` (edat darrera ubicació > llindar existent, p.ex. 300s): text del tipus “Sense actualitzacions des de fa X — darrera posició coneguda” (o equivalent calm en català).
+- [x] No s’introdueix UI d’alarma / SOS per aquest estat.
 
 ### AC-2 — Darrera posició evident al mapa
-- [ ] Quan l’estat és silenci (`limbo`/`offline` o confidence `stale`), el marcador de posició actual es distingeix clarament del mode “en viu” (sense pols viu engañós).
-- [ ] La traça ja dibuixada es manté; no s’exigeixen segments `is_recovered=true` nous pel sol fet del silenci.
+- [x] Quan l’estat és silenci (`limbo`/`offline` o confidence `stale`), el marcador de posició actual es distingeix clarament del mode “en viu” (sense pols viu engañós).
+- [x] La traça ja dibuixada es manté; no s’exigeixen segments `is_recovered=true` nous pel sol fet del silenci.
 
 ### AC-3 — Recuperació automàtica
-- [ ] Quan tornen punts WS/HTTP, la UI torna a l’estat normal sense acció del cuidador.
+- [x] Quan tornen punts WS/HTTP, la UI torna a l’estat normal sense acció del cuidador. *(presence + `resolveMarkerConfidence` es re-deriven; sense estat enganxat de silenci)*
 
 ### AC-4 — Contracte cross-platform (docs + comportament esperat)
-- [ ] Android i iOS comparteixen la mateixa semàntica de producte a aquesta spec i a SPEC-180/188.
-- [ ] Documentat: app realment tancada / procés mort → forats acceptats; no traça completa recuperada.
+- [x] Android i iOS comparteixen la mateixa semàntica de producte a aquesta spec i a SPEC-180/188.
+- [x] Documentat: app realment tancada / procés mort → forats acceptats; no traça completa recuperada.
 
 ### AC-5 — Desplegament Vercel
-- [ ] Canvis UI mergejats a `main` i pushejats a `origin/main` (deploy Vercel).
-- [ ] Verificació visual a `https://path-guard-orpin.vercel.app` (cuidador).
+- [x] Canvis UI mergejats a `main` i pushejats a `origin/main` (deploy Vercel) — `7f4d4d5`.
+- [ ] Verificació visual a `https://path-guard-orpin.vercel.app` (cuidador) — **smoke humà** (obert).
 
 ### AC-6 — Tests
-- [ ] Vitest: copy/estat silenci + mode marcador darrera coneguda.
-- [ ] Sense regressió baseline frontend (108/108 + skipped preexistents).
+- [x] Vitest: copy/estat silenci + mode marcador darrera coneguda.
+- [x] Sense regressió baseline frontend (**141 pass / 6 skipped** a 2026-08-06; skipped preexistents).
 
-### AC-7 — Field (quan hi hagi binari natiu actualitzat)
+### AC-7 — Field (DIFERIT — Sessió E)
 - [ ] Android: kill voluntari amb passeig actiu → missatge + darrera posició; **no** gate de `is_recovered=true` massiu.
 - [ ] iOS: mateix criteri quan hi hagi dispositiu (alineat SPEC-182).
 - [ ] Fins aleshores: validació MVP = PWA cuidador amb silenci simulat (edat de punt / presence) + smoke amb APK/IPA actual si el silenci ja es produeix.
+
+> **Nota Sessió D:** AC-7 resta obert a propòsit. El MVP PWA es considera tancat per paper; el camp natiu no bloqueja el tancament de sessions A–D.
 
 ## 6. Riscos
 
@@ -155,7 +162,7 @@ Walk **159** (2026-08-04): kill amb tot `is_recovered=false` + mapa blau — coh
 | **A — Copy** | [x] | Text calm `limbo`/`offline` a `PatientStatusCard`; sense ping en silenci | Commit a `feat/SPEC-189-caregiver-walk-silence` (`fa2c18f`) |
 | **B — Mapa** | [x] | Marcador **darrera posició coneguda** evident (`CurrentPositionMarker` / `CustomIcons`); sense pols “en viu” engañós en silenci/`stale` | Commit a la mateixa feat; **aturar** |
 | **C — Tests + Vercel** | [x] | Vitest AC-6; merge feat → `main`; push `origin/main` (+ `develop`); smoke cuidador a Vercel | UI en producció Vercel; **aturar** |
-| **D — Paper** | [ ] | Marcar ACs MVP d’aquesta spec; actualitzar `STATE` / EVOLUTION si cal; deixar AC-7 field obert | Spec reflecteix MVP fet; **aturar** |
+| **D — Paper** | [x] | Marcar ACs MVP d’aquesta spec; actualitzar `STATE` / EVOLUTION si cal; deixar AC-7 field obert | Spec reflecteix MVP fet; **aturar** |
 | **E — Camp** | [ ] | Quan hi hagi APK/IPA: butxaca (188 AC-6) + kill (189 AC-7); iOS quan hi hagi iPhone | Informes de camp; tancar AC-7 |
 
 ### Detall per sessió (checklist)
@@ -181,11 +188,11 @@ Walk **159** (2026-08-04): kill amb tot `is_recovered=false` + mapa blau — coh
 - [ ] Smoke: https://path-guard-orpin.vercel.app (cuidador) — verificar després del deploy
 - [x] Actualitzar aquesta taula (C = `[x]`)
 
-#### Sessió D — Tancament paper MVP
-- [ ] Marcar AC-1..AC-3, AC-5, AC-6 com a fets si aplica
-- [ ] Deixar AC-7 / field explícitament diferit
-- [ ] `STATE.json` pickup → Sessió E o “MVP 189 en Vercel”
-- [ ] Commit docs si cal
+#### Sessió D — Tancament paper MVP ✅
+- [x] Marcar AC-1..AC-4, AC-5 (push), AC-6 com a fets
+- [x] Deixar AC-7 / field explícitament diferit (Sessió E)
+- [x] `STATE.json` pickup → Sessió E / smoke Vercel humà
+- [x] Commit docs
 
 #### Sessió E — Field (diferit fins a binari natiu)
 - [ ] Android: butxaca → majoria `is_recovered=false` (188)
@@ -197,5 +204,5 @@ Walk **159** (2026-08-04): kill amb tot `is_recovered=false` + mapa blau — coh
 
 1. Llegir `.cursor/skills/pathguard-core-state/SKILL.md` + `.pathguard/STATE.json`
 2. Obrir **aquesta secció §11** i fer la primera fila `[ ]`
-3. `git branch --show-current` → hauria de ser `feat/SPEC-189-caregiver-walk-silence` fins a C
+3. `git branch --show-current` → `main` després de C; Sessió E quan hi hagi binari
 4. En tancar: actualitzar §11 + `STATE.next_action` / `next_session_pickup`

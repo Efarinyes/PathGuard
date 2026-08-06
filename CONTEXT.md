@@ -57,7 +57,7 @@ Veure `agents/INDEX.md` per mapeig complet.
 ## Estat actual
 
 - **Versió:** v2.6.0-beta.1 (veure `package.json`)
-- **Fase:** pre-beta — SPEC-189 approved (MVP Vercel); field natiu diferit (veure `.pathguard/STATE.json`)
+- **Fase:** pre-beta — SPEC-189 MVP PWA a main; field natiu diferit (veure `.pathguard/STATE.json`)
 - **Branca actual:** veure `.pathguard/STATE.json`
 - **Spec activa:** veure `.pathguard/STATE.json`
 - **Pickup-point:** veure `.pathguard/STATE.json > next_session_pickup`

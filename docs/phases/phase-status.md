@@ -1,6 +1,6 @@
 # PathGuard — Estat per fase
 
-**Última actualització:** 2026-08-05  
+**Última actualització:** 2026-08-06  
 **Font operativa del dia a dia:** `.pathguard/STATE.json` (no aquest fitxer).  
 **Història:** [`../EVOLUTION.md`](../EVOLUTION.md) · snapshot antic: [`../archive/phase-status-2026-06-30.md`](../archive/phase-status-2026-06-30.md)
 
@@ -10,10 +10,10 @@
 
 | Eix | Estat |
 |---|---|
-| Producte | Pre-beta — PD-WALK-CLOSED-IS-EXCEPTION; SPEC-189 approved (MVP Vercel) |
-| Integració | Treball docs a `docs/SPEC-189-walk-closed-exception` → merge `main` |
+| Producte | Pre-beta — SPEC-189 MVP PWA a main; field AC-7 diferit |
+| Integració | `main` = `develop` = origin (`7f4d4d5`+) |
 | Plugin GPS Android | SPEC-188 mergejada; field butxaca diferit (sense rebuild APK ara) |
-| Specs actives | 180, 182 (diferit), 183, 185, 187, 188, **189** — veure `specs/000-index.md` |
+| Specs actives | 180, 182 (diferit), 183, 185, 187, 188, **189** (MVP; AC-7 obert) — veure `specs/000-index.md` |
 | Target versió | `v2.7.0-beta.1` |
 
 ---

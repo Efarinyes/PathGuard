@@ -35,7 +35,7 @@ Catàleg viu de les specs **operatives**. Les tancades / backlog / superseded vi
 | [SPEC-185](tech-SPEC-185-honest-http-presence.md) | tech | Honest HTTP presence when patient WS dies | backend+frontend | implementing | Field AC-5 pendent |
 | [SPEC-187](tech-SPEC-187-android-fgs-notification-visibility.md) | tech | Android FGS notification on lock screen | android | implementing | Canal `pathguard_walk_v2`; smoke OK |
 | [SPEC-188](tech-SPEC-188-recovered-only-from-buffer.md) | tech | `is_recovered` només des del buffer real | android+qa | implementing | Mergejat; AC-6 = butxaca (kill → 189) |
-| [SPEC-189](feature-SPEC-189-caregiver-walk-silence-last-known.md) | feature | Silenci de passeig: missatge calm + darrera posició | frontend+qa | approved | MVP Vercel; natiu field diferit |
+| [SPEC-189](feature-SPEC-189-caregiver-walk-silence-last-known.md) | feature | Silenci de passeig: missatge calm + darrera posició | frontend+qa | implementing | MVP PWA a main (`7f4d4d5`); AC-7 field diferit |
 
 ---
 

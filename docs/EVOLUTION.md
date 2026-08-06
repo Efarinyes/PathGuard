@@ -3,7 +3,7 @@
 Cronologia narrativa del producte i del projecte, de la concepció fins al present.
 No substitueix l’estat operatiu (`.pathguard/STATE.json`) ni el catàleg de specs (`specs/000-index.md`).
 
-**Última actualització:** 2026-08-05
+**Última actualització:** 2026-08-06
 
 ---
 
@@ -115,13 +115,15 @@ Lliçó: una spec “correcta” al paper pot ser un bug de producte al carrer. 
 **Decisió de producte (2026-08-05) — PD-WALK-CLOSED-IS-EXCEPTION:**  
 App tancada amb passeig actiu = **excepcionalitat**. No es promet traça completa en taronja. El cuidador ha de veure missatge calm + darrera posició (**SPEC-189**). Butxaca amb passeig actiu = directe (blau). `is_recovered` només buffer real (188).
 
+**MVP SPEC-189 (2026-08-06):** UI cuidador a `main`/`origin` (`7f4d4d5`) — copy silenci + marcador `last_known` + Vitest. Field natiu (AC-7 / Sessió E) diferit fins a rebuild APK/IPA.
+
 **Restriccions de sessió:** sense rebuild natiu al dispositiu ara; UX 189 via Vercel/`main`; backend amb micromamba `tracker-env`; Java només via Android Studio quan toqui natiu.
 
 **Specs vives a l’arrel** (la resta a `specs/archive/`):
 
 | Spec | Per què encara importa |
 |---|---|
-| 189 | MVP cuidador: silenci → copy + darrera posició (Vercel); camp natiu diferit |
+| 189 | MVP PWA a Vercel (`7f4d4d5`); AC-7 field diferit (Sessió E) |
 | 188 | Field AC-6 butxaca (kill → 189) |
 | 187 | Notificació FGS (smoke OK; tancar formalment) |
 | 185 | Presència HTTP honesta — field; UX silenci → 189 |
